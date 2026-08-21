@@ -6,12 +6,16 @@ import { Input } from "@/components/ui/input";
 import { trpc } from "@/providers/trpc";
 
 function getOAuthUrl() {
-  const kimiAuthUrl = import.meta.env.VITE_KIMI_AUTH_URL;
-  const appID = import.meta.env.VITE_APP_ID;
+  const kimiAuthUrl = import.meta.env.VITE_KIMI_AUTH_URL?.trim();
+  const appID = import.meta.env.VITE_APP_ID?.trim();
+  if (!kimiAuthUrl || !appID) {
+    throw new Error("Login com Kimi não configurado.");
+  }
+
   const redirectUri = `${window.location.origin}/api/oauth/callback`;
   const state = btoa(redirectUri);
 
-  const url = new URL(`${kimiAuthUrl}/api/oauth/authorize`);
+  const url = new URL("/api/oauth/authorize", kimiAuthUrl);
   url.searchParams.set("client_id", appID);
   url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("response_type", "code");
@@ -27,6 +31,9 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const kimiConfigured = Boolean(
+    import.meta.env.VITE_KIMI_AUTH_URL?.trim() && import.meta.env.VITE_APP_ID?.trim(),
+  );
 
   const loginMut = trpc.auth.loginPassword.useMutation({
     onSuccess: async () => {
@@ -89,11 +96,16 @@ export default function Login() {
           <Button
             variant="outline"
             className="w-full"
+            disabled={!kimiConfigured}
             onClick={() => {
-              window.location.href = getOAuthUrl();
+              try {
+                window.location.href = getOAuthUrl();
+              } catch (error) {
+                setError(error instanceof Error ? error.message : "Login com Kimi indisponível.");
+              }
             }}
           >
-            Entrar com Kimi
+            {kimiConfigured ? "Entrar com Kimi" : "Kimi não configurado"}
           </Button>
         </CardContent>
       </Card>

@@ -37,7 +37,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useTheme();
 
   useEffect(() => {
-    setOpen(false);
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
@@ -87,6 +86,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <NavLink
                 key={n.to}
                 to={n.to}
+                onClick={() => setOpen(false)}
                 className={({ isActive }) =>
                   `block py-2.5 font-display text-lg ${
                     isActive ? "font-semibold text-[var(--c-primary)]" : "text-[var(--c-ink)]/70"
@@ -162,8 +162,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
-        <div className="border-t border-white/10 py-5 text-center text-xs tracking-wide text-white/35">
-          © 2026 Atelier Daniel Detomi — Feito com reúso, luz e gesto
+        <div className="border-t border-white/10 px-5 py-5 text-center text-xs tracking-wide text-white/35">
+          © 2026 Atelier Daniel Detomi — Feito com reúso, luz e gesto · Desenvolvido por{" "}
+          <a
+            href="https://www.vytetech.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/50 transition hover:text-[var(--c-accent)]"
+          >
+            VyteTech
+          </a>
         </div>
       </footer>
 

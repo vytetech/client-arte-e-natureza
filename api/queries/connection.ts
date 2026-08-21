@@ -7,7 +7,14 @@ const fullSchema = { ...schema, ...relations };
 
 let instance: ReturnType<typeof drizzle<typeof fullSchema>>;
 
+export function hasDatabaseConfig() {
+  return env.hasDatabase;
+}
+
 export function getDb() {
+  if (!env.databaseUrl) {
+    throw new Error("DATABASE_URL is required for database access");
+  }
   if (!instance) {
     instance = drizzle(env.databaseUrl, {
       mode: "planetscale",

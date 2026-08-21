@@ -15,6 +15,9 @@ async function exchangeAuthCode(
   code: string,
   redirectUri: string,
 ): Promise<TokenResponse> {
+  if (!env.hasKimiOAuth) {
+    throw new Error("Kimi OAuth is not configured");
+  }
   const body = new URLSearchParams({
     grant_type: "authorization_code",
     code,
@@ -37,14 +40,22 @@ async function exchangeAuthCode(
   return resp.json() as Promise<TokenResponse>;
 }
 
-const jwks = jose.createRemoteJWKSet(
-  new URL(`${env.kimiAuthUrl}/api/.well-known/jwks.json`),
-);
+let jwks: ReturnType<typeof jose.createRemoteJWKSet> | undefined;
+
+function getJwks() {
+  if (!env.hasKimiOAuth) {
+    throw new Error("Kimi OAuth is not configured");
+  }
+  jwks ??= jose.createRemoteJWKSet(
+    new URL("/api/.well-known/jwks.json", env.kimiAuthUrl),
+  );
+  return jwks;
+}
 
 async function verifyAccessToken(
   accessToken: string,
 ): Promise<{ userId: string; clientId: string }> {
-  const { payload } = await jose.jwtVerify(accessToken, jwks);
+  const { payload } = await jose.jwtVerify(accessToken, getJwks());
   const userId = payload.user_id as string;
   const clientId = payload.client_id as string;
   if (!userId) {
@@ -73,6 +84,11 @@ export async function authenticateRequest(headers: Headers) {
 
 export function createOAuthCallbackHandler() {
   return async (c: Context) => {
+    if (!env.hasKimiOAuth) {
+      console.warn("[OAuth] Kimi OAuth requested, but Kimi environment variables are not configured.");
+      return c.json({ error: "OAuth is not configured" }, 503);
+    }
+
     const code = c.req.query("code");
     const state = c.req.query("state");
     const error = c.req.query("error");
