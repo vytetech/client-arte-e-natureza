@@ -105,11 +105,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  const handleLogoClick = () => {
+    setOpen(false);
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[var(--c-bg)] text-[var(--c-ink)]">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(10,8,6,0.72)] shadow-[0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-[10px]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
-          <Link to="/" className="flex items-center gap-3">
+          <Link
+            to="/"
+            aria-label={t("nav.logo_home")}
+            onClick={handleLogoClick}
+            className="flex cursor-pointer items-center gap-3"
+          >
             <LogoMark />
             <div className="leading-tight">
               <div className="font-display text-lg font-semibold tracking-wide text-[#F5F2ED]">
