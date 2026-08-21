@@ -13,6 +13,8 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "admin:create": "tsx scripts/create-admin.ts",
+    "db:seed": "tsx db/seed.ts",
+    "db:seed-content": "tsx db/seed.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push"
