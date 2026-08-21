@@ -952,6 +952,10 @@ function isVideo(mime: string) {
   return /^video\//i.test(mime);
 }
 
+function formatFileSize(n: number) {
+  return n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.round(n / 1024)} KB`;
+}
+
 function ImagesTab() {
   const utils = trpc.useUtils();
   const { t } = useLang();
@@ -1003,9 +1007,6 @@ function ImagesTab() {
     uploadMut.mutate({ name: file.name, mime: file.type, dataBase64: base64 });
   };
 
-  const fmtSize = (n: number) =>
-    n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.round(n / 1024)} KB`;
-
   return (
     <div className="space-y-8">
       {notice && (
@@ -1042,7 +1043,7 @@ function ImagesTab() {
             <div className="flex-1 text-sm">
               <div className="font-bold">{preview.name}</div>
               <div className="text-xs text-[var(--c-ink)]/55">
-                {preview.mime} · {fmtSize(preview.size)}
+                {preview.mime} · {formatFileSize(preview.size)}
               </div>
             </div>
             <div className="flex gap-2">
@@ -1082,7 +1083,7 @@ function ImagesTab() {
                   <div className="truncate text-sm font-bold" title={m.name}>{m.name}</div>
                 )}
                 <div className="mt-0.5 text-xs text-[var(--c-ink)]/50">
-                  {m.mime} · {fmtSize(m.size)}
+                  {m.mime} · {formatFileSize(m.size)}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <Button
@@ -1956,20 +1957,31 @@ function CafeContent() {
   const { t } = useLang();
   const { data: drafts, error } = trpc.cafe.list.useQuery();
   const { data: mediaList } = trpc.admin.listMedia.useQuery();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState<number | "new" | null>(null);
   const [type, setType] = useState<DraftType>("text");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [note, setNote] = useState("");
   const [notice, setNotice] = useState("");
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; mime: string; size: number } | null>(null);
 
   const invalidate = () => utils.cafe.list.invalidate();
+  const invalidateMedia = () => utils.admin.listMedia.invalidate();
+  const uploadMut = trpc.admin.uploadMedia.useMutation({
+    onSuccess: (res) => {
+      setContent(res.url);
+      invalidateMedia();
+      setNotice(t("admin.cafe.uploaded"));
+    },
+    onError: () => setNotice(`${t("admin.error")}: ${t("admin.cafe.upload_failed")}`),
+  });
   const createMut = trpc.cafe.create.useMutation({
-    onSuccess: () => { invalidate(); setEditing(null); setNotice(t("admin.cafe.created")); },
+    onSuccess: () => { invalidate(); setEditing(null); setUploadedFile(null); setNotice(t("admin.cafe.created")); },
     onError: () => setNotice(`${t("admin.error")}: ${t("admin.generic_error")}`),
   });
   const updateMut = trpc.cafe.update.useMutation({
-    onSuccess: () => { invalidate(); setEditing(null); setNotice(t("admin.cafe.updated")); },
+    onSuccess: () => { invalidate(); setEditing(null); setUploadedFile(null); setNotice(t("admin.cafe.updated")); },
     onError: () => setNotice(`${t("admin.error")}: ${t("admin.generic_error")}`),
   });
   const removeMut = trpc.cafe.remove.useMutation({
@@ -1981,6 +1993,7 @@ function CafeContent() {
     setTitle("");
     setContent("");
     setNote("");
+    setUploadedFile(null);
     setEditing("new");
   };
 
@@ -1991,10 +2004,15 @@ function CafeContent() {
     setTitle(d.title);
     setContent(d.content);
     setNote(d.note ?? "");
+    setUploadedFile(null);
     setEditing(id);
   };
 
   const save = () => {
+    if (uploadMut.isPending) {
+      setNotice(t("admin.cafe.wait_upload"));
+      return;
+    }
     if (!content.trim()) {
       setNotice(t("admin.cafe.required"));
       return;
@@ -2017,6 +2035,46 @@ function CafeContent() {
     return draftType ? t(draftType.labelKey) : type;
   };
   const typeIcon = (type: string) => DRAFT_TYPES.find((x) => x.id === type)?.icon ?? "📄";
+  const pickCafeFile = (file: File | undefined) => {
+    if (!file) return;
+    if (!MEDIA_REGEX.test(file.type)) {
+      setNotice(`${t("admin.error")}: ${t("admin.media.unsupported")}`);
+      return;
+    }
+    if (type === "image" && !/^image\//i.test(file.type)) {
+      setNotice(`${t("admin.error")}: ${t("admin.cafe.image_only")}`);
+      return;
+    }
+    if (type === "video" && !/^video\//i.test(file.type)) {
+      setNotice(`${t("admin.error")}: ${t("admin.cafe.video_only")}`);
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      setNotice(`${t("admin.error")}: ${t("admin.media.too_large")}`);
+      return;
+    }
+
+    setNotice(t("admin.cafe.uploading"));
+    setUploadedFile({ name: file.name, mime: file.type, size: file.size });
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result);
+      uploadMut.mutate({
+        name: file.name,
+        mime: file.type,
+        dataBase64: dataUrl.split(",")[1] ?? "",
+      });
+    };
+    reader.onerror = () => {
+      setUploadedFile(null);
+      setNotice(`${t("admin.error")}: ${t("admin.cafe.upload_failed")}`);
+    };
+    reader.readAsDataURL(file);
+  };
+  const clearMedia = () => {
+    setContent("");
+    setUploadedFile(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -2059,31 +2117,99 @@ function CafeContent() {
                 <label className="text-xs font-bold uppercase">
                   {text(t, "admin.cafe.media_label", { type: typeLabel(type) })}
                 </label>
-                <select
-                  className="w-full rounded-md border px-3 py-2 text-sm"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                >
-                  <option value="">{t("admin.cafe.choose_media")}</option>
-                  {(mediaList ?? [])
-                    .filter((m) => (type === "video" ? isVideo(m.mime) : !isVideo(m.mime)))
-                    .map((m) => (
-                      <option key={m.id} value={m.url}>{m.name}</option>
-                    ))}
-                </select>
-                <Input
-                  className="mt-2"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder={t("admin.cafe.paste_url")}
-                />
+                <div className="mt-2 grid gap-3 lg:grid-cols-3">
+                  <div className="rounded-lg border border-[var(--c-ink)]/10 p-4">
+                    <div className="text-xs font-bold uppercase text-[var(--c-ink)]/55">
+                      {t("admin.cafe.upload_from_computer")}
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept={type === "video" ? "video/*" : "image/*"}
+                      className="hidden"
+                      onChange={(e) => {
+                        pickCafeFile(e.target.files?.[0]);
+                        e.target.value = "";
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-3 w-full"
+                      disabled={uploadMut.isPending}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {uploadMut.isPending ? t("admin.cafe.uploading") : t("admin.cafe.choose_file")}
+                    </Button>
+                    <p className="mt-2 text-[11px] leading-relaxed text-[var(--c-ink)]/50">
+                      {t("admin.cafe.upload_help")}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-[var(--c-ink)]/10 p-4">
+                    <div className="text-xs font-bold uppercase text-[var(--c-ink)]/55">
+                      {t("admin.cafe.existing_media")}
+                    </div>
+                    <select
+                      className="mt-3 w-full rounded-md border px-3 py-2 text-sm"
+                      value={content}
+                      onChange={(e) => {
+                        setContent(e.target.value);
+                        setUploadedFile(null);
+                      }}
+                    >
+                      <option value="">{t("admin.cafe.choose_media")}</option>
+                      {(mediaList ?? [])
+                        .filter((m) => (type === "video" ? isVideo(m.mime) : !isVideo(m.mime)))
+                        .map((m) => (
+                          <option key={m.id} value={m.url}>{m.name}</option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div className="rounded-lg border border-[var(--c-ink)]/10 p-4">
+                    <div className="text-xs font-bold uppercase text-[var(--c-ink)]/55">
+                      {t("admin.cafe.manual_url")}
+                    </div>
+                    <Input
+                      className="mt-3"
+                      value={content}
+                      onChange={(e) => {
+                        setContent(e.target.value);
+                        setUploadedFile(null);
+                      }}
+                      placeholder={t("admin.cafe.paste_url")}
+                    />
+                  </div>
+                </div>
                 {content && (
-                  <div className="mt-3">
-                    {type === "video" ? (
-                      <video src={content} controls className="max-h-48 rounded" />
-                    ) : (
-                      <img src={content} alt="" className="max-h-48 rounded object-contain" />
-                    )}
+                  <div className="mt-4 rounded-lg bg-[var(--c-sand)] p-4">
+                    <div className="flex flex-wrap items-start gap-4">
+                      {type === "video" ? (
+                        <video src={content} controls preload="metadata" className="max-h-48 rounded bg-black" />
+                      ) : (
+                        <img src={content} alt="" className="max-h-48 rounded object-contain" />
+                      )}
+                      <div className="min-w-0 flex-1 text-sm">
+                        <div className="font-bold">{uploadedFile?.name ?? t("admin.cafe.selected_media")}</div>
+                        {uploadedFile && (
+                          <div className="mt-1 text-xs text-[var(--c-ink)]/55">
+                            {uploadedFile.mime} · {formatFileSize(uploadedFile.size)}
+                          </div>
+                        )}
+                        <div className="mt-1 break-all font-mono text-[11px] text-[var(--c-ink)]/50">
+                          {content}
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                            {t("admin.cafe.change_file")}
+                          </Button>
+                          <Button type="button" size="sm" variant="outline" onClick={clearMedia}>
+                            {t("admin.cafe.remove_media")}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2093,8 +2219,8 @@ function CafeContent() {
               <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("admin.cafe.note_placeholder")} />
             </div>
             <div className="flex gap-2">
-              <Button onClick={save} disabled={createMut.isPending || updateMut.isPending}>
-                {t("admin.cafe.save")}
+              <Button onClick={save} disabled={createMut.isPending || updateMut.isPending || uploadMut.isPending}>
+                {uploadMut.isPending ? t("admin.cafe.uploading") : t("admin.cafe.save")}
               </Button>
               <Button variant="outline" onClick={() => setEditing(null)}>{t("admin.cancel")}</Button>
             </div>
