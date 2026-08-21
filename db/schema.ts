@@ -76,6 +76,21 @@ export const media = mysqlTable("media", {
 
 export type Media = typeof media.$inferSelect;
 
+export const drafts = mysqlTable("drafts", {
+  id: serial("id").primaryKey(),
+  type: mysqlEnum("type", ["text", "image", "video"]).notNull(),
+  title: varchar("title", { length: 255 }).default("").notNull(),
+  content: text("content").notNull(), // texto livre ou URL da mídia (/api/media/:id)
+  note: text("note"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+});
+
+export type Draft = typeof drafts.$inferSelect;
+
 export const settings = mysqlTable("settings", {
   id: serial("id").primaryKey(),
   key: varchar("key", { length: 128 }).notNull().unique(),

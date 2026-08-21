@@ -35,7 +35,7 @@ const COLOR_FIELDS = [
   { key: "design.sand", label: "Blocos claros", def: "#efe6d2" },
 ];
 
-type Tab = "obras" | "imagens" | "textos" | "design" | "secoes";
+type Tab = "obras" | "imagens" | "textos" | "design" | "secoes" | "cafe";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "obras", label: "Obras e preços" },
@@ -43,6 +43,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "textos", label: "Textos do site" },
   { id: "design", label: "Design e fontes" },
   { id: "secoes", label: "Seções da página" },
+  { id: "cafe", label: "☕ Espaço de Café" },
 ];
 
 type WorkForm = {
@@ -144,6 +145,7 @@ export default function Admin() {
         {tab === "textos" && <TextsTab />}
         {tab === "design" && <DesignTab />}
         {tab === "secoes" && <SectionsTab />}
+        {tab === "cafe" && <CafeTab />}
       </main>
     </div>
   );
@@ -959,6 +961,263 @@ function SectionsTab() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/* ============================= ESPAÇO DE CAFÉ ============================= */
+
+const DRAFT_TYPES = [
+  { id: "text", label: "Texto", icon: "✏️" },
+  { id: "image", label: "Foto", icon: "🖼️" },
+  { id: "video", label: "Vídeo", icon: "🎬" },
+] as const;
+
+type DraftType = (typeof DRAFT_TYPES)[number]["id"];
+
+function CafeTab() {
+  const utils = trpc.useUtils();
+  const { data: status } = trpc.cafe.status.useQuery();
+  const enabled = status?.enabled ?? false;
+
+  const toggleMut = trpc.cafe.toggle.useMutation({
+    onSuccess: () => {
+      utils.cafe.status.invalidate();
+      utils.cafe.list.invalidate();
+    },
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Toggle de ativação */}
+      <div
+        className={`flex flex-wrap items-center justify-between gap-4 rounded-xl border-2 p-5 shadow-sm transition ${
+          enabled ? "border-[var(--c-accent)] bg-[#fff8ec]" : "border-[var(--c-ink)]/15 bg-white"
+        }`}
+      >
+        <div>
+          <h2 className="font-bold">
+            ☕ Espaço de Café — {enabled ? "ativado" : "desativado"}
+          </h2>
+          <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
+            Área de rascunho: textos, fotos e vídeos em preparação que{" "}
+            <strong>nunca aparecem no site público</strong>. Desativado, o espaço fica
+            completamente inacessível.
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={enabled}
+          disabled={toggleMut.isPending}
+          onClick={() => toggleMut.mutate({ enabled: !enabled })}
+          className={`relative h-8 w-16 shrink-0 rounded-full transition ${
+            enabled ? "bg-[var(--c-accent)]" : "bg-[var(--c-ink)]/25"
+          }`}
+        >
+          <span
+            className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all ${
+              enabled ? "left-9" : "left-1"
+            }`}
+          />
+        </button>
+      </div>
+
+      {!enabled ? (
+        <div className="rounded-xl border border-dashed border-[var(--c-ink)]/25 bg-white/60 p-14 text-center">
+          <div className="text-4xl">🔒</div>
+          <h3 className="mt-3 font-display text-xl font-semibold">Espaço de Café fechado</h3>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--c-ink)]/55">
+            Os rascunhos estão guardados em segurança. Ative o espaço acima para voltar a
+            editá-los.
+          </p>
+        </div>
+      ) : (
+        <CafeContent />
+      )}
+    </div>
+  );
+}
+
+function CafeContent() {
+  const utils = trpc.useUtils();
+  const { data: drafts, error } = trpc.cafe.list.useQuery();
+  const { data: mediaList } = trpc.admin.listMedia.useQuery();
+  const [editing, setEditing] = useState<number | "new" | null>(null);
+  const [type, setType] = useState<DraftType>("text");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [note, setNote] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const invalidate = () => utils.cafe.list.invalidate();
+  const createMut = trpc.cafe.create.useMutation({
+    onSuccess: () => { invalidate(); setEditing(null); setNotice("Rascunho criado ✓"); },
+    onError: (e) => setNotice(`Erro: ${e.message}`),
+  });
+  const updateMut = trpc.cafe.update.useMutation({
+    onSuccess: () => { invalidate(); setEditing(null); setNotice("Rascunho salvo ✓"); },
+    onError: (e) => setNotice(`Erro: ${e.message}`),
+  });
+  const removeMut = trpc.cafe.remove.useMutation({
+    onSuccess: () => { invalidate(); setNotice("Rascunho excluído ✓"); },
+  });
+
+  const startNew = (t: DraftType) => {
+    setType(t);
+    setTitle("");
+    setContent("");
+    setNote("");
+    setEditing("new");
+  };
+
+  const startEdit = (id: number) => {
+    const d = drafts?.find((x) => x.id === id);
+    if (!d) return;
+    setType(d.type as DraftType);
+    setTitle(d.title);
+    setContent(d.content);
+    setNote(d.note ?? "");
+    setEditing(id);
+  };
+
+  const save = () => {
+    if (!content.trim()) {
+      setNotice("Preencha o conteúdo do rascunho.");
+      return;
+    }
+    const data = { type, title: title.trim(), content: content.trim(), note: note.trim() };
+    if (editing === "new") createMut.mutate(data);
+    else if (typeof editing === "number") updateMut.mutate({ id: editing, data });
+  };
+
+  if (error) {
+    return (
+      <div className="rounded-xl bg-white p-6 text-sm text-[var(--c-primary)] shadow-sm">
+        {error.message}
+      </div>
+    );
+  }
+
+  const typeLabel = (t: string) => DRAFT_TYPES.find((x) => x.id === t)?.label ?? t;
+  const typeIcon = (t: string) => DRAFT_TYPES.find((x) => x.id === t)?.icon ?? "📄";
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg border border-[var(--c-accent)]/40 bg-[#fff8ec] px-4 py-2 text-xs text-[var(--c-ink)]/70">
+        Modo rascunho ativo — nada daqui aparece no site público.
+      </div>
+
+      {notice && (
+        <div className="rounded-lg border border-[var(--c-ink)]/15 bg-white px-4 py-2 text-sm">
+          {notice}
+        </div>
+      )}
+
+      {/* Novo rascunho */}
+      <div className="flex flex-wrap gap-2">
+        {DRAFT_TYPES.map((t) => (
+          <Button key={t.id} variant="outline" onClick={() => startNew(t.id)}>
+            {t.icon} Novo {t.label.toLowerCase()}
+          </Button>
+        ))}
+      </div>
+
+      {editing !== null && (
+        <div className="rounded-xl bg-white p-6 shadow-md">
+          <h3 className="mb-4 font-bold">
+            {editing === "new" ? "Novo rascunho" : "Editar rascunho"} — {typeLabel(type)}
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold uppercase">Título</label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nome interno do rascunho" />
+            </div>
+            {type === "text" ? (
+              <div>
+                <label className="text-xs font-bold uppercase">Texto</label>
+                <Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Escreva o texto em preparação…" />
+              </div>
+            ) : (
+              <div>
+                <label className="text-xs font-bold uppercase">
+                  {type === "image" ? "Foto" : "Vídeo"} (da aba Imagens)
+                </label>
+                <select
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                >
+                  <option value="">— escolher mídia enviada —</option>
+                  {(mediaList ?? [])
+                    .filter((m) => (type === "video" ? isVideo(m.mime) : !isVideo(m.mime)))
+                    .map((m) => (
+                      <option key={m.id} value={m.url}>{m.name}</option>
+                    ))}
+                </select>
+                <Input
+                  className="mt-2"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Ou cole a URL da mídia"
+                />
+                {content && (
+                  <div className="mt-3">
+                    {type === "video" ? (
+                      <video src={content} controls className="max-h-48 rounded" />
+                    ) : (
+                      <img src={content} alt="" className="max-h-48 rounded object-contain" />
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            <div>
+              <label className="text-xs font-bold uppercase">Anotação interna (opcional)</label>
+              <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ex.: publicar na próxima exposição" />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={save} disabled={createMut.isPending || updateMut.isPending}>
+                Salvar rascunho
+              </Button>
+              <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lista de rascunhos */}
+      <div className="grid gap-3">
+        {(!drafts || drafts.length === 0) && (
+          <p className="text-sm text-[var(--c-ink)]/55">
+            Nenhum rascunho ainda. Comece com um texto, foto ou vídeo em preparação.
+          </p>
+        )}
+        {drafts?.map((d) => (
+          <div key={d.id} className="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm">
+            <span className="text-xl">{typeIcon(d.type)}</span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-bold">
+                {d.title || <span className="text-[var(--c-ink)]/40">(sem título)</span>}
+              </div>
+              <div className="truncate text-xs text-[var(--c-ink)]/55">
+                {typeLabel(d.type)} · {d.type === "text" ? d.content.slice(0, 80) : d.content}
+                {d.note ? ` · 📝 ${d.note}` : ""}
+              </div>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => startEdit(d.id)}>Editar</Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => {
+                if (confirm("Excluir este rascunho?")) removeMut.mutate({ id: d.id });
+              }}
+            >
+              Excluir
+            </Button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

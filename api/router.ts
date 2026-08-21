@@ -1,6 +1,7 @@
 import { authRouter } from "./auth-router";
 import { contentRouter } from "./content-router";
 import { adminRouter } from "./admin-router";
+import { cafeRouter } from "./cafe-router";
 import { createRouter, publicQuery } from "./middleware";
 
 export const appRouter = createRouter({
@@ -8,6 +9,7 @@ export const appRouter = createRouter({
   auth: authRouter,
   content: contentRouter,
   admin: adminRouter,
+  cafe: cafeRouter,
 
   // TODO: add feature routers here, e.g.
   // todo: createRouter({
