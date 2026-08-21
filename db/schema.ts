@@ -132,6 +132,7 @@ export const drafts = pgTable("drafts", {
   title: varchar("title", { length: 255 }).default("").notNull(),
   content: text("content").notNull(), // texto livre ou URL da mídia (/api/media/:id)
   note: text("note"),
+  published: boolean("published").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
     .defaultNow()
@@ -140,6 +141,25 @@ export const drafts = pgTable("drafts", {
 });
 
 export type Draft = typeof drafts.$inferSelect;
+
+export const draftTranslations = pgTable("draft_translations", {
+  id: serial("id").primaryKey(),
+  draftId: integer("draftId")
+    .notNull()
+    .references(() => drafts.id, { onDelete: "cascade" }),
+  locale: locale("locale").notNull(),
+  title: varchar("title", { length: 255 }).default("").notNull(),
+  content: text("content").default("").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+}, (table) => ({
+  draftLocaleUnique: unique("draft_translations_draft_locale_unique").on(table.draftId, table.locale),
+}));
+
+export type DraftTranslation = typeof draftTranslations.$inferSelect;
 
 export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),

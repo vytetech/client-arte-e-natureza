@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import Layout from "@/components/Layout";
 import MapaSection from "@/components/MapaSection";
 import GaleriaCeuAberto from "@/components/GaleriaCeuAberto";
+import PromotionSection from "@/components/PromotionSection";
 import { useTexts } from "@/hooks/useTexts";
 import { useSettings } from "@/hooks/useTheme";
 import { useWhatsApp } from "@/hooks/useWhatsApp";
@@ -214,6 +215,8 @@ export default function Home() {
       {visible("section.ceuaberto") && (
             <GaleriaCeuAberto />
       )}
+
+      <PromotionSection />
 
       {/* MAPA — COMO CHEGAR */}
       {visible("section.mapa") && (

@@ -6,6 +6,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang, LANG_META, type Lang } from "@/lib/i18n";
 import { INSTAGRAM_URL } from "@/config";
+import { trpc } from "@/providers/trpc";
 
 const NAV = [
   { to: "/", key: "nav.home" },
@@ -57,7 +58,7 @@ function LanguageSwitcher() {
         🌐
       </button>
       {open && (
-        <div className="absolute end-0 top-11 z-50 w-48 overflow-hidden rounded-lg border border-[var(--c-ink)]/10 bg-[var(--c-bg)] text-[var(--c-ink)] shadow-xl">
+        <div className="absolute end-0 top-11 z-50 w-56 overflow-hidden rounded-lg border border-[var(--c-ink)]/10 bg-[var(--c-bg)] text-[var(--c-ink)] shadow-xl">
           {enabled.map((l: Lang) => (
             <button
               key={l}
@@ -65,13 +66,18 @@ function LanguageSwitcher() {
                 setLang(l);
                 setOpen(false);
               }}
-              className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-[var(--c-sand)] ${
+              className={`flex w-full items-center gap-3 px-4 py-3 text-start text-sm transition hover:bg-[var(--c-sand)] ${
                 l === lang ? "bg-[var(--c-sand)] font-semibold text-[var(--c-primary)]" : "text-[var(--c-ink)]/75"
               }`}
             >
               <span className="text-lg leading-none">{LANG_META[l].flag}</span>
-              <span>{LANG_META[l].name}</span>
-              {l === lang && <span className="ms-auto text-[var(--c-primary)]">✓</span>}
+              <span className="w-7 shrink-0 font-mono text-[11px] font-bold tracking-widest text-[var(--c-ink)]/45">
+                {LANG_META[l].code}
+              </span>
+              <span dir="auto" className="min-w-0 flex-1 truncate">
+                {LANG_META[l].name}
+              </span>
+              {l === lang && <span className="ms-auto text-sm font-bold text-[var(--c-primary)]">✓</span>}
             </button>
           ))}
         </div>
@@ -84,8 +90,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useTheme();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const whatsapp = useWhatsApp();
+  const { data: cafe } = trpc.cafe.public.useQuery(lang, { staleTime: 60_000, retry: false });
+  const nav = cafe?.enabled && cafe.items.length > 0
+    ? [...NAV, { to: "/cafe", key: "nav.cafe" }]
+    : NAV;
 
   useEffect(() => {
     setOpen(false);
@@ -109,7 +119,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </Link>
           <div className="flex items-center gap-4">
             <nav className="hidden items-center gap-7 md:flex">
-              {NAV.map((n) => (
+              {nav.map((n) => (
                 <NavLink
                   key={n.to}
                   to={n.to}
@@ -137,7 +147,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
         {open && (
           <nav className="border-t border-white/10 px-5 py-3 md:hidden">
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <NavLink
                 key={n.to}
                 to={n.to}
@@ -191,7 +201,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div>
             <div className="eyebrow mb-4 text-white/35">{t("footer.nav")}</div>
             <div className="flex flex-col gap-2.5">
-              {NAV.map((n) => (
+              {nav.map((n) => (
                 <Link
                   key={n.to}
                   to={n.to}

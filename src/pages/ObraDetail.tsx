@@ -1,13 +1,12 @@
 import { Link, useParams } from "react-router";
 import Layout from "@/components/Layout";
+import PromotionSection from "@/components/PromotionSection";
 import { trpc } from "@/providers/trpc";
 import { useSettings } from "@/hooks/useTheme";
 import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
 import { statusTranslationKey } from "@contracts/status";
 import { categoryLabel } from "@/lib/categoryLabels";
-
-const READING_SITE = "https://www.leituradaborradecafe.com";
 
 function parseDateOnly(value: string, endOfDay = false) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
@@ -20,12 +19,6 @@ function isCurrentDateInRange(start: string, end: string) {
   const startDate = parseDateOnly(start);
   const endDate = parseDateOnly(end, true);
   return (!startDate || now >= startDate) && (!endDate || now <= endDate);
-}
-
-function formatBRL(value: string) {
-  const amount = Number(value);
-  const safeAmount = Number.isFinite(amount) && amount > 0 ? amount : 7000;
-  return `R$ ${safeAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export default function ObraDetail() {
@@ -42,10 +35,6 @@ export default function ObraDetail() {
   const couponName = s("coupon.name", t("od.coupon_default"));
   const couponPct = s("coupon.percent", "");
   const showCoupon = couponOn && !!work?.couponEnabled && isCurrentDateInRange(s("coupon.start", ""), s("coupon.end", ""));
-  const promoRead = s("prize.reading", "0") === "1";
-  const promoWork = s("prize.work", "0") === "1";
-  const readingLink = s("prize.reading.link", "0") === "1";
-  const promotionMinimum = formatBRL(s("promotion.minimumAmount", "7000"));
   const whatsapp = useWhatsApp(
     work ? `${t("od.whatsapp_message")} "${work.title}" (${categoryLabel(work.category, t)}).` : undefined,
   );
@@ -97,30 +86,7 @@ export default function ObraDetail() {
                   </span>
                 </div>
               )}
-              {(promoRead || promoWork) && (
-                <div className="mt-4 rounded-lg border border-[var(--c-accent)]/50 bg-[#fff8ec] px-4 py-3">
-                  <div className="text-sm font-semibold text-[var(--c-ink)]">
-                    {t("od.promo_title_prefix")} {promotionMinimum} {t("od.promo_title_suffix")}
-                  </div>
-                  <ul className="mt-1.5 space-y-1 text-sm text-[var(--c-ink)]/75">
-                    {promoRead && <li>{t("od.prize_reading")}</li>}
-                    {promoWork && <li>{t("od.prize_work")}</li>}
-                  </ul>
-                  {promoRead && readingLink && (
-                    <a
-                      href={READING_SITE}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1.5 block text-[11px] font-semibold text-[var(--c-primary)] underline underline-offset-2 hover:opacity-80"
-                    >
-                      {t("od.reading_site")}
-                    </a>
-                  )}
-                  <span className="mt-1.5 block text-[11px] text-[var(--c-ink)]/55">
-                    {t("od.promo_hint")}
-                  </span>
-                </div>
-              )}
+              <PromotionSection variant="compact" />
               {showShipping && (
                 <div className="mt-4 text-sm font-medium text-[var(--c-ink)]/80">
                   {t("od.shipping")}

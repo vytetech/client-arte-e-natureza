@@ -1823,9 +1823,9 @@ function IdiomasTab() {
   const { vals, set, saveKeys, notice, saving } = useSettingsState();
   const { t } = useLang();
   const languages = [
-    { key: "lang.en", flag: "🇮🇪", name: "English (US)", descKey: "admin.languages.en_desc" },
-    { key: "lang.es", flag: "🇪🇸", name: "Español", descKey: "admin.languages.es_desc" },
-    { key: "lang.ar", flag: "🇵🇸", name: "العربية", descKey: "admin.languages.ar_desc" },
+    { key: "lang.en", lang: "en" as Lang, descKey: "admin.languages.en_desc" },
+    { key: "lang.es", lang: "es" as Lang, descKey: "admin.languages.es_desc" },
+    { key: "lang.ar", lang: "ar" as Lang, descKey: "admin.languages.ar_desc" },
   ];
 
   return (
@@ -1853,7 +1853,7 @@ function IdiomasTab() {
               <div key={language.key} className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-ink)]/10 p-4">
                 <div>
                   <div className="text-sm font-semibold">
-                    {language.flag} {language.name}
+                    {LANG_META[language.lang].flag} {LANG_META[language.lang].name}
                   </div>
                   <div className="text-xs text-[var(--c-ink)]/55">
                     {on ? t(language.descKey) : t("admin.languages.hidden")}
@@ -1900,6 +1900,7 @@ function CafeTab() {
     onSuccess: () => {
       utils.cafe.status.invalidate();
       utils.cafe.list.invalidate();
+      utils.cafe.public.invalidate();
     },
   });
 
@@ -1965,8 +1966,18 @@ function CafeContent() {
   const [note, setNote] = useState("");
   const [notice, setNotice] = useState("");
   const [uploadedFile, setUploadedFile] = useState<{ name: string; mime: string; size: number } | null>(null);
+  const [editLang, setEditLang] = useState<Lang>("pt");
+  const [draftTranslations, setDraftTranslations] = useState<Record<Lang, { title: string; content: string }>>({
+    pt: { title: "", content: "" },
+    en: { title: "", content: "" },
+    es: { title: "", content: "" },
+    ar: { title: "", content: "" },
+  });
 
-  const invalidate = () => utils.cafe.list.invalidate();
+  const invalidate = () => {
+    utils.cafe.list.invalidate();
+    utils.cafe.public.invalidate();
+  };
   const invalidateMedia = () => utils.admin.listMedia.invalidate();
   const uploadMut = trpc.admin.uploadMedia.useMutation({
     onSuccess: (res) => {
@@ -1987,6 +1998,10 @@ function CafeContent() {
   const removeMut = trpc.cafe.remove.useMutation({
     onSuccess: () => { invalidate(); setNotice(t("admin.cafe.deleted")); },
   });
+  const publishMut = trpc.cafe.setPublished.useMutation({
+    onSuccess: () => { invalidate(); setNotice(t("admin.cafe.publish_saved")); },
+    onError: () => setNotice(`${t("admin.error")}: ${t("admin.generic_error")}`),
+  });
 
   const startNew = (t: DraftType) => {
     setType(t);
@@ -1994,6 +2009,13 @@ function CafeContent() {
     setContent("");
     setNote("");
     setUploadedFile(null);
+    setEditLang("pt");
+    setDraftTranslations({
+      pt: { title: "", content: "" },
+      en: { title: "", content: "" },
+      es: { title: "", content: "" },
+      ar: { title: "", content: "" },
+    });
     setEditing("new");
   };
 
@@ -2005,6 +2027,13 @@ function CafeContent() {
     setContent(d.content);
     setNote(d.note ?? "");
     setUploadedFile(null);
+    setEditLang("pt");
+    setDraftTranslations({
+      pt: d.translations?.pt ?? { title: d.title, content: d.content },
+      en: d.translations?.en ?? { title: "", content: "" },
+      es: d.translations?.es ?? { title: "", content: "" },
+      ar: d.translations?.ar ?? { title: "", content: "" },
+    });
     setEditing(id);
   };
 
@@ -2017,7 +2046,11 @@ function CafeContent() {
       setNotice(t("admin.cafe.required"));
       return;
     }
-    const data = { type, title: title.trim(), content: content.trim(), note: note.trim() };
+    const translations = {
+      ...draftTranslations,
+      pt: { title: title.trim(), content: content.trim() },
+    };
+    const data = { type, title: title.trim(), content: content.trim(), note: note.trim(), translations };
     if (editing === "new") createMut.mutate(data);
     else if (typeof editing === "number") updateMut.mutate({ id: editing, data });
   };
@@ -2075,6 +2108,28 @@ function CafeContent() {
     setContent("");
     setUploadedFile(null);
   };
+  const localizedTitle = editLang === "pt" ? title : draftTranslations[editLang].title;
+  const localizedContent = editLang === "pt" ? content : draftTranslations[editLang].content;
+  const setLocalizedTitle = (value: string) => {
+    if (editLang === "pt") {
+      setTitle(value);
+      return;
+    }
+    setDraftTranslations((current) => ({
+      ...current,
+      [editLang]: { ...current[editLang], title: value },
+    }));
+  };
+  const setLocalizedContent = (value: string) => {
+    if (editLang === "pt") {
+      setContent(value);
+      return;
+    }
+    setDraftTranslations((current) => ({
+      ...current,
+      [editLang]: { ...current[editLang], content: value },
+    }));
+  };
 
   return (
     <div className="space-y-6">
@@ -2103,14 +2158,27 @@ function CafeContent() {
             {editing === "new" ? t("admin.cafe.new_draft") : t("admin.cafe.edit_draft")} — {typeLabel(type)}
           </h3>
           <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {LANGS.map((locale) => (
+                <Button
+                  key={locale}
+                  type="button"
+                  size="sm"
+                  variant={editLang === locale ? "default" : "outline"}
+                  onClick={() => setEditLang(locale)}
+                >
+                  {LANG_META[locale].flag} {LANG_META[locale].name}
+                </Button>
+              ))}
+            </div>
             <div>
               <label className="text-xs font-bold uppercase">{t("admin.cafe.title_label")}</label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("admin.cafe.title_placeholder")} />
+              <Input value={localizedTitle} onChange={(e) => setLocalizedTitle(e.target.value)} placeholder={t("admin.cafe.title_placeholder")} />
             </div>
             {type === "text" ? (
               <div>
                 <label className="text-xs font-bold uppercase">{t("admin.cafe.text_label")}</label>
-                <Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} placeholder={t("admin.cafe.text_placeholder")} />
+                <Textarea rows={6} value={localizedContent} onChange={(e) => setLocalizedContent(e.target.value)} placeholder={t("admin.cafe.text_placeholder")} />
               </div>
             ) : (
               <div>
@@ -2246,7 +2314,18 @@ function CafeContent() {
                 {typeLabel(d.type)} · {d.type === "text" ? d.content.slice(0, 80) : d.content}
                 {d.note ? ` · 📝 ${d.note}` : ""}
               </div>
+              <div className={`mt-1 text-[10px] font-bold uppercase tracking-widest ${d.published ? "text-green-700" : "text-[var(--c-ink)]/40"}`}>
+                {d.published ? t("admin.cafe.published") : t("admin.cafe.draft")}
+              </div>
             </div>
+            <Button
+              size="sm"
+              variant={d.published ? "outline" : "default"}
+              disabled={publishMut.isPending}
+              onClick={() => publishMut.mutate({ id: d.id, published: !d.published })}
+            >
+              {d.published ? t("admin.cafe.unpublish") : t("admin.cafe.publish")}
+            </Button>
             <Button size="sm" variant="outline" onClick={() => startEdit(d.id)}>{t("admin.edit")}</Button>
             <Button
               size="sm"

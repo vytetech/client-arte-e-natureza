@@ -4,11 +4,11 @@ import { ADMIN_DICTS } from "@/lib/adminI18n";
 
 export type Lang = "pt" | "en" | "es" | "ar";
 
-export const LANG_META: Record<Lang, { flag: string; name: string; rtl?: boolean }> = {
-  pt: { flag: "🇧🇷", name: "Português (BR)" },
-  en: { flag: "🇮🇪", name: "English (US)" },
-  es: { flag: "🇪🇸", name: "Español" },
-  ar: { flag: "🇵🇸", name: "العربية", rtl: true },
+export const LANG_META: Record<Lang, { code: string; flag: string; name: string; rtl?: boolean }> = {
+  pt: { code: "PT", flag: "🇧🇷", name: "Português" },
+  en: { code: "EN", flag: "🇺🇸", name: "English" },
+  es: { code: "ES", flag: "🇪🇸", name: "Español" },
+  ar: { code: "AR", flag: "🇸🇦", name: "العربية", rtl: true },
 };
 
 type Dict = Record<string, string>;
@@ -20,6 +20,7 @@ const pt: Dict = {
   "nav.galeria": "Galeria",
   "nav.exposicoes": "Exposições",
   "nav.tiradentes": "Tiradentes",
+  "nav.cafe": "Espaço de Café",
   "footer.address": "Estrada de Tiradentes, perto do Museu do Automóvel da Estrada Real",
   "footer.city": "Tiradentes — Minas Gerais — Brasil.",
   "footer.visit": "Ateliê aberto a visitas mediante agendamento.",
@@ -79,6 +80,17 @@ const pt: Dict = {
   "home.image1_alt": "Parede principal do ateliê",
   "home.image2_alt": "Sala com a série de arlequins",
   "home.image3_alt": "Cartão do ateliê — Arte e Natureza",
+
+  "promotion.eyebrow": "Promoção especial",
+  "promotion.title": "Benefícios para compras selecionadas",
+  "promotion.minimum": "Ao adquirir obras a partir de {amount}",
+  "promotion.benefits": "Você recebe:",
+  "promotion.reading": "Sessão de leitura de borra de café",
+  "promotion.work": "Uma obra de arte de até R$ 250,00",
+  "promotion.cta": "Consultar promoção pelo WhatsApp",
+  "promotion.whatsapp_message": "Olá! Gostaria de saber mais sobre a promoção disponível no Atelier Daniel Detomi.",
+  "promotion.available": "Promoção disponível",
+  "promotion.detail": "Compras a partir de {amount} podem incluir benefícios especiais.",
 
   "gca.eyebrow": "O jardim é o museu",
   "gca.title": "Galeria de arte ecológica ao ar livre",
@@ -205,6 +217,16 @@ const pt: Dict = {
   "status.unavailable": "Indisponível",
   "status.unknown": "Status não informado",
 
+  "cafe.eyebrow": "Espaço de Café",
+  "cafe.title": "Rascunhos, imagens e ideias em preparo",
+  "cafe.intro": "Um espaço reservado para registros em construção: textos, fotos e vídeos que acompanham o cotidiano criativo do ateliê.",
+  "cafe.open": "Visitar o Espaço de Café",
+  "cafe.empty": "Nenhum conteúdo publicado no momento.",
+  "cafe.text": "Texto",
+  "cafe.photo": "Foto",
+  "cafe.video": "Vídeo",
+  "cafe.back": "Voltar ao início",
+
   "nf.title": "Página não encontrada",
   "nf.back": "Voltar ao início",
 };
@@ -216,6 +238,7 @@ const en: Dict = {
   "nav.galeria": "Gallery",
   "nav.exposicoes": "Exhibitions",
   "nav.tiradentes": "Tiradentes",
+  "nav.cafe": "Coffee Space",
   "footer.address": "Estrada de Tiradentes, near the Estrada Real Automobile Museum",
   "footer.city": "Tiradentes — Minas Gerais — Brazil.",
   "footer.visit": "Studio open to visits by appointment.",
@@ -275,6 +298,17 @@ const en: Dict = {
   "home.image1_alt": "Main wall of the studio",
   "home.image2_alt": "Room with the harlequin series",
   "home.image3_alt": "Studio card — Art and Nature",
+
+  "promotion.eyebrow": "Special promotion",
+  "promotion.title": "Benefits for selected purchases",
+  "promotion.minimum": "When purchasing works from {amount}",
+  "promotion.benefits": "You receive:",
+  "promotion.reading": "A coffee-grounds reading session",
+  "promotion.work": "An artwork worth up to R$ 250.00",
+  "promotion.cta": "Ask about the promotion on WhatsApp",
+  "promotion.whatsapp_message": "Hello! I would like to know more about the promotion available at Atelier Daniel Detomi.",
+  "promotion.available": "Promotion available",
+  "promotion.detail": "Purchases from {amount} may include special benefits.",
 
   "gca.eyebrow": "The garden is the museum",
   "gca.title": "Open-air ecological art gallery",
@@ -401,6 +435,16 @@ const en: Dict = {
   "status.unavailable": "Unavailable",
   "status.unknown": "Status not provided",
 
+  "cafe.eyebrow": "Coffee Space",
+  "cafe.title": "Drafts, images and ideas in preparation",
+  "cafe.intro": "A reserved space for records in progress: texts, photos and videos that accompany the studio's creative routine.",
+  "cafe.open": "Visit the Coffee Space",
+  "cafe.empty": "No published content at the moment.",
+  "cafe.text": "Text",
+  "cafe.photo": "Photo",
+  "cafe.video": "Video",
+  "cafe.back": "Back to home",
+
   "nf.title": "Page not found",
   "nf.back": "Back to home",
 };
@@ -412,6 +456,7 @@ const es: Dict = {
   "nav.galeria": "Galería",
   "nav.exposicoes": "Exposiciones",
   "nav.tiradentes": "Tiradentes",
+  "nav.cafe": "Espacio de Café",
   "footer.address": "Estrada de Tiradentes, cerca del Museo del Automóvil de la Estrada Real",
   "footer.city": "Tiradentes — Minas Gerais — Brasil.",
   "footer.visit": "Atelier abierto a visitas con cita previa.",
@@ -471,6 +516,17 @@ const es: Dict = {
   "home.image1_alt": "Pared principal del atelier",
   "home.image2_alt": "Sala con la serie de arlequines",
   "home.image3_alt": "Tarjeta del atelier — Arte y Naturaleza",
+
+  "promotion.eyebrow": "Promoción especial",
+  "promotion.title": "Beneficios para compras seleccionadas",
+  "promotion.minimum": "Al adquirir obras a partir de {amount}",
+  "promotion.benefits": "Recibes:",
+  "promotion.reading": "Sesión de lectura de borra de café",
+  "promotion.work": "Una obra de arte de hasta R$ 250,00",
+  "promotion.cta": "Consultar promoción por WhatsApp",
+  "promotion.whatsapp_message": "¡Hola! Me gustaría saber más sobre la promoción disponible en Atelier Daniel Detomi.",
+  "promotion.available": "Promoción disponible",
+  "promotion.detail": "Las compras a partir de {amount} pueden incluir beneficios especiales.",
 
   "gca.eyebrow": "El jardín es el museo",
   "gca.title": "Galería de arte ecológico al aire libre",
@@ -597,6 +653,16 @@ const es: Dict = {
   "status.unavailable": "No disponible",
   "status.unknown": "Estado no informado",
 
+  "cafe.eyebrow": "Espacio de Café",
+  "cafe.title": "Borradores, imágenes e ideas en preparación",
+  "cafe.intro": "Un espacio reservado para registros en construcción: textos, fotos y vídeos que acompañan la rutina creativa del atelier.",
+  "cafe.open": "Visitar el Espacio de Café",
+  "cafe.empty": "No hay contenido publicado en este momento.",
+  "cafe.text": "Texto",
+  "cafe.photo": "Foto",
+  "cafe.video": "Vídeo",
+  "cafe.back": "Volver al inicio",
+
   "nf.title": "Página no encontrada",
   "nf.back": "Volver al inicio",
 };
@@ -608,6 +674,7 @@ const ar: Dict = {
   "nav.galeria": "المعرض",
   "nav.exposicoes": "المعارض",
   "nav.tiradentes": "تيرادنتيس",
+  "nav.cafe": "مساحة القهوة",
   "footer.address": "طريق تيرادنتيس، بالقرب من متحف السيارات إسترادا ريال",
   "footer.city": "تيرادنتيس — ميناس جيرايس — البرازيل.",
   "footer.visit": "المرسم مفتوح للزيارات بموعد مسبق.",
@@ -667,6 +734,17 @@ const ar: Dict = {
   "home.image1_alt": "الجدار الرئيسي في المرسم",
   "home.image2_alt": "غرفة تضم سلسلة الهارلكين",
   "home.image3_alt": "بطاقة المرسم — فن وطبيعة",
+
+  "promotion.eyebrow": "عرض خاص",
+  "promotion.title": "مزايا للمشتريات المختارة",
+  "promotion.minimum": "عند شراء أعمال بقيمة تبدأ من {amount}",
+  "promotion.benefits": "تحصل على:",
+  "promotion.reading": "جلسة قراءة تفل القهوة",
+  "promotion.work": "عمل فني بقيمة حتى R$ 250,00",
+  "promotion.cta": "استفسر عن العرض عبر واتساب",
+  "promotion.whatsapp_message": "مرحبًا! أود معرفة المزيد عن العرض المتاح في مرسم دانيال ديتومي.",
+  "promotion.available": "العرض متاح",
+  "promotion.detail": "قد تشمل المشتريات ابتداءً من {amount} مزايا خاصة.",
 
   "gca.eyebrow": "الحديقة هي المتحف",
   "gca.title": "معرض الفن البيئي في الهواء الطلق",
@@ -792,6 +870,16 @@ const ar: Dict = {
   "status.reserved": "محجوز",
   "status.unavailable": "غير متاح",
   "status.unknown": "الحالة غير مذكورة",
+
+  "cafe.eyebrow": "مساحة القهوة",
+  "cafe.title": "مسودات وصور وأفكار قيد التحضير",
+  "cafe.intro": "مساحة مخصصة لسجلات قيد البناء: نصوص وصور وفيديوهات ترافق روتين المرسم الإبداعي.",
+  "cafe.open": "زيارة مساحة القهوة",
+  "cafe.empty": "لا يوجد محتوى منشور حاليًا.",
+  "cafe.text": "نص",
+  "cafe.photo": "صورة",
+  "cafe.video": "فيديو",
+  "cafe.back": "العودة إلى الرئيسية",
 
   "nf.title": "الصفحة غير موجودة",
   "nf.back": "العودة إلى الرئيسية",

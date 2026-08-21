@@ -6,6 +6,7 @@ import Galeria from './pages/Galeria'
 import ObraDetail from './pages/ObraDetail'
 import Exposicoes from './pages/Exposicoes'
 import Tiradentes from './pages/Tiradentes'
+import Cafe from "./pages/Cafe"
 import Admin from './pages/Admin'
 import Login from "./pages/Login"
 import NotFound from "./pages/NotFound"
@@ -20,6 +21,7 @@ export default function App() {
       <Route path="/obra/:slug" element={<ObraDetail />} />
       <Route path="/exposicoes" element={<Exposicoes />} />
       <Route path="/tiradentes" element={<Tiradentes />} />
+      <Route path="/cafe" element={<Cafe />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/login" element={<Login />} />
       <Route path="*" element={<NotFound />} />
