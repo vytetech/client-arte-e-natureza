@@ -3,8 +3,7 @@ import * as crypto from "crypto";
 import { z } from "zod";
 import { Session } from "@contracts/constants";
 import { getSessionCookieOptions } from "./lib/cookies";
-import { env } from "./lib/env";
-import { signSessionToken } from "./kimi/session";
+import { signSessionToken } from "./lib/session";
 import { upsertUser } from "./queries/users";
 import { createRouter, authedQuery, publicQuery } from "./middleware";
 import { TRPCError } from "@trpc/server";
@@ -44,7 +43,7 @@ export const authRouter = createRouter({
         lastSignInAt: new Date(),
       });
 
-      const token = await signSessionToken({ unionId, clientId: env.appId });
+      const token = await signSessionToken({ unionId });
       const opts = getSessionCookieOptions(ctx.req.headers);
       ctx.resHeaders.append(
         "set-cookie",

@@ -37,7 +37,7 @@ Everything is config-driven via `src/config.ts`. Components read from config and
 
 ## Configuration
 
-All editable content lives in `src/config.ts`. See `info.md` at the outer wrapper level for the full field-by-field documentation.
+All editable content lives in `src/config.ts`.
 
 ## Required Images
 

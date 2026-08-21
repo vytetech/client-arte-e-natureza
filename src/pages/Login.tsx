@@ -5,35 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/providers/trpc";
 
-function getOAuthUrl() {
-  const kimiAuthUrl = import.meta.env.VITE_KIMI_AUTH_URL?.trim();
-  const appID = import.meta.env.VITE_APP_ID?.trim();
-  if (!kimiAuthUrl || !appID) {
-    throw new Error("Login com Kimi não configurado.");
-  }
-
-  const redirectUri = `${window.location.origin}/api/oauth/callback`;
-  const state = btoa(redirectUri);
-
-  const url = new URL("/api/oauth/authorize", kimiAuthUrl);
-  url.searchParams.set("client_id", appID);
-  url.searchParams.set("redirect_uri", redirectUri);
-  url.searchParams.set("response_type", "code");
-  url.searchParams.set("scope", "profile");
-  url.searchParams.set("state", state);
-
-  return url.toString();
-}
-
 export default function Login() {
   const navigate = useNavigate();
   const utils = trpc.useUtils();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const kimiConfigured = Boolean(
-    import.meta.env.VITE_KIMI_AUTH_URL?.trim() && import.meta.env.VITE_APP_ID?.trim(),
-  );
 
   const loginMut = trpc.auth.loginPassword.useMutation({
     onSuccess: async () => {
@@ -86,27 +63,6 @@ export default function Login() {
               {loginMut.isPending ? "Entrando…" : "Entrar"}
             </Button>
           </form>
-
-          <div className="flex items-center gap-3 text-xs text-[var(--c-ink)]/40">
-            <span className="h-px flex-1 bg-[var(--c-ink)]/15" />
-            ou
-            <span className="h-px flex-1 bg-[var(--c-ink)]/15" />
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full"
-            disabled={!kimiConfigured}
-            onClick={() => {
-              try {
-                window.location.href = getOAuthUrl();
-              } catch (error) {
-                setError(error instanceof Error ? error.message : "Login com Kimi indisponível.");
-              }
-            }}
-          >
-            {kimiConfigured ? "Entrar com Kimi" : "Kimi não configurado"}
-          </Button>
         </CardContent>
       </Card>
     </div>
