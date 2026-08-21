@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 import { trpc } from "@/providers/trpc";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,6 +6,7 @@ import { applyTheme, FONT_OPTIONS } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { canonicalStatus, WORK_STATUS_LABELS_PT, WORK_STATUSES } from "@contracts/status";
 
 const CATEGORIES = [
   "Pinturas",
@@ -80,7 +81,7 @@ const emptyWork: WorkForm = {
   title: "",
   category: CATEGORIES[0],
   technique: "",
-  status: "Disponível",
+  status: "available",
   year: "2026",
   price: "Sob consulta",
   image: "",
@@ -520,7 +521,7 @@ function WorksTab() {
       title: w.title,
       category: w.category,
       technique: w.technique,
-      status: w.status,
+      status: canonicalStatus(w.status, "available"),
       year: w.year,
       price: w.price,
       image: w.image,
@@ -545,7 +546,7 @@ function WorksTab() {
       setNotice("Preencha título, slug e imagem.");
       return;
     }
-    const data = { ...form, price };
+    const data = { ...form, price, status: canonicalStatus(form.status, "available") };
     if (editing === "new") createMut.mutate(data);
     else if (typeof editing === "number") updateMut.mutate({ id: editing, data });
   };
@@ -647,9 +648,9 @@ function WorksTab() {
             <div>
               <label className="text-xs font-bold uppercase">Status</label>
               <div className="mt-1 flex gap-2">
-                {(["Disponível", "Vendido"] as const).map((s) => {
-                  const active = form.status.toLowerCase() === s.toLowerCase();
-                  const isSold = s === "Vendido";
+                {WORK_STATUSES.map((s) => {
+                  const active = canonicalStatus(form.status, "available") === s;
+                  const isSold = s === "sold";
                   return (
                     <button
                       key={s}
@@ -664,7 +665,7 @@ function WorksTab() {
                           : "border-[var(--c-ink)]/20 text-[var(--c-ink)]/55 hover:border-[var(--c-dark)]"
                       }`}
                     >
-                      {s}
+                      {WORK_STATUS_LABELS_PT[s]}
                     </button>
                   );
                 })}
@@ -1310,7 +1311,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (value: boolean) => v
 function useSettingsState() {
   const utils = trpc.useUtils();
   const { data: settingsList } = trpc.admin.listSettings.useQuery();
-  const save = trpc.admin.updateSetting.useMutation();
+  const save = trpc.admin.updateSettings.useMutation();
   const [vals, setVals] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
 
@@ -1324,14 +1325,20 @@ function useSettingsState() {
 
   const set = (key: string, value: string) => setVals((current) => ({ ...current, [key]: value }));
 
-  const saveKeys = async (keys: string[], message: string) => {
-    for (const key of keys) {
-      await save.mutateAsync({ key, value: vals[key] ?? "" });
+  const saveKeys = async (keys: string[], message: string, overrides: Record<string, string> = {}) => {
+    try {
+      const values = Object.fromEntries(keys.map((key) => [key, overrides[key] ?? vals[key] ?? ""]));
+      await save.mutateAsync({ values });
+      utils.admin.listSettings.invalidate();
+      utils.content.settings.invalidate();
+      setNotice(message);
+      window.setTimeout(() => setNotice(""), 2500);
+    } catch (error) {
+      const err = error instanceof Error ? error.message : "Erro ao salvar configurações";
+      setNotice(`Erro: ${err}`);
+      window.setTimeout(() => setNotice(""), 4000);
+      throw error;
     }
-    utils.admin.listSettings.invalidate();
-    utils.content.settings.invalidate();
-    setNotice(message);
-    window.setTimeout(() => setNotice(""), 2500);
   };
 
   return { vals, set, saveKeys, notice, saving: save.isPending };
@@ -1350,10 +1357,19 @@ function CouponTab() {
   });
 
   const enabled = (vals["coupon.enabled"] ?? "0") === "1";
+  const noticeIsError = notice.startsWith("Erro:");
+
+  const handleSaveCoupon = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await saveKeys(
+      ["coupon.enabled", "coupon.name", "coupon.percent", "coupon.start", "coupon.end"],
+      "Cupom salvo ✓",
+    ).catch(() => undefined);
+  };
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border-2 border-[var(--c-accent)]/60 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSaveCoupon} className="rounded-xl border-2 border-[var(--c-accent)]/60 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-bold">🎟️ Cupom de desconto</h2>
@@ -1362,75 +1378,71 @@ function CouponTab() {
               das obras escolhidas individualmente.
             </p>
           </div>
-          <Toggle on={enabled} onChange={(value) => set("coupon.enabled", value ? "1" : "0")} />
+          <label className="flex items-center gap-3 rounded-lg border border-[var(--c-ink)]/10 px-3 py-2 text-sm font-semibold">
+            <Toggle on={enabled} onChange={(value) => set("coupon.enabled", value ? "1" : "0")} />
+            Ativar cupom
+          </label>
         </div>
 
-        {enabled && (
-          <div className="mt-5 space-y-4 border-t border-[var(--c-ink)]/10 pt-5">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="text-xs font-bold uppercase">Nome do cupom</label>
-                <Input
-                  value={vals["coupon.name"] ?? ""}
-                  onChange={(event) => set("coupon.name", event.target.value)}
-                  placeholder="Ex.: CAFE10"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold uppercase">Desconto (%)</label>
+        <div className="mt-5 space-y-4 border-t border-[var(--c-ink)]/10 pt-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-bold uppercase">Nome do cupom</label>
+              <Input
+                value={vals["coupon.name"] ?? ""}
+                onChange={(event) => set("coupon.name", event.target.value)}
+                placeholder="Ex.: CAFE10"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase">Percentual de desconto</label>
+              <div className="flex items-center rounded-md border bg-white px-3 focus-within:border-[var(--c-primary)]">
                 <Input
                   type="number"
-                  min={0}
+                  min={1}
                   max={100}
                   value={vals["coupon.percent"] ?? ""}
-                  onChange={(event) => set("coupon.percent", event.target.value.replace(/[^\d]/g, ""))}
-                  placeholder="Ex.: 10"
+                  onChange={(event) => set("coupon.percent", event.target.value.replace(/[^\d.]/g, ""))}
+                  placeholder="10"
+                  className="border-0 px-0 focus-visible:ring-0"
                 />
+                <span className="text-sm font-bold text-[var(--c-ink)]/55">%</span>
               </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="text-xs font-bold uppercase">Início da validade</label>
-                <input
-                  type="date"
-                  value={vals["coupon.start"] ?? ""}
-                  onChange={(event) => set("coupon.start", event.target.value)}
-                  className="w-full rounded-md border px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold uppercase">Fim da validade</label>
-                <input
-                  type="date"
-                  value={vals["coupon.end"] ?? ""}
-                  onChange={(event) => set("coupon.end", event.target.value)}
-                  className="w-full rounded-md border px-3 py-2 text-sm"
-                />
-              </div>
-            </div>
-            <div className="rounded-lg border border-dashed border-[var(--c-accent)]/50 p-3 text-xs text-[var(--c-ink)]/65">
-              🎟️ <strong>Pré-visualização:</strong> {vals["coupon.name"] || "Cupom"}
-              {vals["coupon.percent"] ? ` — ${vals["coupon.percent"]}% de desconto nesta obra` : ""}
             </div>
           </div>
-        )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-bold uppercase">Data inicial</label>
+              <input
+                type="date"
+                value={vals["coupon.start"] ?? ""}
+                onChange={(event) => set("coupon.start", event.target.value)}
+                className="w-full rounded-md border px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase">Data final</label>
+              <input
+                type="date"
+                value={vals["coupon.end"] ?? ""}
+                onChange={(event) => set("coupon.end", event.target.value)}
+                className="w-full rounded-md border px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+          <div className="rounded-lg border border-dashed border-[var(--c-accent)]/50 p-3 text-xs text-[var(--c-ink)]/65">
+            🎟️ <strong>Pré-visualização:</strong> {enabled ? vals["coupon.name"] || "Cupom" : "cupom desativado"}
+            {enabled && vals["coupon.percent"] ? ` — ${vals["coupon.percent"]}% de desconto nesta obra` : ""}
+          </div>
+        </div>
 
         <div className="mt-4 flex items-center gap-3">
-          <Button
-            size="sm"
-            disabled={saving}
-            onClick={() =>
-              saveKeys(
-                ["coupon.enabled", "coupon.name", "coupon.percent", "coupon.start", "coupon.end"],
-                "Cupom salvo ✓",
-              )
-            }
-          >
+          <Button size="sm" type="submit" disabled={saving}>
             {saving ? "Salvando…" : "Salvar cupom"}
           </Button>
-          {notice && <span className="text-xs text-green-700">{notice}</span>}
+          {notice && <span className={`text-xs ${noticeIsError ? "text-red-700" : "text-green-700"}`}>{notice}</span>}
         </div>
-      </div>
+      </form>
 
       {enabled && (
         <div className="space-y-3">
@@ -1475,15 +1487,59 @@ function PromocoesTab() {
   const readingOn = (vals["prize.reading"] ?? "0") === "1";
   const workOn = (vals["prize.work"] ?? "0") === "1";
   const linkOn = (vals["prize.reading.link"] ?? "0") === "1";
+  const [minimumInput, setMinimumInput] = useState("");
+  const noticeIsError = notice.startsWith("Erro:");
+
+  useEffect(() => {
+    const amount = Number(vals["promotion.minimumAmount"] ?? "7000");
+    if (Number.isFinite(amount) && amount > 0) {
+      setMinimumInput(`R$ ${formatBRL(amount)}`);
+    }
+  }, [vals["promotion.minimumAmount"]]);
+
+  const handleSavePromotions = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const amount = parseBRL(minimumInput);
+    if (amount === null || amount <= 0) {
+      await saveKeys(
+        ["promotion.minimumAmount", "prize.reading", "prize.work", "prize.reading.link"],
+        "Promoções salvas ✓",
+        { "promotion.minimumAmount": "0" },
+      ).catch(() => undefined);
+      return;
+    }
+    const normalizedAmount = String(amount);
+    set("promotion.minimumAmount", normalizedAmount);
+    await saveKeys(
+      ["promotion.minimumAmount", "prize.reading", "prize.work", "prize.reading.link"],
+      "Promoções salvas ✓",
+      { "promotion.minimumAmount": normalizedAmount },
+    ).catch(() => undefined);
+    setMinimumInput(`R$ ${formatBRL(amount)}`);
+  };
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-white p-6 shadow-sm">
+      <form onSubmit={handleSavePromotions} className="rounded-xl bg-white p-6 shadow-sm">
         <h2 className="font-bold">🎁 Promoção de compra</h2>
         <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
-          Ao adquirir obras a partir de <strong>R$ 7.000</strong>, o cliente ganha os prêmios
+          Ao adquirir obras a partir de <strong>{minimumInput || "R$ 7.000,00"}</strong>, o cliente ganha os prêmios
           ativados abaixo. O aviso aparece na página de cada obra.
         </p>
+
+        <div className="mt-5 max-w-xs">
+          <label className="text-xs font-bold uppercase">Valor mínimo da compra</label>
+          <Input
+            inputMode="decimal"
+            value={minimumInput}
+            onChange={(event) => setMinimumInput(event.target.value)}
+            onBlur={() => {
+              const amount = parseBRL(minimumInput);
+              if (amount !== null) setMinimumInput(`R$ ${formatBRL(amount)}`);
+            }}
+            placeholder="R$ 7.000,00"
+          />
+        </div>
 
         <div className="mt-5 space-y-3">
           <div className="rounded-lg border border-[var(--c-ink)]/10 p-4">
@@ -1523,16 +1579,12 @@ function PromocoesTab() {
         </div>
 
         <div className="mt-4 flex items-center gap-3">
-          <Button
-            size="sm"
-            disabled={saving}
-            onClick={() => saveKeys(["prize.reading", "prize.work", "prize.reading.link"], "Promoções salvas ✓")}
-          >
+          <Button size="sm" type="submit" disabled={saving}>
             {saving ? "Salvando…" : "Salvar promoções"}
           </Button>
-          {notice && <span className="text-xs text-green-700">{notice}</span>}
+          {notice && <span className={`text-xs ${noticeIsError ? "text-red-700" : "text-green-700"}`}>{notice}</span>}
         </div>
-      </div>
+      </form>
     </div>
   );
 }

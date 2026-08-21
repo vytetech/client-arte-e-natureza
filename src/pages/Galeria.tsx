@@ -3,6 +3,7 @@ import Layout from "@/components/Layout";
 import { trpc } from "@/providers/trpc";
 import { WHATSAPP_URL } from "@/config";
 import { useLang } from "@/lib/i18n";
+import { statusTranslationKey } from "@contracts/status";
 
 const ARTIST_PHOTOS = [
   { src: "/images/bastidores-1.jpg", alt: "Entalhando as asas de madeira de um novo guardião" },
@@ -79,7 +80,7 @@ export default function Galeria() {
               <div className="mt-3 flex items-center justify-between border-t border-[var(--c-ink)]/10 pt-3">
                 <span className="font-display text-lg font-semibold">{w.price}</span>
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--c-ink)]/50">
-                  {t(`status.${w.status}`)}
+                  {t(statusTranslationKey(w.status))}
                 </span>
               </div>
             </Link>

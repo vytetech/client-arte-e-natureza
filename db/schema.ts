@@ -39,7 +39,7 @@ export const works = pgTable("works", {
   title: varchar("title", { length: 255 }).notNull(),
   category: varchar("category", { length: 64 }).notNull(),
   technique: varchar("technique", { length: 255 }).default("").notNull(),
-  status: varchar("status", { length: 64 }).default("DISPONÍVEL").notNull(),
+  status: varchar("status", { length: 64 }).default("available").notNull(),
   year: varchar("year", { length: 16 }).default("2026").notNull(),
   price: varchar("price", { length: 64 }).default("Sob consulta").notNull(),
   couponEnabled: boolean("couponEnabled").default(false).notNull(),

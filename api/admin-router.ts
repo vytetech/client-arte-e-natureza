@@ -6,21 +6,102 @@ import { createRouter, adminQuery } from "./middleware";
 import { TRPCError } from "@trpc/server";
 import { hashPassword, validatePasswordStrength } from "./lib/password";
 import { findUserByEmail, normalizeEmail } from "./queries/users";
+import { normalizeStatus } from "@contracts/status";
 import * as fs from "node:fs";
 import * as path from "node:path";
+
+const workStatusInput = z.string().max(64).default("available").transform((value, ctx) => {
+  const status = normalizeStatus(value);
+  if (!status) {
+    ctx.addIssue({ code: "custom", message: "Status inválido." });
+    return z.NEVER;
+  }
+  return status;
+});
 
 const workInput = z.object({
   slug: z.string().min(1).max(64),
   title: z.string().min(1).max(255),
   category: z.string().min(1).max(64),
   technique: z.string().max(255).default(""),
-  status: z.string().max(64).default("Disponível"),
+  status: workStatusInput,
   year: z.string().max(16).default("2026"),
   price: z.string().max(64).default("Sob consulta"),
   image: z.string().min(1).max(512),
   description: z.string().default(""),
   sortOrder: z.number().int().default(0),
 });
+
+const booleanSettingKeys = new Set([
+  "coupon.enabled",
+  "prize.reading",
+  "prize.work",
+  "prize.reading.link",
+  "shipping.enabled",
+  "shipping.note",
+  "shipping.international",
+  "lang.en",
+  "lang.es",
+  "lang.ar",
+]);
+
+const dateSettingKeys = new Set(["coupon.start", "coupon.end"]);
+
+function assertBadRequest(condition: boolean, message: string) {
+  if (!condition) {
+    throw new TRPCError({ code: "BAD_REQUEST", message });
+  }
+}
+
+function isDateInput(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function normalizeSettingValue(key: string, value: string) {
+  const trimmed = value.trim();
+
+  if (booleanSettingKeys.has(key)) {
+    return trimmed === "1" || trimmed.toLowerCase() === "true" ? "1" : "0";
+  }
+
+  if (key === "coupon.percent") {
+    if (!trimmed) return "";
+    const percent = Number(trimmed);
+    assertBadRequest(Number.isFinite(percent) && percent > 0 && percent <= 100, "Percentual do cupom deve ser maior que 0 e menor ou igual a 100.");
+    return String(percent);
+  }
+
+  if (dateSettingKeys.has(key)) {
+    assertBadRequest(!trimmed || isDateInput(trimmed), "Data do cupom inválida.");
+    return trimmed;
+  }
+
+  if (key === "promotion.minimumAmount") {
+    if (!trimmed) return "";
+    const amount = Number(trimmed);
+    assertBadRequest(Number.isFinite(amount) && amount > 0, "Valor mínimo da promoção deve ser maior que 0.");
+    return String(amount);
+  }
+
+  return value;
+}
+
+function validateCombinedSettings(settings: Record<string, string>, changedKeys: string[]) {
+  const changed = new Set(changedKeys);
+  if (settings["coupon.enabled"] === "1") {
+    const percent = settings["coupon.percent"]?.trim() ?? "";
+    assertBadRequest(!!percent, "Informe o percentual do cupom.");
+    normalizeSettingValue("coupon.percent", percent);
+  }
+
+  if (changed.has("coupon.start") || changed.has("coupon.end") || changed.has("coupon.enabled")) {
+    const start = settings["coupon.start"]?.trim() ?? "";
+    const end = settings["coupon.end"]?.trim() ?? "";
+    assertBadRequest(!start || isDateInput(start), "Data inicial do cupom inválida.");
+    assertBadRequest(!end || isDateInput(end), "Data final do cupom inválida.");
+    assertBadRequest(!start || !end || end >= start, "Data final do cupom não pode ser anterior à data inicial.");
+  }
+}
 
 const userRoleInput = z.enum(["admin"]);
 
@@ -331,13 +412,40 @@ export const adminRouter = createRouter({
   updateSetting: adminQuery
     .input(z.object({ key: z.string().min(1).max(128), value: z.string() }))
     .mutation(async ({ input }) => {
+      const value = normalizeSettingValue(input.key, input.value);
+      const currentRows = await getDb().select().from(schema.settings);
+      const current = Object.fromEntries(currentRows.map((setting) => [setting.key, setting.value]));
+      validateCombinedSettings({ ...current, [input.key]: value }, [input.key]);
+
       await getDb()
         .insert(schema.settings)
-        .values({ key: input.key, value: input.value })
+        .values({ key: input.key, value })
         .onConflictDoUpdate({
           target: schema.settings.key,
-          set: { value: input.value },
+          set: { value },
         });
+      return { success: true };
+    }),
+
+  updateSettings: adminQuery
+    .input(z.object({ values: z.record(z.string().min(1).max(128), z.string()) }))
+    .mutation(async ({ input }) => {
+      const normalized = Object.fromEntries(
+        Object.entries(input.values).map(([key, value]) => [key, normalizeSettingValue(key, value)]),
+      );
+      const currentRows = await getDb().select().from(schema.settings);
+      const current = Object.fromEntries(currentRows.map((setting) => [setting.key, setting.value]));
+      validateCombinedSettings({ ...current, ...normalized }, Object.keys(normalized));
+
+      for (const [key, value] of Object.entries(normalized)) {
+        await getDb()
+          .insert(schema.settings)
+          .values({ key, value })
+          .onConflictDoUpdate({
+            target: schema.settings.key,
+            set: { value },
+          });
+      }
       return { success: true };
     }),
 });

@@ -4,8 +4,28 @@ import { trpc } from "@/providers/trpc";
 import { useSettings } from "@/hooks/useTheme";
 import { useLang } from "@/lib/i18n";
 import { WHATSAPP_URL } from "@/config";
+import { statusTranslationKey } from "@contracts/status";
 
 const READING_SITE = "https://www.leituradaborradecafe.com";
+
+function parseDateOnly(value: string, endOfDay = false) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day, endOfDay ? 23 : 0, endOfDay ? 59 : 0, endOfDay ? 59 : 0);
+}
+
+function isCurrentDateInRange(start: string, end: string) {
+  const now = new Date();
+  const startDate = parseDateOnly(start);
+  const endDate = parseDateOnly(end, true);
+  return (!startDate || now >= startDate) && (!endDate || now <= endDate);
+}
+
+function formatBRL(value: string) {
+  const amount = Number(value);
+  const safeAmount = Number.isFinite(amount) && amount > 0 ? amount : 7000;
+  return `R$ ${safeAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
 export default function ObraDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -20,10 +40,11 @@ export default function ObraDetail() {
   const couponOn = s("coupon.enabled", "0") === "1";
   const couponName = s("coupon.name", "Cupom");
   const couponPct = s("coupon.percent", "");
-  const showCoupon = couponOn && !!work?.couponEnabled;
-  const promoRead = visible("prize.reading");
-  const promoWork = visible("prize.work");
+  const showCoupon = couponOn && !!work?.couponEnabled && isCurrentDateInRange(s("coupon.start", ""), s("coupon.end", ""));
+  const promoRead = s("prize.reading", "0") === "1";
+  const promoWork = s("prize.work", "0") === "1";
   const readingLink = s("prize.reading.link", "0") === "1";
+  const promotionMinimum = formatBRL(s("promotion.minimumAmount", "7000"));
 
   const waLink = work
     ? `${WHATSAPP_URL}?text=${encodeURIComponent(`Olá! Tenho interesse na obra "${work.title}" (${work.category}).`)}`
@@ -60,7 +81,7 @@ export default function ObraDetail() {
                 <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.artista")}</dt><dd>Daniel Detomi</dd></div>
                 <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.tecnica")}</dt><dd>{work.technique}</dd></div>
                 <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.ano")}</dt><dd>{work.year}</dd></div>
-                <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.situacao")}</dt><dd>{t(`status.${work.status}`)}</dd></div>
+                <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.situacao")}</dt><dd>{t(statusTranslationKey(work.status))}</dd></div>
               </dl>
               <div className="mt-7 border-l-2 border-[var(--c-primary)] pl-5">
                 <div className="eyebrow text-[var(--c-ink)]/50" style={{ fontSize: "0.55rem" }}>{t("od.preco")}</div>
@@ -79,7 +100,7 @@ export default function ObraDetail() {
               {(promoRead || promoWork) && (
                 <div className="mt-4 rounded-lg border border-[var(--c-accent)]/50 bg-[#fff8ec] px-4 py-3">
                   <div className="text-sm font-semibold text-[var(--c-ink)]">
-                    {t("od.promo_title")}
+                    {t("od.promo_title_prefix")} {promotionMinimum} {t("od.promo_title_suffix")}
                   </div>
                   <ul className="mt-1.5 space-y-1 text-sm text-[var(--c-ink)]/75">
                     {promoRead && <li>{t("od.prize_reading")}</li>}
