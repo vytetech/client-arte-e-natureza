@@ -4,7 +4,7 @@ import FloatingContact from "./FloatingContact";
 import AmbientAudio from "./AmbientAudio";
 import { useTheme } from "@/hooks/useTheme";
 import { useWhatsApp } from "@/hooks/useWhatsApp";
-import { useLang, LANG_META, type Lang } from "@/lib/i18n";
+import { useLang, type Lang } from "@/lib/i18n";
 import { INSTAGRAM_URL } from "@/config";
 import { trpc } from "@/providers/trpc";
 
@@ -16,6 +16,13 @@ const NAV = [
   { to: "/exposicoes", key: "nav.exposicoes" },
   { to: "/tiradentes", key: "nav.tiradentes" },
 ];
+
+const LANGUAGE_LABELS: Record<Lang, string> = {
+  pt: "Português",
+  en: "English",
+  es: "Español",
+  ar: "ar",
+};
 
 function LogoMark({ className = "h-8" }: { className?: string }) {
   return (
@@ -58,7 +65,7 @@ function LanguageSwitcher() {
         🌐
       </button>
       {open && (
-        <div className="absolute end-0 top-11 z-50 w-56 overflow-hidden rounded-lg border border-[var(--c-ink)]/10 bg-[var(--c-bg)] text-[var(--c-ink)] shadow-xl">
+        <div className="absolute end-0 top-11 z-50 w-44 overflow-hidden rounded-lg border border-[var(--c-ink)]/10 bg-[var(--c-bg)] text-[var(--c-ink)] shadow-xl">
           {enabled.map((l: Lang) => (
             <button
               key={l}
@@ -70,12 +77,8 @@ function LanguageSwitcher() {
                 l === lang ? "bg-[var(--c-sand)] font-semibold text-[var(--c-primary)]" : "text-[var(--c-ink)]/75"
               }`}
             >
-              <span className="text-lg leading-none">{LANG_META[l].flag}</span>
-              <span className="w-7 shrink-0 font-mono text-[11px] font-bold tracking-widest text-[var(--c-ink)]/45">
-                {LANG_META[l].code}
-              </span>
               <span dir="auto" className="min-w-0 flex-1 truncate">
-                {LANG_META[l].name}
+                {LANGUAGE_LABELS[l]}
               </span>
               {l === lang && <span className="ms-auto text-sm font-bold text-[var(--c-primary)]">✓</span>}
             </button>
