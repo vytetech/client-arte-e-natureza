@@ -59,7 +59,13 @@ async function run() {
   }
   console.log("Updated", Object.keys(updates).length, "work images.");
   for (const w of newWorks) {
-    await db.insert(works).values(w).onDuplicateKeyUpdate({ set: { image: w.image } });
+    await db
+      .insert(works)
+      .values(w)
+      .onConflictDoUpdate({
+        target: works.slug,
+        set: { image: w.image },
+      });
   }
   console.log("Inserted new works:", newWorks.map((w) => w.slug).join(", "));
   process.exit(0);

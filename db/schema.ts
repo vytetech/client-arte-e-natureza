@@ -1,22 +1,24 @@
 import {
-  mysqlTable,
-  mysqlEnum,
+  pgTable,
+  pgEnum,
   serial,
   varchar,
   text,
   timestamp,
-  int,
+  integer,
   customType,
-  // bigint,
-} from "drizzle-orm/mysql-core";
+} from "drizzle-orm/pg-core";
 
-export const users = mysqlTable("users", {
+export const userRole = pgEnum("role", ["user", "admin"]);
+export const draftType = pgEnum("draft_type", ["text", "image", "video"]);
+
+export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   unionId: varchar("unionId", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 320 }),
   avatar: text("avatar"),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: userRole("role").default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
     .defaultNow()
@@ -28,7 +30,7 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-export const works = mysqlTable("works", {
+export const works = pgTable("works", {
   id: serial("id").primaryKey(),
   slug: varchar("slug", { length: 64 }).notNull().unique(),
   title: varchar("title", { length: 255 }).notNull(),
@@ -39,7 +41,7 @@ export const works = mysqlTable("works", {
   price: varchar("price", { length: 64 }).default("Sob consulta").notNull(),
   image: varchar("image", { length: 512 }).notNull(),
   description: text("description"),
-  sortOrder: int("sortOrder").default(0).notNull(),
+  sortOrder: integer("sortOrder").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
     .defaultNow()
@@ -50,7 +52,7 @@ export const works = mysqlTable("works", {
 export type Work = typeof works.$inferSelect;
 export type InsertWork = typeof works.$inferInsert;
 
-export const siteTexts = mysqlTable("site_texts", {
+export const siteTexts = pgTable("site_texts", {
   id: serial("id").primaryKey(),
   key: varchar("key", { length: 128 }).notNull().unique(),
   label: varchar("label", { length: 255 }).notNull(),
@@ -59,26 +61,26 @@ export const siteTexts = mysqlTable("site_texts", {
 
 export type SiteText = typeof siteTexts.$inferSelect;
 
-const longblob = customType<{ data: Buffer; driverData: Buffer }>({
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
   dataType() {
-    return "longblob";
+    return "bytea";
   },
 });
 
-export const media = mysqlTable("media", {
+export const media = pgTable("media", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   mime: varchar("mime", { length: 100 }).notNull(),
-  size: int("size").notNull(),
-  data: longblob("data").notNull(),
+  size: integer("size").notNull(),
+  data: bytea("data").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 export type Media = typeof media.$inferSelect;
 
-export const drafts = mysqlTable("drafts", {
+export const drafts = pgTable("drafts", {
   id: serial("id").primaryKey(),
-  type: mysqlEnum("type", ["text", "image", "video"]).notNull(),
+  type: draftType("type").notNull(),
   title: varchar("title", { length: 255 }).default("").notNull(),
   content: text("content").notNull(), // texto livre ou URL da mídia (/api/media/:id)
   note: text("note"),
@@ -91,21 +93,10 @@ export const drafts = mysqlTable("drafts", {
 
 export type Draft = typeof drafts.$inferSelect;
 
-export const settings = mysqlTable("settings", {
+export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),
   key: varchar("key", { length: 128 }).notNull().unique(),
   value: text("value").notNull(),
 });
 
 export type Setting = typeof settings.$inferSelect;
-//
-// Example:
-// export const posts = mysqlTable("posts", {
-//   id: serial("id").primaryKey(),
-//   title: varchar("title", { length: 255 }).notNull(),
-//   content: text("content"),
-//   createdAt: timestamp("created_at").notNull().defaultNow(),
-// });
-//
-// Note: FK columns referencing a serial() PK must use:
-//   bigint("columnName", { mode: "number", unsigned: true }).notNull()

@@ -95,7 +95,10 @@ async function seed() {
     await db
       .insert(schema.siteTexts)
       .values(t)
-      .onDuplicateKeyUpdate({ set: { label: t.label } });
+      .onConflictDoUpdate({
+        target: schema.siteTexts.key,
+        set: { label: t.label },
+      });
   }
   console.log(`Upserted ${texts.length} site texts.`);
 

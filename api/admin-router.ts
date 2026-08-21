@@ -122,8 +122,8 @@ export const adminRouter = createRouter({
         mime: input.mime,
         size: buf.length,
         data: buf,
-      });
-      const id = Number(result[0].insertId);
+      }).returning({ id: schema.media.id });
+      const id = result[0].id;
       return { success: true, id, url: `/api/media/${id}` };
     }),
 
@@ -153,7 +153,10 @@ export const adminRouter = createRouter({
       await getDb()
         .insert(schema.settings)
         .values({ key: input.key, value: input.value })
-        .onDuplicateKeyUpdate({ set: { value: input.value } });
+        .onConflictDoUpdate({
+          target: schema.settings.key,
+          set: { value: input.value },
+        });
       return { success: true };
     }),
 });

@@ -42,7 +42,10 @@ export const cafeRouter = createRouter({
       await getDb()
         .insert(schema.settings)
         .values({ key: TOGGLE_KEY, value: input.enabled ? "1" : "0" })
-        .onDuplicateKeyUpdate({ set: { value: input.enabled ? "1" : "0" } });
+        .onConflictDoUpdate({
+          target: schema.settings.key,
+          set: { value: input.enabled ? "1" : "0" },
+        });
       return { success: true, enabled: input.enabled };
     }),
 
@@ -54,8 +57,11 @@ export const cafeRouter = createRouter({
 
   create: adminQuery.input(draftInput).mutation(async ({ input }) => {
     await requireEnabled();
-    const result = await getDb().insert(schema.drafts).values(input);
-    return { success: true, id: Number(result[0].insertId) };
+    const result = await getDb()
+      .insert(schema.drafts)
+      .values(input)
+      .returning({ id: schema.drafts.id });
+    return { success: true, id: result[0].id };
   }),
 
   update: adminQuery
