@@ -16,6 +16,7 @@ export const draftType = pgEnum("draft_type", ["text", "image", "video"]);
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   unionId: varchar("unionId", { length: 255 }).notNull().unique(),
+  username: varchar("username", { length: 64 }).notNull().unique(),
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 320 }).unique(),
   avatar: text("avatar"),

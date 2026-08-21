@@ -5,7 +5,7 @@ import { getDb } from "./queries/connection";
 import { createRouter, adminQuery } from "./middleware";
 import { TRPCError } from "@trpc/server";
 import { hashPassword, validatePasswordStrength } from "./lib/password";
-import { findUserByEmail, normalizeEmail } from "./queries/users";
+import { findUserByUsername, isValidUsername, normalizeUsername } from "./queries/users";
 import { normalizeStatus } from "@contracts/status";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -107,7 +107,7 @@ const userRoleInput = z.enum(["admin"]);
 
 const userCreateInput = z.object({
   name: z.string().trim().min(1, "Nome é obrigatório.").max(255),
-  email: z.string().trim().email("E-mail inválido.").max(320),
+  username: z.string().trim().min(3, "Usuário deve ter ao menos 3 caracteres.").max(64),
   password: z.string().min(1),
   role: userRoleInput.default("admin"),
 });
@@ -115,13 +115,14 @@ const userCreateInput = z.object({
 const userUpdateInput = z.object({
   id: z.number().int().positive(),
   name: z.string().trim().min(1, "Nome é obrigatório.").max(255),
-  email: z.string().trim().email("E-mail inválido.").max(320),
+  username: z.string().trim().min(3, "Usuário deve ter ao menos 3 caracteres.").max(64),
   isActive: z.boolean(),
 });
 
 const userSafeFields = {
   id: schema.users.id,
   name: schema.users.name,
+  username: schema.users.username,
   email: schema.users.email,
   role: schema.users.role,
   isActive: schema.users.isActive,
@@ -130,18 +131,29 @@ const userSafeFields = {
   lastSignInAt: schema.users.lastSignInAt,
 };
 
-function emailUnionId(email: string) {
-  return `email:${email}`;
+function usernameUnionId(username: string) {
+  return `username:${username}`;
 }
 
-async function ensureEmailAvailable(email: string, exceptUserId?: number) {
-  const existing = await findUserByEmail(email);
+async function ensureUsernameAvailable(username: string, exceptUserId?: number) {
+  const existing = await findUserByUsername(username);
   if (existing && existing.id !== exceptUserId) {
     throw new TRPCError({
       code: "CONFLICT",
-      message: "Este e-mail já está cadastrado.",
+      message: "Este usuário já está cadastrado.",
     });
   }
+}
+
+function parseUsername(username: string) {
+  const normalized = normalizeUsername(username);
+  if (!isValidUsername(normalized)) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Usuário deve ter 3 a 64 caracteres e usar apenas letras, números, ponto, hífen ou underline.",
+    });
+  }
+  return normalized;
 }
 
 async function countOtherActiveAdmins(userId: number) {
@@ -180,20 +192,20 @@ export const adminRouter = createRouter({
     getDb()
       .select(userSafeFields)
       .from(schema.users)
-      .orderBy(asc(schema.users.name), asc(schema.users.email)),
+      .orderBy(asc(schema.users.name), asc(schema.users.username)),
   ),
 
   createUser: adminQuery.input(userCreateInput).mutation(async ({ input }) => {
-    const email = normalizeEmail(input.email);
+    const username = parseUsername(input.username);
     assertValidPassword(input.password);
-    await ensureEmailAvailable(email);
+    await ensureUsernameAvailable(username);
 
     const rows = await getDb()
       .insert(schema.users)
       .values({
-        unionId: emailUnionId(email),
+        unionId: usernameUnionId(username),
         name: input.name,
-        email,
+        username,
         role: input.role,
         isActive: true,
         passwordHash: hashPassword(input.password),
@@ -204,7 +216,7 @@ export const adminRouter = createRouter({
   }),
 
   updateUser: adminQuery.input(userUpdateInput).mutation(async ({ input }) => {
-    const email = normalizeEmail(input.email);
+    const username = parseUsername(input.username);
     const rows = await getDb()
       .select()
       .from(schema.users)
@@ -218,14 +230,13 @@ export const adminRouter = createRouter({
     if (user.role === "admin" && user.isActive && !input.isActive) {
       await assertCanDisableOrDeleteAdmin(user.id);
     }
-    await ensureEmailAvailable(email, user.id);
+    await ensureUsernameAvailable(username, user.id);
 
     const updated = await getDb()
       .update(schema.users)
       .set({
         name: input.name,
-        email,
-        unionId: emailUnionId(email),
+        username,
         isActive: input.isActive,
       })
       .where(eq(schema.users.id, input.id))

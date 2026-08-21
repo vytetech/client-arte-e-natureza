@@ -4,7 +4,7 @@ import { Session } from "@contracts/constants";
 import { getSessionCookieOptions } from "./lib/cookies";
 import { signSessionToken } from "./lib/session";
 import { verifyPassword } from "./lib/password";
-import { findUserByEmail, normalizeEmail } from "./queries/users";
+import { findUserByUsername, normalizeUsername } from "./queries/users";
 import { createRouter, authedQuery, publicQuery } from "./middleware";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
@@ -17,8 +17,8 @@ export const authRouter = createRouter({
   loginPassword: publicQuery
     .input(z.object({ username: z.string().min(1), password: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const email = normalizeEmail(input.username);
-      const user = await findUserByEmail(email);
+      const username = normalizeUsername(input.username);
+      const user = await findUserByUsername(username);
       const okPass = verifyPassword(input.password, user?.passwordHash);
       if (!user || user.role !== "admin" || !user.isActive || !okPass) {
         throw new TRPCError({

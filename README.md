@@ -112,10 +112,10 @@ DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE
 | Variável | Uso |
 | --- | --- |
 | `ADMIN_NAME` | Nome do primeiro administrador. |
-| `ADMIN_EMAIL` | E-mail do primeiro administrador. |
+| `ADMIN_USERNAME` | Nome de usuário do primeiro administrador. |
 | `ADMIN_PASSWORD` | Senha inicial do primeiro administrador. |
 
-`ADMIN_NAME`, `ADMIN_EMAIL` e `ADMIN_PASSWORD` devem ser removidas do ambiente de produção após a criação do primeiro administrador.
+`ADMIN_NAME`, `ADMIN_USERNAME` e `ADMIN_PASSWORD` devem ser removidas do ambiente de produção após a criação do primeiro administrador.
 
 ## Instalação Local
 
@@ -140,14 +140,14 @@ npm run db:seed
 Criar o primeiro administrador:
 
 ```bash
-ADMIN_NAME="Administrador" ADMIN_EMAIL="admin@example.com" ADMIN_PASSWORD="senha-forte" npm run admin:create
+ADMIN_NAME="Administrador" ADMIN_USERNAME="admin" ADMIN_PASSWORD="senha-forte" npm run admin:create
 ```
 
 No Windows PowerShell:
 
 ```powershell
 $env:ADMIN_NAME="Administrador"
-$env:ADMIN_EMAIL="admin@example.com"
+$env:ADMIN_USERNAME="admin"
 $env:ADMIN_PASSWORD="senha-forte"
 npm run admin:create
 ```
@@ -214,7 +214,7 @@ O login administrativo é próprio da aplicação.
 Fluxo:
 
 1. Administrador acessa `/login`.
-2. Backend valida e-mail e senha.
+2. Backend valida nome de usuário e senha.
 3. Senha é comparada com `passwordHash`.
 4. Sessão é criada no backend.
 5. Cookie HttpOnly é enviado ao navegador.
@@ -232,7 +232,7 @@ Para banco vazio, configure temporariamente:
 
 ```env
 ADMIN_NAME=
-ADMIN_EMAIL=
+ADMIN_USERNAME=
 ADMIN_PASSWORD=
 ```
 
@@ -244,8 +244,8 @@ npm run admin:create
 
 O comando é idempotente:
 
-- se o e-mail não existir, cria o administrador;
-- se o e-mail já existir, não duplica e finaliza com sucesso.
+- se o usuário não existir, cria o administrador;
+- se o usuário já existir, não duplica e finaliza com sucesso.
 
 Remova as variáveis temporárias após a criação do primeiro administrador.
 

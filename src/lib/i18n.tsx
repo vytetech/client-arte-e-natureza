@@ -26,8 +26,28 @@ const pt: Dict = {
   "footer.nav": "Navegação",
   "footer.contact": "Contato",
   "footer.copy": "© 2026 Atelier Daniel Detomi — Feito com reúso, luz e gesto",
+  "footer.developed_by": "Desenvolvido por",
+
+  "login.title": "Área do Administrador",
+  "login.subtitle": "Atelier Daniel Detomi — Arte e Natureza",
+  "login.username": "Usuário",
+  "login.username_placeholder": "admin",
+  "login.password": "Senha",
+  "login.password_placeholder": "Senha",
+  "login.submit": "Entrar",
+  "login.submitting": "Entrando…",
+  "login.error": "Usuário ou senha incorretos.",
+
+  "category.pinturas": "Pinturas",
+  "category.esculturas": "Esculturas",
+  "category.ceu_aberto": "Galeria a Céu Aberto",
+  "category.circo": "Circo & Forma",
+  "category.recortes": "Recortes",
+  "category.ambiental": "Arte Ambiental",
 
   "home.hero_eyebrow": "Tiradentes — Minas Gerais",
+  "home.hero_title_fallback": "ATELIER DANIEL DETOMI",
+  "home.hero_subtitle_fallback": "Arte e Natureza",
   "home.cta_works": "Ver as Obras",
   "home.cta_visit": "Agendar Visita",
   "home.manifesto_eyebrow": "Arte e Natureza",
@@ -42,6 +62,15 @@ const pt: Dict = {
   "home.destino_cta": "Agendar visita pelo WhatsApp",
   "home.imagens_eyebrow": "Visite",
   "home.imagens_title": "O ateliê em imagens",
+  "home.hero_alt": "Tiradentes vista por Daniel Detomi",
+  "home.painting_alt": "Pintura",
+  "home.sculpture_alt": "Escultura",
+  "home.alterego_alt": "Circo e forma",
+  "home.sign_alt": "Placa do ateliê na estrada de Tiradentes",
+  "home.image0_alt": "Segunda placa na estrada, sentido ateliê",
+  "home.image1_alt": "Parede principal do ateliê",
+  "home.image2_alt": "Sala com a série de arlequins",
+  "home.image3_alt": "Cartão do ateliê — Arte e Natureza",
 
   "gca.eyebrow": "O jardim é o museu",
   "gca.title": "Galeria de arte ecológica ao ar livre",
@@ -85,9 +114,22 @@ const pt: Dict = {
   "gal.cta_title": "Gostou de alguma obra?",
   "gal.cta_text": "Cada peça é única. Fale diretamente com o artista para preços, encomendas e visitas ao ateliê.",
   "gal.cta_btn": "Falar no WhatsApp",
+  "gal.bast0": "Entalhando as asas de madeira de um novo guardião",
+  "gal.bast1": "Maritacas em processo de pintura sobre a mesa de trabalho",
+  "gal.bast2": "Veado embalado para entrega — encomendas para todo o Brasil",
+  "gal.bast3": "Araras recém-pintadas secando sobre a bancada",
+  "gal.amb0": "A sala do ateliê com a série de arlequins na parede",
+  "gal.amb1": "Araras de parede ambientadas junto à pintura do Cupido",
+  "gal.amb2": "Painéis da série circo compostos em conjunto",
 
   "artista.eyebrow": "O Artista",
+  "artista.quote_fallback": "Do descarte nasce a obra.",
+  "artista.interior_alt": "Interior do ateliê",
   "artista.cap_interior": "O interior do ateliê em Tiradentes: pinturas, esculturas e recortes dividem as paredes.",
+  "artista.photo0": "Com o alter-ego Guardião — papel machê e cocar de varetas pintadas",
+  "artista.photo1": "Na abertura da exposição, ao lado do painel biográfico",
+  "artista.photo2": "Com o dálmata da série xadrez, no ateliê",
+  "artista.photo3": "Pintando os recortes de maritacas, fio a fio",
 
   "expo.eyebrow": "Mostras",
   "expo.badge": "Exposição",
@@ -95,9 +137,19 @@ const pt: Dict = {
   "expo.reg_title": "As mostras, em cena",
   "expo.cta_title": "Quer receber as novidades das próximas exposições?",
   "expo.cta_btn": "Falar com o ateliê",
+  "expo.title_fallback": "Exposições",
+  "expo.banner_recortes_alt": "Banner da exposição Recortes do Cerrado",
+  "expo.banner_terra_alt": "Cartaz da exposição Terra Brasilis",
+  "expo.photo0": "Painel da exposição Terra Brasilis montado na parede",
+  "expo.photo1": "O artista na abertura, junto ao painel biográfico",
+  "expo.photo2": "Série circo exposta na sala do ateliê",
 
   "tir.eyebrow": "A cidade",
   "tir.cta": "Agendar visita ao ateliê",
+  "tir.title_fallback": "Tiradentes — Minas Gerais",
+  "tir.hero_alt": "Tiradentes, Minas Gerais",
+  "tir.sign_alt": "Placa do ateliê na estrada",
+  "tir.garden_alt": "Esculturas no jardim do ateliê",
   "tir.cap1": "A placa na estrada indica o caminho — siga a seta vermelha.",
   "tir.cap2": "Os Originários: rostos monumentais no jardim do ateliê, com a mata ao fundo.",
 
@@ -107,11 +159,13 @@ const pt: Dict = {
   "map.info_text": "O ateliê fica na estrada de Tiradentes, a poucos minutos do Museu do Automóvel da Estrada Real. Siga as placas com a seta vermelha e o símbolo do ateliê.",
   "map.coords": "Coordenadas",
   "map.city": "Cidade",
+  "map.city_val": "Tiradentes — Minas Gerais — Brasil",
   "map.visits": "Visitas",
   "map.visits_val": "Mediante agendamento pelo WhatsApp",
   "map.route": "Traçar rota no Google Maps",
   "map.visit": "Agendar visita",
   "map.open": "Abrir no Google Maps",
+  "map.iframe_title": "Mapa — Atelier Daniel Detomi, Tiradentes MG",
   "map.note": "A placa na beira da estrada indica a entrada — siga a seta vermelha. Coordenadas: -21.095564, -44.132506.",
 
   "od.back": "← Voltar à Galeria",
@@ -135,6 +189,7 @@ const pt: Dict = {
   "od.shipping_note": "(Observação: o comprador paga o frete)",
   "od.shipping_intl": "Envio internacional disponível — consulte condições.",
   "od.whatsapp": "Consultar pelo WhatsApp",
+  "od.whatsapp_message": "Olá! Tenho interesse na obra",
   "status.available": "Disponível",
   "status.sold": "Vendido",
   "status.reserved": "Reservado",
@@ -159,8 +214,28 @@ const en: Dict = {
   "footer.nav": "Navigation",
   "footer.contact": "Contact",
   "footer.copy": "© 2026 Atelier Daniel Detomi — Made with reuse, light and gesture",
+  "footer.developed_by": "Developed by",
+
+  "login.title": "Administrator Area",
+  "login.subtitle": "Atelier Daniel Detomi — Art and Nature",
+  "login.username": "Username",
+  "login.username_placeholder": "admin",
+  "login.password": "Password",
+  "login.password_placeholder": "Password",
+  "login.submit": "Sign in",
+  "login.submitting": "Signing in…",
+  "login.error": "Incorrect username or password.",
+
+  "category.pinturas": "Paintings",
+  "category.esculturas": "Sculptures",
+  "category.ceu_aberto": "Open-Air Gallery",
+  "category.circo": "Circus & Form",
+  "category.recortes": "Cut-Outs",
+  "category.ambiental": "Environmental Art",
 
   "home.hero_eyebrow": "Tiradentes — Minas Gerais",
+  "home.hero_title_fallback": "ATELIER DANIEL DETOMI",
+  "home.hero_subtitle_fallback": "Art and Nature",
   "home.cta_works": "View the Works",
   "home.cta_visit": "Book a Visit",
   "home.manifesto_eyebrow": "Art and Nature",
@@ -175,6 +250,15 @@ const en: Dict = {
   "home.destino_cta": "Book a visit via WhatsApp",
   "home.imagens_eyebrow": "Visit",
   "home.imagens_title": "The studio in pictures",
+  "home.hero_alt": "Tiradentes seen by Daniel Detomi",
+  "home.painting_alt": "Painting",
+  "home.sculpture_alt": "Sculpture",
+  "home.alterego_alt": "Circus and form",
+  "home.sign_alt": "Studio sign on the road to Tiradentes",
+  "home.image0_alt": "Second road sign pointing to the studio",
+  "home.image1_alt": "Main wall of the studio",
+  "home.image2_alt": "Room with the harlequin series",
+  "home.image3_alt": "Studio card — Art and Nature",
 
   "gca.eyebrow": "The garden is the museum",
   "gca.title": "Open-air ecological art gallery",
@@ -218,9 +302,22 @@ const en: Dict = {
   "gal.cta_title": "Liked any of the works?",
   "gal.cta_text": "Each piece is unique. Talk directly with the artist for prices, commissions and studio visits.",
   "gal.cta_btn": "Talk on WhatsApp",
+  "gal.bast0": "Carving the wooden wings of a new guardian",
+  "gal.bast1": "Parakeets being painted on the work table",
+  "gal.bast2": "Deer packed for delivery — commissions throughout Brazil",
+  "gal.bast3": "Freshly painted macaws drying on the workbench",
+  "gal.amb0": "The studio room with the harlequin series on the wall",
+  "gal.amb1": "Wall macaws arranged beside the Cupid painting",
+  "gal.amb2": "Circus-series panels arranged together",
 
   "artista.eyebrow": "The Artist",
+  "artista.quote_fallback": "From discard, the work is born.",
+  "artista.interior_alt": "Studio interior",
   "artista.cap_interior": "Inside the studio in Tiradentes: paintings, sculptures and cut-outs share the walls.",
+  "artista.photo0": "With the Guardian alter ego — papier-mâché and a headdress of painted rods",
+  "artista.photo1": "At the exhibition opening, beside the biographical panel",
+  "artista.photo2": "With the dalmatian from the chessboard series, in the studio",
+  "artista.photo3": "Painting the parakeet cut-outs, line by line",
 
   "expo.eyebrow": "Shows",
   "expo.badge": "Exhibition",
@@ -228,9 +325,19 @@ const en: Dict = {
   "expo.reg_title": "The shows, on stage",
   "expo.cta_title": "Want to receive news about upcoming exhibitions?",
   "expo.cta_btn": "Talk to the studio",
+  "expo.title_fallback": "Exhibitions",
+  "expo.banner_recortes_alt": "Recortes do Cerrado exhibition banner",
+  "expo.banner_terra_alt": "Terra Brasilis exhibition poster",
+  "expo.photo0": "Terra Brasilis exhibition panel installed on the wall",
+  "expo.photo1": "The artist at the opening, beside the biographical panel",
+  "expo.photo2": "Circus series exhibited in the studio room",
 
   "tir.eyebrow": "The town",
   "tir.cta": "Book a studio visit",
+  "tir.title_fallback": "Tiradentes — Minas Gerais",
+  "tir.hero_alt": "Tiradentes, Minas Gerais",
+  "tir.sign_alt": "Studio sign on the road",
+  "tir.garden_alt": "Sculptures in the studio garden",
   "tir.cap1": "The sign on the road points the way — follow the red arrow.",
   "tir.cap2": "The First Peoples: monumental faces in the studio garden, with the forest behind.",
 
@@ -240,11 +347,13 @@ const en: Dict = {
   "map.info_text": "The studio is on the Tiradentes road, a few minutes from the Estrada Real Automobile Museum. Follow the signs with the red arrow and the studio symbol.",
   "map.coords": "Coordinates",
   "map.city": "Town",
+  "map.city_val": "Tiradentes — Minas Gerais — Brazil",
   "map.visits": "Visits",
   "map.visits_val": "By appointment via WhatsApp",
   "map.route": "Route on Google Maps",
   "map.visit": "Book a visit",
   "map.open": "Open in Google Maps",
+  "map.iframe_title": "Map — Atelier Daniel Detomi, Tiradentes MG",
   "map.note": "The sign at the roadside marks the entrance — follow the red arrow. Coordinates: -21.095564, -44.132506.",
 
   "od.back": "← Back to the Gallery",
@@ -268,6 +377,7 @@ const en: Dict = {
   "od.shipping_note": "(Note: the buyer pays the shipping)",
   "od.shipping_intl": "International shipping available — ask about conditions.",
   "od.whatsapp": "Inquire via WhatsApp",
+  "od.whatsapp_message": "Hello! I am interested in the work",
   "status.available": "Available",
   "status.sold": "Sold",
   "status.reserved": "Reserved",
@@ -292,8 +402,28 @@ const es: Dict = {
   "footer.nav": "Navegación",
   "footer.contact": "Contacto",
   "footer.copy": "© 2026 Atelier Daniel Detomi — Hecho con reúso, luz y gesto",
+  "footer.developed_by": "Desarrollado por",
+
+  "login.title": "Área del Administrador",
+  "login.subtitle": "Atelier Daniel Detomi — Arte y Naturaleza",
+  "login.username": "Usuario",
+  "login.username_placeholder": "admin",
+  "login.password": "Contraseña",
+  "login.password_placeholder": "Contraseña",
+  "login.submit": "Entrar",
+  "login.submitting": "Entrando…",
+  "login.error": "Usuario o contraseña incorrectos.",
+
+  "category.pinturas": "Pinturas",
+  "category.esculturas": "Esculturas",
+  "category.ceu_aberto": "Galería al Aire Libre",
+  "category.circo": "Circo y Forma",
+  "category.recortes": "Recortes",
+  "category.ambiental": "Arte Ambiental",
 
   "home.hero_eyebrow": "Tiradentes — Minas Gerais",
+  "home.hero_title_fallback": "ATELIER DANIEL DETOMI",
+  "home.hero_subtitle_fallback": "Arte y Naturaleza",
   "home.cta_works": "Ver las Obras",
   "home.cta_visit": "Agendar Visita",
   "home.manifesto_eyebrow": "Arte y Naturaleza",
@@ -308,6 +438,15 @@ const es: Dict = {
   "home.destino_cta": "Agendar visita por WhatsApp",
   "home.imagens_eyebrow": "Visita",
   "home.imagens_title": "El atelier en imágenes",
+  "home.hero_alt": "Tiradentes vista por Daniel Detomi",
+  "home.painting_alt": "Pintura",
+  "home.sculpture_alt": "Escultura",
+  "home.alterego_alt": "Circo y forma",
+  "home.sign_alt": "Cartel del atelier en el camino de Tiradentes",
+  "home.image0_alt": "Segundo cartel en el camino hacia el atelier",
+  "home.image1_alt": "Pared principal del atelier",
+  "home.image2_alt": "Sala con la serie de arlequines",
+  "home.image3_alt": "Tarjeta del atelier — Arte y Naturaleza",
 
   "gca.eyebrow": "El jardín es el museo",
   "gca.title": "Galería de arte ecológico al aire libre",
@@ -351,9 +490,22 @@ const es: Dict = {
   "gal.cta_title": "¿Te gustó alguna obra?",
   "gal.cta_text": "Cada pieza es única. Habla directamente con el artista para precios, encargos y visitas al atelier.",
   "gal.cta_btn": "Hablar por WhatsApp",
+  "gal.bast0": "Tallando las alas de madera de un nuevo guardián",
+  "gal.bast1": "Cotorras en proceso de pintura sobre la mesa de trabajo",
+  "gal.bast2": "Venado embalado para entrega — encargos en todo Brasil",
+  "gal.bast3": "Guacamayos recién pintados secándose sobre la mesa",
+  "gal.amb0": "La sala del atelier con la serie de arlequines en la pared",
+  "gal.amb1": "Guacamayos de pared ambientados junto a la pintura de Cupido",
+  "gal.amb2": "Paneles de la serie circo compuestos en conjunto",
 
   "artista.eyebrow": "El Artista",
+  "artista.quote_fallback": "Del descarte nace la obra.",
+  "artista.interior_alt": "Interior del atelier",
   "artista.cap_interior": "El interior del atelier en Tiradentes: pinturas, esculturas y recortes comparten las paredes.",
+  "artista.photo0": "Con el alter ego Guardián — papel maché y tocado de varillas pintadas",
+  "artista.photo1": "En la inauguración de la exposición, junto al panel biográfico",
+  "artista.photo2": "Con el dálmata de la serie ajedrez, en el atelier",
+  "artista.photo3": "Pintando los recortes de cotorras, línea por línea",
 
   "expo.eyebrow": "Muestras",
   "expo.badge": "Exposición",
@@ -361,9 +513,19 @@ const es: Dict = {
   "expo.reg_title": "Las muestras, en escena",
   "expo.cta_title": "¿Quieres recibir las novedades de las próximas exposiciones?",
   "expo.cta_btn": "Hablar con el atelier",
+  "expo.title_fallback": "Exposiciones",
+  "expo.banner_recortes_alt": "Banner de la exposición Recortes del Cerrado",
+  "expo.banner_terra_alt": "Cartel de la exposición Terra Brasilis",
+  "expo.photo0": "Panel de la exposición Terra Brasilis montado en la pared",
+  "expo.photo1": "El artista en la inauguración, junto al panel biográfico",
+  "expo.photo2": "Serie circo expuesta en la sala del atelier",
 
   "tir.eyebrow": "La ciudad",
   "tir.cta": "Agendar visita al atelier",
+  "tir.title_fallback": "Tiradentes — Minas Gerais",
+  "tir.hero_alt": "Tiradentes, Minas Gerais",
+  "tir.sign_alt": "Cartel del atelier en el camino",
+  "tir.garden_alt": "Esculturas en el jardín del atelier",
   "tir.cap1": "El cartel en el camino indica el rumbo — sigue la flecha roja.",
   "tir.cap2": "Los Originarios: rostros monumentales en el jardín del atelier, con la mata al fondo.",
 
@@ -373,11 +535,13 @@ const es: Dict = {
   "map.info_text": "El atelier queda en el camino de Tiradentes, a pocos minutos del Museo del Automóvil de la Estrada Real. Sigue los carteles con la flecha roja y el símbolo del atelier.",
   "map.coords": "Coordenadas",
   "map.city": "Ciudad",
+  "map.city_val": "Tiradentes — Minas Gerais — Brasil",
   "map.visits": "Visitas",
   "map.visits_val": "Con cita previa por WhatsApp",
   "map.route": "Trazar ruta en Google Maps",
   "map.visit": "Agendar visita",
   "map.open": "Abrir en Google Maps",
+  "map.iframe_title": "Mapa — Atelier Daniel Detomi, Tiradentes MG",
   "map.note": "El cartel al borde del camino indica la entrada — sigue la flecha roja. Coordenadas: -21.095564, -44.132506.",
 
   "od.back": "← Volver a la Galería",
@@ -401,6 +565,7 @@ const es: Dict = {
   "od.shipping_note": "(Observación: el comprador paga el flete)",
   "od.shipping_intl": "Envío internacional disponible — consulta las condiciones.",
   "od.whatsapp": "Consultar por WhatsApp",
+  "od.whatsapp_message": "¡Hola! Tengo interés en la obra",
   "status.available": "Disponible",
   "status.sold": "Vendido",
   "status.reserved": "Reservado",
@@ -425,8 +590,28 @@ const ar: Dict = {
   "footer.nav": "التنقل",
   "footer.contact": "التواصل",
   "footer.copy": "© 2026 مرسم دانيال ديتومي — صُنع بإعادة التدوير والضوء والحركة",
+  "footer.developed_by": "تم التطوير بواسطة",
+
+  "login.title": "منطقة الإدارة",
+  "login.subtitle": "مرسم دانيال ديتومي — فن وطبيعة",
+  "login.username": "اسم المستخدم",
+  "login.username_placeholder": "admin",
+  "login.password": "كلمة المرور",
+  "login.password_placeholder": "كلمة المرور",
+  "login.submit": "دخول",
+  "login.submitting": "جارٍ الدخول…",
+  "login.error": "اسم المستخدم أو كلمة المرور غير صحيحة.",
+
+  "category.pinturas": "لوحات",
+  "category.esculturas": "منحوتات",
+  "category.ceu_aberto": "معرض في الهواء الطلق",
+  "category.circo": "السيرك والشكل",
+  "category.recortes": "قصاصات معدنية",
+  "category.ambiental": "فن بيئي",
 
   "home.hero_eyebrow": "تيرادنتيس — ميناس جيرايس",
+  "home.hero_title_fallback": "مرسم دانيال ديتومي",
+  "home.hero_subtitle_fallback": "فن وطبيعة",
   "home.cta_works": "شاهد الأعمال",
   "home.cta_visit": "احجز زيارة",
   "home.manifesto_eyebrow": "فن وطبيعة",
@@ -441,6 +626,15 @@ const ar: Dict = {
   "home.destino_cta": "احجز زيارة عبر واتساب",
   "home.imagens_eyebrow": "زُرنا",
   "home.imagens_title": "المرسم في الصور",
+  "home.hero_alt": "تيرادنتيس كما يراها دانيال ديتومي",
+  "home.painting_alt": "لوحة",
+  "home.sculpture_alt": "منحوتة",
+  "home.alterego_alt": "السيرك والشكل",
+  "home.sign_alt": "لافتة المرسم على طريق تيرادنتيس",
+  "home.image0_alt": "لافتة ثانية على الطريق باتجاه المرسم",
+  "home.image1_alt": "الجدار الرئيسي في المرسم",
+  "home.image2_alt": "غرفة تضم سلسلة الهارلكين",
+  "home.image3_alt": "بطاقة المرسم — فن وطبيعة",
 
   "gca.eyebrow": "الحديقة هي المتحف",
   "gca.title": "معرض الفن البيئي في الهواء الطلق",
@@ -484,9 +678,22 @@ const ar: Dict = {
   "gal.cta_title": "أعجبك أحد الأعمال؟",
   "gal.cta_text": "كل قطعة فريدة. تحدث مباشرة مع الفنان حول الأسعار والطلبات وزيارة المرسم.",
   "gal.cta_btn": "تواصل عبر واتساب",
+  "gal.bast0": "نحت الأجنحة الخشبية لحارس جديد",
+  "gal.bast1": "ببغاوات صغيرة أثناء الطلاء على طاولة العمل",
+  "gal.bast2": "غزال مُغلف للتسليم — طلبات في جميع أنحاء البرازيل",
+  "gal.bast3": "ببغاوات مكاو مطلية حديثًا تجف على طاولة العمل",
+  "gal.amb0": "غرفة المرسم مع سلسلة الهارلكين على الجدار",
+  "gal.amb1": "ببغاوات جدارية منسقة بجانب لوحة كيوبيد",
+  "gal.amb2": "ألواح من سلسلة السيرك منسقة معًا",
 
   "artista.eyebrow": "الفنان",
+  "artista.quote_fallback": "من المهملات يولد العمل الفني.",
+  "artista.interior_alt": "داخل المرسم",
   "artista.cap_interior": "داخل المرسم في تيرادنتيس: لوحات ومنحوتات وقصاصات تتقاسم الجدران.",
+  "artista.photo0": "مع شخصية الحارس — ورق معجون وتاج من عيدان مطلية",
+  "artista.photo1": "في افتتاح المعرض، بجانب اللوحة التعريفية",
+  "artista.photo2": "مع الدلماسي من سلسلة رقعة الشطرنج داخل المرسم",
+  "artista.photo3": "طلاء قصاصات الببغاوات الصغيرة خيطًا بخيط",
 
   "expo.eyebrow": "عروض",
   "expo.badge": "معرض",
@@ -494,9 +701,19 @@ const ar: Dict = {
   "expo.reg_title": "المعارض في الصورة",
   "expo.cta_title": "هل تريد تلقي أخبار المعارض القادمة؟",
   "expo.cta_btn": "تواصل مع المرسم",
+  "expo.title_fallback": "المعارض",
+  "expo.banner_recortes_alt": "لافتة معرض قصاصات السيرادو",
+  "expo.banner_terra_alt": "ملصق معرض تيرا برازيليس",
+  "expo.photo0": "لوحة معرض تيرا برازيليس مثبتة على الجدار",
+  "expo.photo1": "الفنان في الافتتاح بجانب اللوحة التعريفية",
+  "expo.photo2": "سلسلة السيرك معروضة في غرفة المرسم",
 
   "tir.eyebrow": "المدينة",
   "tir.cta": "احجز زيارة للمرسم",
+  "tir.title_fallback": "تيرادنتيس — ميناس جيرايس",
+  "tir.hero_alt": "تيرادنتيس، ميناس جيرايس",
+  "tir.sign_alt": "لافتة المرسم على الطريق",
+  "tir.garden_alt": "منحوتات في حديقة المرسم",
   "tir.cap1": "اللافتة على الطريق تدل على الاتجاه — اتبع السهم الأحمر.",
   "tir.cap2": "السكان الأصليون: وجوه ضخمة في حديقة المرسم وخلفها الغابة.",
 
@@ -506,11 +723,13 @@ const ar: Dict = {
   "map.info_text": "يقع المرسم على طريق تيرادنتيس، على بعد دقائق من متحف السيارات إسترادا ريال. اتبع اللافتات ذات السهم الأحمر ورمز المرسم.",
   "map.coords": "الإحداثيات",
   "map.city": "المدينة",
+  "map.city_val": "تيرادنتيس — ميناس جيرايس — البرازيل",
   "map.visits": "الزيارات",
   "map.visits_val": "بموعد مسبق عبر واتساب",
   "map.route": "حدد المسار على خرائط جوجل",
   "map.visit": "احجز زيارة",
   "map.open": "افتح في خرائط جوجل",
+  "map.iframe_title": "خريطة — مرسم دانيال ديتومي، تيرادنتيس MG",
   "map.note": "اللافتة على جانب الطريق تدل على المدخل — اتبع السهم الأحمر. الإحداثيات: -21.095564, -44.132506.",
 
   "od.back": "→ العودة إلى المعرض",
@@ -534,6 +753,7 @@ const ar: Dict = {
   "od.shipping_note": "(ملاحظة: المشتري يدفع تكاليف الشحن)",
   "od.shipping_intl": "الشحن الدولي متاح — استفسر عن الشروط.",
   "od.whatsapp": "استفسر عبر واتساب",
+  "od.whatsapp_message": "مرحبًا! لدي اهتمام بالعمل",
   "status.available": "متاح",
   "status.sold": "مُباع",
   "status.reserved": "محجوز",
@@ -546,9 +766,23 @@ const ar: Dict = {
 
 const DICTS: Record<Lang, Dict> = { pt, en, es, ar };
 
+function validateDictionaries() {
+  if (import.meta.env.PROD) return;
+  const baseKeys = Object.keys(pt).sort();
+  for (const lang of ["en", "es", "ar"] as Lang[]) {
+    const missing = baseKeys.filter((key) => !(key in DICTS[lang]));
+    const extra = Object.keys(DICTS[lang]).filter((key) => !(key in pt));
+    if (missing.length || extra.length) {
+      console.warn(`[i18n] ${lang} translation mismatch`, { missing, extra });
+    }
+  }
+}
+
+validateDictionaries();
+
 const STORAGE_KEY = "atelier-lang";
 
-type LangCtx = {
+export type LangCtx = {
   lang: Lang;
   setLang: (l: Lang) => void;
   t: (key: string) => string;
@@ -586,7 +820,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLangState(l);
   };
 
-  const t = (key: string) => DICTS[effective][key] ?? pt[key] ?? key;
+  const t = (key: string) => {
+    const value = DICTS[effective][key];
+    if (value) return value;
+    if (!import.meta.env.PROD) {
+      console.warn(`[i18n] Missing translation key "${key}" for "${effective}"`);
+    }
+    if (effective === "pt") return key;
+    return DICTS.en[key] ?? key;
+  };
 
   return <Ctx.Provider value={{ lang: effective, setLang, t, enabled }}>{children}</Ctx.Provider>;
 }

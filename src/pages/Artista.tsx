@@ -3,10 +3,10 @@ import { useTexts } from "@/hooks/useTexts";
 import { useLang } from "@/lib/i18n";
 
 const PHOTOS = [
-  { src: "/images/artist-real-1.jpg", caption: "Com o alter-ego Guardião — papel machê e cocar de varetas pintadas" },
-  { src: "/images/artist-real-2.jpg", caption: "Na abertura da exposição, ao lado do painel biográfico" },
-  { src: "/images/artist-real-3.jpg", caption: "Com o dálmata da série xadrez, no ateliê" },
-  { src: "/images/artist-real-4.jpg", caption: "Pintando os recortes de maritacas, fio a fio" },
+  { src: "/images/artist-real-1.jpg", key: "artista.photo0" },
+  { src: "/images/artist-real-2.jpg", key: "artista.photo1" },
+  { src: "/images/artist-real-3.jpg", key: "artista.photo2" },
+  { src: "/images/artist-real-4.jpg", key: "artista.photo3" },
 ];
 
 export default function Artista() {
@@ -20,7 +20,7 @@ export default function Artista() {
           <div className="eyebrow text-[var(--c-accent)]">{tr("artista.eyebrow")}</div>
           <h1 className="mt-4 font-display text-5xl font-semibold md:text-6xl">Daniel Detomi</h1>
           <p className="mt-5 max-w-2xl font-display text-xl italic leading-relaxed text-white/70 md:text-2xl">
-            “{t("artist_quote", "Do descarte nasce a obra.")}”
+            “{t("artist_quote", tr("artista.quote_fallback"))}”
           </p>
         </div>
       </section>
@@ -40,7 +40,7 @@ export default function Artista() {
               </p>
             ))}
           <figure className="mt-10">
-            <img src="/images/atelier-interior-real.jpg" alt="Interior do ateliê" className="w-full object-cover" />
+            <img src="/images/atelier-interior-real.jpg" alt={tr("artista.interior_alt")} className="w-full object-cover" />
             <figcaption className="mt-3 border-l-2 border-[var(--c-primary)] pl-4 text-sm italic text-[var(--c-ink)]/60">
               {tr("artista.cap_interior")}
             </figcaption>
@@ -52,11 +52,11 @@ export default function Artista() {
               <div className="overflow-hidden">
                 <img
                   src={p.src}
-                  alt={p.caption}
+                  alt={tr(p.key)}
                   className="h-52 w-full object-cover transition duration-700 group-hover:scale-105"
                 />
               </div>
-              <figcaption className="mt-2 text-xs leading-snug text-[var(--c-ink)]/60">{p.caption}</figcaption>
+              <figcaption className="mt-2 text-xs leading-snug text-[var(--c-ink)]/60">{tr(p.key)}</figcaption>
             </figure>
           ))}
         </div>

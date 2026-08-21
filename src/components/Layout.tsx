@@ -216,7 +216,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="border-t border-white/10 px-5 py-5 text-center text-xs tracking-wide text-white/35">
-          {t("footer.copy")} · Desenvolvido por{" "}
+          {t("footer.copy")} · {t("footer.developed_by")}{" "}
           <a
             href="https://www.vytetech.com"
             target="_blank"

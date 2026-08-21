@@ -13,7 +13,7 @@ export default function Exposicoes() {
         <div className="mx-auto max-w-6xl px-5">
           <div className="eyebrow text-[var(--c-accent)]">{tr("expo.eyebrow")}</div>
           <h1 className="mt-4 font-display text-5xl font-semibold md:text-6xl">
-            {t("expo_title", "Exposições")}
+            {t("expo_title", tr("expo.title_fallback"))}
           </h1>
         </div>
       </section>
@@ -23,7 +23,7 @@ export default function Exposicoes() {
         <div className="grid items-stretch gap-0 overflow-hidden bg-white shadow-[0_10px_40px_rgba(26,23,18,0.08)] md:grid-cols-2">
           <img
             src="/images/expo-recortes-real.jpg"
-            alt="Banner da exposição Recortes do Cerrado"
+            alt={tr("expo.banner_recortes_alt")}
             className="h-full max-h-[560px] w-full object-cover"
           />
           <div className="flex flex-col justify-center p-10">
@@ -54,7 +54,7 @@ export default function Exposicoes() {
           </div>
           <img
             src="/images/expo-terra-real.jpg"
-            alt="Cartaz da exposição Terra Brasilis"
+            alt={tr("expo.banner_terra_alt")}
             className="order-1 h-full max-h-[560px] w-full object-cover md:order-2"
           />
         </div>
@@ -65,19 +65,19 @@ export default function Exposicoes() {
           <h2 className="mt-3 font-display text-3xl font-semibold">{tr("expo.reg_title")}</h2>
           <div className="mt-8 grid gap-5 md:grid-cols-3">
             {[
-              { src: "/images/expo-terra-2.jpg", alt: "Painel da exposição Terra Brasilis montado na parede" },
-              { src: "/images/artist-real-2.jpg", alt: "O artista na abertura, junto ao painel biográfico" },
-              { src: "/images/amb-1.jpg", alt: "Série circo exposta na sala do ateliê" },
+              { src: "/images/expo-terra-2.jpg", key: "expo.photo0" },
+              { src: "/images/artist-real-2.jpg", key: "expo.photo1" },
+              { src: "/images/amb-1.jpg", key: "expo.photo2" },
             ].map((f) => (
               <figure key={f.src} className="group">
                 <div className="overflow-hidden">
                   <img
                     src={f.src}
-                    alt={f.alt}
+                    alt={tr(f.key)}
                     className="h-72 w-full object-cover transition duration-700 group-hover:scale-105"
                   />
                 </div>
-                <figcaption className="mt-2 text-xs leading-snug text-[var(--c-ink)]/60">{f.alt}</figcaption>
+                <figcaption className="mt-2 text-xs leading-snug text-[var(--c-ink)]/60">{tr(f.key)}</figcaption>
               </figure>
             ))}
           </div>

@@ -39,7 +39,7 @@ export default function MapaSection() {
                 <span className="eyebrow w-24 shrink-0 pt-0.5 text-[var(--c-ink)]/45" style={{ fontSize: "0.55rem" }}>
                   {t("map.city")}
                 </span>
-                <span>Tiradentes — Minas Gerais — Brasil</span>
+                <span>{t("map.city_val")}</span>
               </p>
               <p className="flex gap-3">
                 <span className="eyebrow w-24 shrink-0 pt-0.5 text-[var(--c-ink)]/45" style={{ fontSize: "0.55rem" }}>
@@ -75,7 +75,7 @@ export default function MapaSection() {
               <div className="absolute -left-3 -top-3 h-full w-full border border-[var(--c-primary)]/25" />
               <iframe
                 src={EMBED_URL}
-                title="Mapa — Atelier Daniel Detomi, Tiradentes MG"
+                title={t("map.iframe_title")}
                 className="relative h-[380px] w-full border-0 bg-[var(--c-sand2)] md:h-[440px]"
                 loading="eager"
                 allowFullScreen

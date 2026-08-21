@@ -30,7 +30,7 @@ export default function Home() {
       <section className="relative flex min-h-[94vh] items-end">
         <img
           src="/images/real-tiradentes-panel.jpg"
-          alt="Tiradentes vista por Daniel Detomi"
+          alt={tr("home.hero_alt")}
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/15" />
@@ -42,13 +42,13 @@ export default function Home() {
             className="fade-up mt-4 max-w-3xl font-display text-5xl font-semibold leading-[1.05] md:text-7xl"
             style={{ animationDelay: "0.25s" }}
           >
-            {t("hero_title", "ATELIER DANIEL DETOMI")}
+            {t("hero_title", tr("home.hero_title_fallback"))}
           </h1>
           <p
             className="fade-up mt-4 max-w-xl font-display text-xl italic text-white/85 md:text-2xl"
             style={{ animationDelay: "0.4s" }}
           >
-            {t("hero_subtitle", "Arte e Natureza")}
+            {t("hero_subtitle", tr("home.hero_subtitle_fallback"))}
           </p>
           <div className="fade-up mt-9 flex flex-wrap gap-4" style={{ animationDelay: "0.55s" }}>
             <Link
@@ -94,15 +94,15 @@ export default function Home() {
           </h2>
           <div className="mt-14 grid gap-10 md:grid-cols-3">
             {[
-              { img: "/images/real-revoada.jpg", key: "painting", alt: "Pintura" },
-              { img: "/images/real-guardiao.jpg", key: "sculpture", alt: "Escultura" },
-              { img: "/images/real-arlequins.jpg", key: "alterego", alt: "Circo e forma" },
+              { img: "/images/real-revoada.jpg", key: "painting", altKey: "home.painting_alt" },
+              { img: "/images/real-guardiao.jpg", key: "sculpture", altKey: "home.sculpture_alt" },
+              { img: "/images/real-arlequins.jpg", key: "alterego", altKey: "home.alterego_alt" },
             ].map((b) => (
               <article key={b.key} className="group">
                 <div className="overflow-hidden">
                   <img
                     src={b.img}
-                    alt={b.alt}
+                    alt={tr(b.altKey)}
                     className="h-72 w-full object-cover transition duration-700 group-hover:scale-105"
                   />
                 </div>
@@ -154,7 +154,7 @@ export default function Home() {
           <div className="absolute -left-3 -top-3 h-full w-full border border-[var(--c-primary)]/30" />
           <img
             src="/images/placa-1.jpg"
-            alt="Placa do ateliê na estrada de Tiradentes"
+            alt={tr("home.sign_alt")}
             className="relative w-full object-cover"
           />
         </div>
@@ -188,20 +188,20 @@ export default function Home() {
           </h2>
           <div className="mt-10 grid grid-cols-2 gap-5 md:grid-cols-4">
             {[
-              { src: "/images/placa-2.jpg", alt: "Segunda placa na estrada, sentido ateliê" },
-              { src: "/images/atelier-interior-real.jpg", alt: "Parede principal do ateliê" },
-              { src: "/images/amb-1.jpg", alt: "Sala com a série de arlequins" },
-              { src: "/images/logo-cartao.jpg", alt: "Cartão do ateliê — Arte e Natureza" },
+              { src: "/images/placa-2.jpg", altKey: "home.image0_alt" },
+              { src: "/images/atelier-interior-real.jpg", altKey: "home.image1_alt" },
+              { src: "/images/amb-1.jpg", altKey: "home.image2_alt" },
+              { src: "/images/logo-cartao.jpg", altKey: "home.image3_alt" },
             ].map((f) => (
               <figure key={f.src} className="group">
                 <div className="overflow-hidden">
                   <img
                     src={f.src}
-                    alt={f.alt}
+                    alt={tr(f.altKey)}
                     className="h-64 w-full object-cover transition duration-700 group-hover:scale-105"
                   />
                 </div>
-                <figcaption className="mt-2 text-xs leading-snug text-[var(--c-ink)]/60">{f.alt}</figcaption>
+                <figcaption className="mt-2 text-xs leading-snug text-[var(--c-ink)]/60">{tr(f.altKey)}</figcaption>
               </figure>
             ))}
           </div>

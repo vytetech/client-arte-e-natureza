@@ -13,14 +13,14 @@ export default function Tiradentes() {
       <section className="relative flex min-h-[62vh] items-end">
         <img
           src="/images/real-tiradentes-panel.jpg"
-          alt="Tiradentes, Minas Gerais"
+          alt={tr("tir.hero_alt")}
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl px-5 pb-14 text-white">
           <div className="eyebrow text-[var(--c-accent)]">{tr("tir.eyebrow")}</div>
           <h1 className="mt-4 font-display text-5xl font-semibold md:text-6xl">
-            {t("tiradentes_title", "Tiradentes — Minas Gerais")}
+            {t("tiradentes_title", tr("tir.title_fallback"))}
           </h1>
         </div>
       </section>
@@ -50,7 +50,7 @@ export default function Tiradentes() {
           <figure>
             <div className="relative">
               <div className="absolute -left-3 -top-3 h-full w-full border border-[var(--c-primary)]/25" />
-              <img src="/images/placa-1.jpg" alt="Placa do ateliê na estrada" className="relative w-full object-cover" />
+              <img src="/images/placa-1.jpg" alt={tr("tir.sign_alt")} className="relative w-full object-cover" />
             </div>
             <figcaption className="mt-3 border-l-2 border-[var(--c-primary)] pl-4 text-sm italic text-[var(--c-ink)]/60">
               {tr("tir.cap1")}
@@ -59,7 +59,7 @@ export default function Tiradentes() {
           <figure>
             <div className="relative">
               <div className="absolute -left-3 -top-3 h-full w-full border border-[var(--c-primary)]/25" />
-              <img src="/images/real-ancionais.jpg" alt="Esculturas no jardim do ateliê" className="relative w-full object-cover" />
+              <img src="/images/real-ancionais.jpg" alt={tr("tir.garden_alt")} className="relative w-full object-cover" />
             </div>
             <figcaption className="mt-3 border-l-2 border-[var(--c-primary)] pl-4 text-sm italic text-[var(--c-ink)]/60">
               {tr("tir.cap2")}

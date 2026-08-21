@@ -4,18 +4,19 @@ import { trpc } from "@/providers/trpc";
 import { WHATSAPP_URL } from "@/config";
 import { useLang } from "@/lib/i18n";
 import { statusTranslationKey } from "@contracts/status";
+import { categoryLabel } from "@/lib/categoryLabels";
 
 const ARTIST_PHOTOS = [
-  { src: "/images/bastidores-1.jpg", alt: "Entalhando as asas de madeira de um novo guardião" },
-  { src: "/images/bastidores-2.jpg", alt: "Maritacas em processo de pintura sobre a mesa de trabalho" },
-  { src: "/images/bastidores-3.jpg", alt: "Veado embalado para entrega — encomendas para todo o Brasil" },
-  { src: "/images/bastidores-4.jpg", alt: "Araras recém-pintadas secando sobre a bancada" },
+  { src: "/images/bastidores-1.jpg", key: "gal.bast0" },
+  { src: "/images/bastidores-2.jpg", key: "gal.bast1" },
+  { src: "/images/bastidores-3.jpg", key: "gal.bast2" },
+  { src: "/images/bastidores-4.jpg", key: "gal.bast3" },
 ];
 
 const AMBIENT_PHOTOS = [
-  { src: "/images/amb-1.jpg", alt: "A sala do ateliê com a série de arlequins na parede" },
-  { src: "/images/amb-2.jpg", alt: "Araras de parede ambientadas junto à pintura do Cupido" },
-  { src: "/images/amb-3.jpg", alt: "Painéis da série circo compostos em conjunto" },
+  { src: "/images/amb-1.jpg", key: "gal.amb0" },
+  { src: "/images/amb-2.jpg", key: "gal.amb1" },
+  { src: "/images/amb-3.jpg", key: "gal.amb2" },
 ];
 
 export default function Galeria() {
@@ -50,7 +51,7 @@ export default function Galeria() {
                 cat === c ? "border-b border-[var(--c-primary)] font-semibold text-[var(--c-primary)]" : "text-[var(--c-ink)]/55 hover:text-[var(--c-primary)]"
               }`}
             >
-              {c}
+              {categoryLabel(c, t)}
             </button>
           ))}
         </div>
@@ -69,7 +70,7 @@ export default function Galeria() {
               </div>
               <div className="mt-4 flex items-baseline justify-between">
                 <span className="eyebrow text-[var(--c-primary)]" style={{ fontSize: "0.55rem" }}>
-                  {w.category}
+                  {categoryLabel(w.category, t)}
                 </span>
                 <span className="text-xs text-[var(--c-ink)]/45">{w.year}</span>
               </div>
@@ -97,11 +98,11 @@ export default function Galeria() {
                 <div className="overflow-hidden">
                   <img
                     src={p.src}
-                    alt={p.alt}
+                    alt={t(p.key)}
                     className="h-64 w-full object-cover transition duration-700 group-hover:scale-105"
                   />
                 </div>
-                <figcaption className="mt-2 text-xs leading-snug text-[var(--c-ink)]/60">{p.alt}</figcaption>
+                <figcaption className="mt-2 text-xs leading-snug text-[var(--c-ink)]/60">{t(p.key)}</figcaption>
               </figure>
             ))}
           </div>
@@ -117,11 +118,11 @@ export default function Galeria() {
                 <div className="overflow-hidden">
                   <img
                     src={p.src}
-                    alt={p.alt}
+                    alt={t(p.key)}
                     className="h-72 w-full object-cover transition duration-700 group-hover:scale-105"
                   />
                 </div>
-                <figcaption className="mt-2 text-xs leading-snug text-[var(--c-ink)]/60">{p.alt}</figcaption>
+                <figcaption className="mt-2 text-xs leading-snug text-[var(--c-ink)]/60">{t(p.key)}</figcaption>
               </figure>
             ))}
           </div>

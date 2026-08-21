@@ -12,7 +12,7 @@ O acesso administrativo é feito pela rota:
 /login
 ```
 
-Use o e-mail e a senha cadastrados para a sua conta administrativa.
+Use o nome de usuário e a senha cadastrados para a sua conta administrativa.
 
 Recomendações:
 
@@ -127,7 +127,7 @@ Administradores autorizados podem gerenciar outros usuários administrativos.
 Operações disponíveis:
 
 - Criar novo usuário.
-- Editar nome e e-mail.
+- Editar nome e usuário.
 - Redefinir senha.
 - Ativar ou desativar usuário.
 - Remover usuário quando necessário.

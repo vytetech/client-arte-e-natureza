@@ -177,7 +177,7 @@ export default function Admin() {
 
 type UserForm = {
   name: string;
-  email: string;
+  username: string;
   password: string;
   confirmPassword: string;
   role: "admin";
@@ -186,7 +186,7 @@ type UserForm = {
 
 const emptyUserForm: UserForm = {
   name: "",
-  email: "",
+  username: "",
   password: "",
   confirmPassword: "",
   role: "admin",
@@ -261,7 +261,7 @@ function UsersTab() {
     setEditingId(user.id);
     setForm({
       name: user.name ?? "",
-      email: user.email ?? "",
+      username: user.username ?? "",
       password: "",
       confirmPassword: "",
       role: "admin",
@@ -281,7 +281,7 @@ function UsersTab() {
     if (editingId === null) {
       createMut.mutate({
         name: form.name,
-        email: form.email,
+        username: form.username,
         password: form.password,
         role: form.role,
       });
@@ -291,7 +291,7 @@ function UsersTab() {
     updateMut.mutate({
       id: editingId,
       name: form.name,
-      email: form.email,
+      username: form.username,
       isActive: form.isActive,
     });
   };
@@ -331,11 +331,13 @@ function UsersTab() {
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
-            <label className="text-xs font-bold uppercase">E-mail</label>
+            <label className="text-xs font-bold uppercase">Usuário</label>
             <Input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              type="text"
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              autoComplete="username"
+              placeholder="admin"
             />
           </div>
           {editingId === null && (
@@ -400,7 +402,7 @@ function UsersTab() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="font-bold">{user.name ?? "Sem nome"}</div>
-                <div className="text-sm text-[var(--c-ink)]/60">{user.email}</div>
+                <div className="text-sm text-[var(--c-ink)]/60">@{user.username}</div>
                 <div className="mt-1 text-xs text-[var(--c-ink)]/45">
                   {user.isActive ? "Ativo" : "Inativo"} · {user.role} · Último acesso:{" "}
                   {formatDate(user.lastSignInAt)}
@@ -425,7 +427,7 @@ function UsersTab() {
                   size="sm"
                   variant="destructive"
                   onClick={() => {
-                    if (confirm(`Excluir o usuário "${user.email}"?`)) {
+                    if (confirm(`Excluir o usuário "${user.username}"?`)) {
                       deleteMut.mutate({ id: user.id });
                     }
                   }}

@@ -5,6 +5,7 @@ import { useSettings } from "@/hooks/useTheme";
 import { useLang } from "@/lib/i18n";
 import { WHATSAPP_URL } from "@/config";
 import { statusTranslationKey } from "@contracts/status";
+import { categoryLabel } from "@/lib/categoryLabels";
 
 const READING_SITE = "https://www.leituradaborradecafe.com";
 
@@ -47,7 +48,7 @@ export default function ObraDetail() {
   const promotionMinimum = formatBRL(s("promotion.minimumAmount", "7000"));
 
   const waLink = work
-    ? `${WHATSAPP_URL}?text=${encodeURIComponent(`Olá! Tenho interesse na obra "${work.title}" (${work.category}).`)}`
+    ? `${WHATSAPP_URL}?text=${encodeURIComponent(`${t("od.whatsapp_message")} "${work.title}" (${categoryLabel(work.category, t)}).`)}`
     : WHATSAPP_URL;
 
   return (
@@ -75,7 +76,7 @@ export default function ObraDetail() {
               <img src={work.image} alt={work.title} className="relative w-full object-cover" />
             </div>
             <div>
-              <span className="eyebrow text-[var(--c-primary)]">{work.category}</span>
+              <span className="eyebrow text-[var(--c-primary)]">{categoryLabel(work.category, t)}</span>
               <h1 className="mt-3 font-display text-5xl font-semibold">{work.title}</h1>
               <dl className="mt-6 space-y-2 border-t border-[var(--c-ink)]/10 pt-5 text-sm text-[var(--c-ink)]/70">
                 <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.artista")}</dt><dd>Daniel Detomi</dd></div>

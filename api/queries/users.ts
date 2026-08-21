@@ -3,8 +3,12 @@ import * as schema from "@db/schema";
 import type { InsertUser } from "@db/schema";
 import { getDb } from "./connection";
 
-export function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
+export function normalizeUsername(username: string) {
+  return username.trim().toLowerCase();
+}
+
+export function isValidUsername(username: string) {
+  return /^[a-z0-9._-]{3,64}$/.test(normalizeUsername(username));
 }
 
 export async function findUserByUnionId(unionId: string) {
@@ -16,11 +20,11 @@ export async function findUserByUnionId(unionId: string) {
   return rows.at(0);
 }
 
-export async function findUserByEmail(email: string) {
+export async function findUserByUsername(username: string) {
   const rows = await getDb()
     .select()
     .from(schema.users)
-    .where(eq(schema.users.email, normalizeEmail(email)))
+    .where(eq(schema.users.username, normalizeUsername(username)))
     .limit(1);
   return rows.at(0);
 }
