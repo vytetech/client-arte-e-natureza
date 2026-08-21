@@ -1,4 +1,5 @@
 import { WHATSAPP_URL, INSTAGRAM_URL } from "@/config"
+import { useLang } from "@/lib/i18n"
 
 function WhatsAppIcon() {
   return (
@@ -19,13 +20,15 @@ function InstagramIcon() {
 }
 
 export default function FloatingContact() {
+  const { t } = useLang()
+
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col items-center gap-3">
       <a
         href={INSTAGRAM_URL}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Instagram do Atelier Daniel Detomi"
+        aria-label={t("social.instagram")}
         title="Instagram @danieldetomiartenatureza"
         className="flex h-12 w-12 items-center justify-center rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:scale-110"
         style={{
@@ -39,7 +42,7 @@ export default function FloatingContact() {
         href={WHATSAPP_URL}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="WhatsApp do Atelier Daniel Detomi: +55 32 98452-7407"
+        aria-label={t("social.whatsapp")}
         title="WhatsApp +55 32 98452-7407"
         className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-[0_10px_28px_rgba(37,211,102,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:scale-110"
       >

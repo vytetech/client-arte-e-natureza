@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSettings } from "@/hooks/useTheme";
+import { ADMIN_DICTS } from "@/lib/adminI18n";
 
 export type Lang = "pt" | "en" | "es" | "ar";
 
@@ -27,6 +28,13 @@ const pt: Dict = {
   "footer.contact": "Contato",
   "footer.copy": "© 2026 Atelier Daniel Detomi — Feito com reúso, luz e gesto",
   "footer.developed_by": "Desenvolvido por",
+  "footer.admin": "Área do administrador",
+  "lang.selector": "Selecionar idioma",
+  "nav.menu": "Menu",
+  "audio.enable": "Ligar o som",
+  "audio.disable": "Desligar o som",
+  "social.instagram": "Instagram do Atelier Daniel Detomi",
+  "social.whatsapp": "WhatsApp do Atelier Daniel Detomi: +55 32 98452-7407",
 
   "login.title": "Área do Administrador",
   "login.subtitle": "Atelier Daniel Detomi — Arte e Natureza",
@@ -177,6 +185,7 @@ const pt: Dict = {
   "od.ano": "Ano",
   "od.situacao": "Situação",
   "od.preco": "Preço",
+  "od.coupon_default": "Cupom",
   "od.coupon_hint": "Mencione o cupom ao falar com o artista para garantir o desconto.",
   "od.promo_title": "☕ Ao adquirir nossas obras a partir de R$ 7.000, você ganha:",
   "od.promo_title_prefix": "☕ Ao adquirir nossas obras a partir de",
@@ -215,6 +224,13 @@ const en: Dict = {
   "footer.contact": "Contact",
   "footer.copy": "© 2026 Atelier Daniel Detomi — Made with reuse, light and gesture",
   "footer.developed_by": "Developed by",
+  "footer.admin": "Administrator area",
+  "lang.selector": "Select language",
+  "nav.menu": "Menu",
+  "audio.enable": "Turn sound on",
+  "audio.disable": "Turn sound off",
+  "social.instagram": "Atelier Daniel Detomi Instagram",
+  "social.whatsapp": "Atelier Daniel Detomi WhatsApp: +55 32 98452-7407",
 
   "login.title": "Administrator Area",
   "login.subtitle": "Atelier Daniel Detomi — Art and Nature",
@@ -365,6 +381,7 @@ const en: Dict = {
   "od.ano": "Year",
   "od.situacao": "Status",
   "od.preco": "Price",
+  "od.coupon_default": "Coupon",
   "od.coupon_hint": "Mention the coupon when talking to the artist to secure the discount.",
   "od.promo_title": "☕ When purchasing our works from R$ 7,000, you get:",
   "od.promo_title_prefix": "☕ When purchasing our works from",
@@ -403,6 +420,13 @@ const es: Dict = {
   "footer.contact": "Contacto",
   "footer.copy": "© 2026 Atelier Daniel Detomi — Hecho con reúso, luz y gesto",
   "footer.developed_by": "Desarrollado por",
+  "footer.admin": "Área del administrador",
+  "lang.selector": "Seleccionar idioma",
+  "nav.menu": "Menú",
+  "audio.enable": "Activar sonido",
+  "audio.disable": "Desactivar sonido",
+  "social.instagram": "Instagram de Atelier Daniel Detomi",
+  "social.whatsapp": "WhatsApp de Atelier Daniel Detomi: +55 32 98452-7407",
 
   "login.title": "Área del Administrador",
   "login.subtitle": "Atelier Daniel Detomi — Arte y Naturaleza",
@@ -553,6 +577,7 @@ const es: Dict = {
   "od.ano": "Año",
   "od.situacao": "Estado",
   "od.preco": "Precio",
+  "od.coupon_default": "Cupón",
   "od.coupon_hint": "Menciona el cupón al hablar con el artista para asegurar el descuento.",
   "od.promo_title": "☕ Al adquirir nuestras obras a partir de R$ 7.000, ganas:",
   "od.promo_title_prefix": "☕ Al adquirir nuestras obras a partir de",
@@ -591,6 +616,13 @@ const ar: Dict = {
   "footer.contact": "التواصل",
   "footer.copy": "© 2026 مرسم دانيال ديتومي — صُنع بإعادة التدوير والضوء والحركة",
   "footer.developed_by": "تم التطوير بواسطة",
+  "footer.admin": "منطقة الإدارة",
+  "lang.selector": "اختيار اللغة",
+  "nav.menu": "القائمة",
+  "audio.enable": "تشغيل الصوت",
+  "audio.disable": "إيقاف الصوت",
+  "social.instagram": "إنستغرام مرسم دانيال ديتومي",
+  "social.whatsapp": "واتساب مرسم دانيال ديتومي: +55 32 98452-7407",
 
   "login.title": "منطقة الإدارة",
   "login.subtitle": "مرسم دانيال ديتومي — فن وطبيعة",
@@ -741,6 +773,7 @@ const ar: Dict = {
   "od.ano": "السنة",
   "od.situacao": "الحالة",
   "od.preco": "السعر",
+  "od.coupon_default": "كوبون",
   "od.coupon_hint": "اذكر الكوبون عند التحدث مع الفنان لضمان الخصم.",
   "od.promo_title": "☕ عند شراء أعمالنا بقيمة ٧٠٠٠ ريال برازيلي أو أكثر، تفوز بـ:",
   "od.promo_title_prefix": "☕ عند شراء أعمالنا بقيمة تبدأ من",
@@ -764,7 +797,12 @@ const ar: Dict = {
   "nf.back": "العودة إلى الرئيسية",
 };
 
-const DICTS: Record<Lang, Dict> = { pt, en, es, ar };
+const DICTS: Record<Lang, Dict> = {
+  pt: { ...pt, ...ADMIN_DICTS.pt },
+  en: { ...en, ...ADMIN_DICTS.en },
+  es: { ...es, ...ADMIN_DICTS.es },
+  ar: { ...ar, ...ADMIN_DICTS.ar },
+};
 
 function validateDictionaries() {
   if (import.meta.env.PROD) return;

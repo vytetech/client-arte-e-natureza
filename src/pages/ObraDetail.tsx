@@ -39,7 +39,7 @@ export default function ObraDetail() {
   const showShippingNote = s("shipping.note", "1") === "1";
   const showIntl = s("shipping.international", "0") === "1";
   const couponOn = s("coupon.enabled", "0") === "1";
-  const couponName = s("coupon.name", "Cupom");
+  const couponName = s("coupon.name", t("od.coupon_default"));
   const couponPct = s("coupon.percent", "");
   const showCoupon = couponOn && !!work?.couponEnabled && isCurrentDateInRange(s("coupon.start", ""), s("coupon.end", ""));
   const promoRead = s("prize.reading", "0") === "1";

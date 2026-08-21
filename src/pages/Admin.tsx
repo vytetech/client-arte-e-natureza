@@ -6,7 +6,9 @@ import { applyTheme, FONT_OPTIONS } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { canonicalStatus, WORK_STATUS_LABELS_PT, WORK_STATUSES } from "@contracts/status";
+import { canonicalStatus, WORK_STATUSES } from "@contracts/status";
+import { useLang, type LangCtx } from "@/lib/i18n";
+import { categoryLabel } from "@/lib/categoryLabels";
 
 const CATEGORIES = [
   "Pinturas",
@@ -18,22 +20,22 @@ const CATEGORIES = [
 ];
 
 const SECTIONS = [
-  { key: "section.manifesto", label: "Manifesto (texto de abertura)" },
-  { key: "section.linguagens", label: "Três linguagens, um só olhar" },
-  { key: "section.video", label: "Vídeo — o ateliê em movimento" },
-  { key: "section.destino", label: "O ateliê é um destino" },
-  { key: "section.imagens", label: "O ateliê em imagens" },
-  { key: "section.ceuaberto", label: "Galeria de arte ecológica ao ar livre" },
-  { key: "section.mapa", label: "Mapa — como chegar" },
+  { key: "section.manifesto", labelKey: "admin.sections.manifesto" },
+  { key: "section.linguagens", labelKey: "admin.sections.languages" },
+  { key: "section.video", labelKey: "admin.sections.video" },
+  { key: "section.destino", labelKey: "admin.sections.destination" },
+  { key: "section.imagens", labelKey: "admin.sections.images" },
+  { key: "section.ceuaberto", labelKey: "admin.sections.open_air" },
+  { key: "section.mapa", labelKey: "admin.sections.map" },
 ];
 
 const COLOR_FIELDS = [
-  { key: "design.primary", label: "Cor principal (vermelho)", def: "#8f1d22" },
-  { key: "design.bg", label: "Fundo do site", def: "#f6f0e4" },
-  { key: "design.ink", label: "Texto principal", def: "#1a1712" },
-  { key: "design.accent", label: "Destaque (dourado)", def: "#d4a24e" },
-  { key: "design.dark", label: "Seções escuras", def: "#14100c" },
-  { key: "design.sand", label: "Blocos claros", def: "#efe6d2" },
+  { key: "design.primary", labelKey: "admin.design.color_primary", def: "#8f1d22" },
+  { key: "design.bg", labelKey: "admin.design.color_bg", def: "#f6f0e4" },
+  { key: "design.ink", labelKey: "admin.design.color_ink", def: "#1a1712" },
+  { key: "design.accent", labelKey: "admin.design.color_accent", def: "#d4a24e" },
+  { key: "design.dark", labelKey: "admin.design.color_dark", def: "#14100c" },
+  { key: "design.sand", labelKey: "admin.design.color_sand", def: "#efe6d2" },
 ];
 
 type Tab =
@@ -49,18 +51,18 @@ type Tab =
   | "cafe"
   | "usuarios";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "obras", label: "Obras e preços" },
-  { id: "imagens", label: "Imagens" },
-  { id: "textos", label: "Textos do site" },
-  { id: "design", label: "Design e fontes" },
-  { id: "secoes", label: "Seções da página" },
-  { id: "cupom", label: "🎟️ Cupom" },
-  { id: "promocoes", label: "🎁 Promoções" },
-  { id: "entrega", label: "🚚 Entrega" },
-  { id: "idiomas", label: "Idiomas" },
-  { id: "cafe", label: "☕ Espaço de Café" },
-  { id: "usuarios", label: "Usuários" },
+const TABS: { id: Tab; labelKey: string }[] = [
+  { id: "obras", labelKey: "admin.tab.works" },
+  { id: "imagens", labelKey: "admin.tab.images" },
+  { id: "textos", labelKey: "admin.tab.texts" },
+  { id: "design", labelKey: "admin.tab.design" },
+  { id: "secoes", labelKey: "admin.tab.sections" },
+  { id: "cupom", labelKey: "admin.tab.coupon" },
+  { id: "promocoes", labelKey: "admin.tab.promotions" },
+  { id: "entrega", labelKey: "admin.tab.shipping" },
+  { id: "idiomas", labelKey: "admin.tab.languages" },
+  { id: "cafe", labelKey: "admin.tab.cafe" },
+  { id: "usuarios", labelKey: "admin.tab.users" },
 ];
 
 type WorkForm = {
@@ -101,20 +103,28 @@ function formatBRL(n: number): string {
   return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function text(t: LangCtx["t"], key: string, values: Record<string, string | number> = {}) {
+  return Object.entries(values).reduce(
+    (message, [name, value]) => message.replaceAll(`{${name}}`, String(value)),
+    t(key),
+  );
+}
+
 export default function Admin() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { t } = useLang();
   const [tab, setTab] = useState<Tab>("obras");
 
   if (isLoading) {
-    return <div className="flex min-h-screen items-center justify-center">Carregando…</div>;
+    return <div className="flex min-h-screen items-center justify-center">{t("admin.loading")}</div>;
   }
 
   if (!isAuthenticated) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--c-bg)]">
-        <p>Área restrita. Entre com sua conta para continuar.</p>
+        <p>{t("admin.restricted")}</p>
         <Link to="/login">
-          <Button>Ir para o login</Button>
+          <Button>{t("admin.login_link")}</Button>
         </Link>
       </div>
     );
@@ -123,8 +133,8 @@ export default function Admin() {
   if (user?.role !== "admin") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--c-bg)]">
-        <p>Esta conta não tem permissão de administrador.</p>
-        <Button variant="outline" onClick={logout}>Sair</Button>
+        <p>{t("admin.forbidden")}</p>
+        <Button variant="outline" onClick={logout}>{t("admin.logout")}</Button>
       </div>
     );
   }
@@ -134,24 +144,24 @@ export default function Admin() {
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div>
-            <h1 className="text-xl font-black">Administração — Atelier Daniel Detomi</h1>
-            <p className="text-xs text-[var(--c-ink)]/60">Olá, {user?.name ?? "admin"}</p>
+            <h1 className="text-xl font-black">{t("admin.title")}</h1>
+            <p className="text-xs text-[var(--c-ink)]/60">{text(t, "admin.greeting", { name: user?.name ?? "admin" })}</p>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/">
-              <Button variant="outline">Ver o site</Button>
+              <Button variant="outline">{t("admin.view_site")}</Button>
             </Link>
-            <Button variant="outline" onClick={logout}>Sair</Button>
+            <Button variant="outline" onClick={logout}>{t("admin.logout")}</Button>
           </div>
         </div>
         <div className="mx-auto flex max-w-6xl flex-wrap gap-2 px-4 pb-3">
-          {TABS.map((t) => (
+          {TABS.map((item) => (
             <Button
-              key={t.id}
-              variant={tab === t.id ? "default" : "outline"}
-              onClick={() => setTab(t.id)}
+              key={item.id}
+              variant={tab === item.id ? "default" : "outline"}
+              onClick={() => setTab(item.id)}
             >
-              {t.label}
+              {t(item.labelKey)}
             </Button>
           ))}
         </div>
@@ -193,11 +203,12 @@ const emptyUserForm: UserForm = {
   isActive: true,
 };
 
-function formatDate(value: Date | string | null | undefined) {
-  if (!value) return "Nunca";
+function formatDate(value: Date | string | null | undefined, lang: string, t: LangCtx["t"]) {
+  if (!value) return t("admin.never");
   const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "Nunca";
-  return date.toLocaleString("pt-BR", {
+  if (Number.isNaN(date.getTime())) return t("admin.never");
+  const locale = lang === "pt" ? "pt-BR" : lang === "en" ? "en-US" : lang === "ar" ? "ar" : "es";
+  return date.toLocaleString(locale, {
     dateStyle: "short",
     timeStyle: "short",
   });
@@ -205,6 +216,7 @@ function formatDate(value: Date | string | null | undefined) {
 
 function UsersTab() {
   const utils = trpc.useUtils();
+  const { lang, t } = useLang();
   const { data: users, isLoading } = trpc.admin.listUsers.useQuery();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<UserForm>(emptyUserForm);
@@ -214,14 +226,14 @@ function UsersTab() {
   const [notice, setNotice] = useState("");
 
   const invalidate = () => utils.admin.listUsers.invalidate();
-  const onError = (error: { message: string }) => setNotice(`Erro: ${error.message}`);
+  const onError = () => setNotice(`${t("admin.error")}: ${t("admin.generic_error")}`);
 
   const createMut = trpc.admin.createUser.useMutation({
     onSuccess: () => {
       invalidate();
       setForm(emptyUserForm);
       setEditingId(null);
-      setNotice("Usuário criado ✓");
+      setNotice(t("admin.users.created"));
     },
     onError,
   });
@@ -230,7 +242,7 @@ function UsersTab() {
       invalidate();
       setForm(emptyUserForm);
       setEditingId(null);
-      setNotice("Usuário salvo ✓");
+      setNotice(t("admin.users.updated"));
     },
     onError,
   });
@@ -239,14 +251,14 @@ function UsersTab() {
       setResetUserId(null);
       setNewPassword("");
       setConfirmNewPassword("");
-      setNotice("Senha redefinida ✓");
+      setNotice(t("admin.users.password_updated"));
     },
     onError,
   });
   const deleteMut = trpc.admin.deleteUser.useMutation({
     onSuccess: () => {
       invalidate();
-      setNotice("Usuário excluído ✓");
+      setNotice(t("admin.users.deleted"));
     },
     onError,
   });
@@ -274,7 +286,7 @@ function UsersTab() {
   const saveUser = () => {
     setNotice("");
     if (editingId === null && form.password !== form.confirmPassword) {
-      setNotice("Erro: as senhas não conferem.");
+      setNotice(t("admin.users.password_mismatch"));
       return;
     }
 
@@ -299,7 +311,7 @@ function UsersTab() {
   const resetPassword = (id: number) => {
     setNotice("");
     if (newPassword !== confirmNewPassword) {
-      setNotice("Erro: as senhas não conferem.");
+      setNotice(t("admin.users.password_mismatch"));
       return;
     }
     resetMut.mutate({ id, password: newPassword });
@@ -316,22 +328,22 @@ function UsersTab() {
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="font-bold">
-            {editingId === null ? "Novo usuário administrativo" : "Editar usuário"}
+            {editingId === null ? t("admin.users.new_title") : t("admin.users.edit_title")}
           </h2>
           {editingId !== null && (
             <Button variant="outline" size="sm" onClick={startCreate}>
-              Novo usuário
+              {t("admin.users.new")}
             </Button>
           )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="text-xs font-bold uppercase">Nome</label>
+            <label className="text-xs font-bold uppercase">{t("admin.users.name")}</label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
-            <label className="text-xs font-bold uppercase">Usuário</label>
+            <label className="text-xs font-bold uppercase">{t("admin.users.username")}</label>
             <Input
               type="text"
               value={form.username}
@@ -343,7 +355,7 @@ function UsersTab() {
           {editingId === null && (
             <>
               <div>
-                <label className="text-xs font-bold uppercase">Senha inicial</label>
+                <label className="text-xs font-bold uppercase">{t("admin.users.initial_password")}</label>
                 <Input
                   type="password"
                   value={form.password}
@@ -352,7 +364,7 @@ function UsersTab() {
                 />
               </div>
               <div>
-                <label className="text-xs font-bold uppercase">Confirmar senha</label>
+                <label className="text-xs font-bold uppercase">{t("admin.users.confirm_password")}</label>
                 <Input
                   type="password"
                   value={form.confirmPassword}
@@ -363,13 +375,13 @@ function UsersTab() {
             </>
           )}
           <div>
-            <label className="text-xs font-bold uppercase">Perfil</label>
+            <label className="text-xs font-bold uppercase">{t("admin.users.role")}</label>
             <select
               className="w-full rounded-md border px-3 py-2 text-sm"
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value as "admin" })}
             >
-              <option value="admin">Administrador</option>
+              <option value="admin">{t("admin.users.admin_role")}</option>
             </select>
           </div>
           {editingId !== null && (
@@ -379,38 +391,38 @@ function UsersTab() {
                 checked={form.isActive}
                 onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
               />
-              Usuário ativo
+              {t("admin.users.active")}
             </label>
           )}
         </div>
         <div className="mt-4 flex gap-2">
           <Button onClick={saveUser} disabled={createMut.isPending || updateMut.isPending}>
-            {editingId === null ? "Criar usuário" : "Salvar usuário"}
+            {editingId === null ? t("admin.users.create") : t("admin.users.save")}
           </Button>
           {editingId !== null && (
             <Button variant="outline" onClick={startCreate}>
-              Cancelar
+              {t("admin.cancel")}
             </Button>
           )}
         </div>
       </div>
 
       <div className="space-y-3">
-        {isLoading && <p className="text-sm text-[var(--c-ink)]/60">Carregando usuários…</p>}
+        {isLoading && <p className="text-sm text-[var(--c-ink)]/60">{t("admin.users.loading")}</p>}
         {users?.map((user) => (
           <div key={user.id} className="rounded-xl bg-white p-4 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <div className="font-bold">{user.name ?? "Sem nome"}</div>
+                <div className="font-bold">{user.name ?? t("admin.no_name")}</div>
                 <div className="text-sm text-[var(--c-ink)]/60">@{user.username}</div>
                 <div className="mt-1 text-xs text-[var(--c-ink)]/45">
-                  {user.isActive ? "Ativo" : "Inativo"} · {user.role} · Último acesso:{" "}
-                  {formatDate(user.lastSignInAt)}
+                  {user.isActive ? t("admin.active") : t("admin.inactive")} · {user.role} · {t("admin.last_access")}:{" "}
+                  {formatDate(user.lastSignInAt, lang, t)}
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" onClick={() => startEdit(user)}>
-                  Editar
+                  {t("admin.edit")}
                 </Button>
                 <Button
                   size="sm"
@@ -421,18 +433,18 @@ function UsersTab() {
                     setConfirmNewPassword("");
                   }}
                 >
-                  Redefinir senha
+                  {t("admin.users.reset")}
                 </Button>
                 <Button
                   size="sm"
                   variant="destructive"
                   onClick={() => {
-                    if (confirm(`Excluir o usuário "${user.username}"?`)) {
+                    if (confirm(text(t, "admin.users.delete_confirm", { username: user.username }))) {
                       deleteMut.mutate({ id: user.id });
                     }
                   }}
                 >
-                  Excluir
+                  {t("admin.delete")}
                 </Button>
               </div>
             </div>
@@ -440,7 +452,7 @@ function UsersTab() {
             {resetUserId === user.id && (
               <div className="mt-4 grid gap-3 border-t pt-4 md:grid-cols-[1fr_1fr_auto]">
                 <div>
-                  <label className="text-xs font-bold uppercase">Nova senha</label>
+                  <label className="text-xs font-bold uppercase">{t("admin.users.new_password")}</label>
                   <Input
                     type="password"
                     value={newPassword}
@@ -449,7 +461,7 @@ function UsersTab() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold uppercase">Confirmar nova senha</label>
+                  <label className="text-xs font-bold uppercase">{t("admin.users.confirm_new_password")}</label>
                   <Input
                     type="password"
                     value={confirmNewPassword}
@@ -462,7 +474,7 @@ function UsersTab() {
                     onClick={() => resetPassword(user.id)}
                     disabled={resetMut.isPending}
                   >
-                    Salvar senha
+                    {t("admin.users.save_password")}
                   </Button>
                 </div>
               </div>
@@ -478,6 +490,7 @@ function UsersTab() {
 
 function WorksTab() {
   const utils = trpc.useUtils();
+  const { t } = useLang();
   const { data: works } = trpc.admin.listWorks.useQuery();
   const { data: images } = trpc.admin.listImages.useQuery();
   const { data: mediaList } = trpc.admin.listMedia.useQuery();
@@ -501,16 +514,16 @@ function WorksTab() {
     utils.content.works.invalidate();
   };
   const createMut = trpc.admin.createWork.useMutation({
-    onSuccess: () => { invalidate(); setEditing(null); setNotice("Obra criada ✓"); },
+    onSuccess: () => { invalidate(); setEditing(null); setNotice(t("admin.works.created")); },
   });
   const updateMut = trpc.admin.updateWork.useMutation({
-    onSuccess: () => { invalidate(); setEditing(null); setNotice("Obra salva ✓"); },
+    onSuccess: () => { invalidate(); setEditing(null); setNotice(t("admin.works.updated")); },
   });
   const deleteMut = trpc.admin.deleteWork.useMutation({
-    onSuccess: () => { invalidate(); setNotice("Obra excluída ✓"); },
+    onSuccess: () => { invalidate(); setNotice(t("admin.works.deleted")); },
   });
   const reorderMut = trpc.admin.reorderWorks.useMutation({
-    onSuccess: () => { invalidate(); setNotice("Nova ordem salva ✓"); },
+    onSuccess: () => { invalidate(); setNotice(t("admin.works.reordered")); },
   });
 
   const startEdit = (id: number) => {
@@ -536,16 +549,16 @@ function WorksTab() {
 
   const commitPrice = () => {
     const n = parseBRL(priceInput);
-    const price = n === null ? "Sob consulta" : `R$ ${formatBRL(n)}`;
+    const price = n === null ? t("admin.works.price_placeholder") : `R$ ${formatBRL(n)}`;
     setPriceInput(n === null ? "" : formatBRL(n));
     setForm((f) => ({ ...f, price }));
   };
 
   const save = () => {
     const n = parseBRL(priceInput);
-    const price = n === null ? "Sob consulta" : `R$ ${formatBRL(n)}`;
+    const price = n === null ? t("admin.works.price_placeholder") : `R$ ${formatBRL(n)}`;
     if (!form.title || !form.slug || !form.image) {
-      setNotice("Preencha título, slug e imagem.");
+      setNotice(t("admin.works.required"));
       return;
     }
     const data = { ...form, price, status: canonicalStatus(form.status, "available") };
@@ -575,10 +588,9 @@ function WorksTab() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <p className="text-sm text-[var(--c-ink)]/70">
-          {works?.length ?? 0} obras cadastradas. Arraste os cartões para reordenar — a ordem é salva
-          automaticamente.
+          {text(t, "admin.works.count", { count: works?.length ?? 0 })}
         </p>
-        <Button onClick={() => { setForm(emptyWork); setPriceInput(""); setEditing("new"); }}>+ Nova obra</Button>
+        <Button onClick={() => { setForm(emptyWork); setPriceInput(""); setEditing("new"); }}>{t("admin.works.new")}</Button>
       </div>
 
       {notice && (
@@ -589,28 +601,28 @@ function WorksTab() {
 
       {editing !== null && (
         <div className="mb-8 rounded-xl bg-white p-6 shadow-md">
-          <h2 className="mb-4 font-bold">{editing === "new" ? "Nova obra" : "Editar obra"}</h2>
+          <h2 className="mb-4 font-bold">{editing === "new" ? t("admin.works.new_title") : t("admin.works.edit_title")}</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="text-xs font-bold uppercase">Título</label>
+              <label className="text-xs font-bold uppercase">{t("admin.works.title")}</label>
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-bold uppercase">Slug (URL)</label>
+              <label className="text-xs font-bold uppercase">{t("admin.works.slug")}</label>
               <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-") })} />
             </div>
             <div>
-              <label className="text-xs font-bold uppercase">Categoria</label>
+              <label className="text-xs font-bold uppercase">{t("admin.works.category")}</label>
               <select
                 className="w-full rounded-md border px-3 py-2 text-sm"
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
               >
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                {CATEGORIES.map((c) => <option key={c} value={c}>{categoryLabel(c, t)}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold uppercase">Preço</label>
+              <label className="text-xs font-bold uppercase">{t("admin.works.price")}</label>
               <div className="flex items-center rounded-md border bg-white px-3 focus-within:border-[var(--c-primary)]">
                 <span className="text-sm font-semibold text-[var(--c-ink)]/50">R$</span>
                 <input
@@ -625,30 +637,30 @@ function WorksTab() {
                       commitPrice();
                     }
                   }}
-                  placeholder="Sob consulta"
+                  placeholder={t("admin.works.price_placeholder")}
                   className="w-full bg-transparent px-2 py-2 text-sm font-semibold outline-none"
                 />
               </div>
               <p className="mt-1 text-[11px] text-[var(--c-ink)]/45">
-                Formato brasileiro: 12.500,00 · vazio = “Sob consulta”
+                {t("admin.works.price_help")}
               </p>
             </div>
             <div>
-              <label className="text-xs font-bold uppercase">Técnica</label>
+              <label className="text-xs font-bold uppercase">{t("admin.works.technique")}</label>
               <Input value={form.technique} onChange={(e) => setForm({ ...form, technique: e.target.value })} />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs font-bold uppercase">Ano de produção</label>
+                <label className="text-xs font-bold uppercase">{t("admin.works.year")}</label>
                 <Input value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
               </div>
               <div>
-                <label className="text-xs font-bold uppercase">Ordem</label>
+                <label className="text-xs font-bold uppercase">{t("admin.works.order")}</label>
                 <Input type="number" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })} />
               </div>
             </div>
             <div>
-              <label className="text-xs font-bold uppercase">Status</label>
+              <label className="text-xs font-bold uppercase">{t("admin.works.status")}</label>
               <div className="mt-1 flex gap-2">
                 {WORK_STATUSES.map((s) => {
                   const active = canonicalStatus(form.status, "available") === s;
@@ -667,14 +679,14 @@ function WorksTab() {
                           : "border-[var(--c-ink)]/20 text-[var(--c-ink)]/55 hover:border-[var(--c-dark)]"
                       }`}
                     >
-                      {WORK_STATUS_LABELS_PT[s]}
+                      {t(`status.${s}`)}
                     </button>
                   );
                 })}
               </div>
             </div>
             <div className="md:col-span-2">
-              <label className="text-xs font-bold uppercase">Imagem</label>
+              <label className="text-xs font-bold uppercase">{t("admin.works.image")}</label>
               <DeviceImagePicker
                 value={form.image}
                 onChange={(url) => setForm({ ...form, image: url })}
@@ -685,7 +697,7 @@ function WorksTab() {
                   value={form.image}
                   onChange={(e) => setForm({ ...form, image: e.target.value })}
                 >
-                  <option value="">— ou escolher da biblioteca —</option>
+                  <option value="">{t("admin.works.library_option")}</option>
                   {form.image && !imageOptions.some((o) => o.url === form.image) && (
                     <option value={form.image}>{form.image}</option>
                   )}
@@ -699,13 +711,13 @@ function WorksTab() {
               </div>
             </div>
             <div className="md:col-span-2">
-              <label className="text-xs font-bold uppercase">Descrição (parágrafos separados por linha em branco)</label>
+              <label className="text-xs font-bold uppercase">{t("admin.works.description")}</label>
               <Textarea rows={6} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
           </div>
           <div className="mt-4 flex gap-2">
-            <Button onClick={save} disabled={createMut.isPending || updateMut.isPending}>Salvar obra</Button>
-            <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
+            <Button onClick={save} disabled={createMut.isPending || updateMut.isPending}>{t("admin.works.save")}</Button>
+            <Button variant="outline" onClick={() => setEditing(null)}>{t("admin.cancel")}</Button>
           </div>
         </div>
       )}
@@ -719,25 +731,25 @@ function WorksTab() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => onDrop(w.id)}
             className="flex cursor-grab items-center gap-4 rounded-xl bg-white p-3 shadow-sm active:cursor-grabbing"
-            title="Arraste para reordenar"
+            title={t("admin.works.drag")}
           >
             <span className="text-lg text-[var(--c-ink)]/30">⠿</span>
             <img src={w.image} alt="" className="h-16 w-24 rounded object-cover" />
             <div className="flex-1">
               <div className="font-bold">{w.title}</div>
               <div className="text-xs text-[var(--c-ink)]/60">
-                {w.category} · {w.year} · <span className="font-bold text-[var(--c-primary)]">{w.price}</span>
+                {categoryLabel(w.category, t)} · {w.year} · <span className="font-bold text-[var(--c-primary)]">{w.price}</span>
               </div>
             </div>
-            <Button size="sm" variant="outline" onClick={() => startEdit(w.id)}>Editar</Button>
+            <Button size="sm" variant="outline" onClick={() => startEdit(w.id)}>{t("admin.edit")}</Button>
             <Button
               size="sm"
               variant="destructive"
               onClick={() => {
-                if (confirm(`Excluir a obra "${w.title}"?`)) deleteMut.mutate({ id: w.id });
+                if (confirm(text(t, "admin.works.delete_confirm", { title: w.title }))) deleteMut.mutate({ id: w.id });
               }}
             >
-              Excluir
+              {t("admin.delete")}
             </Button>
           </div>
         ))}
@@ -759,6 +771,7 @@ function isMobileDevice(): boolean {
 
 function DeviceImagePicker({ value, onChange }: { value: string; onChange: (url: string) => void }) {
   const utils = trpc.useUtils();
+  const { t } = useLang();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -770,8 +783,8 @@ function DeviceImagePicker({ value, onChange }: { value: string; onChange: (url:
       utils.admin.listMedia.invalidate();
       setBusy(false);
     },
-    onError: (e) => {
-      setError(e.message);
+    onError: () => {
+      setError(t("admin.generic_error"));
       setBusy(false);
     },
   });
@@ -779,11 +792,11 @@ function DeviceImagePicker({ value, onChange }: { value: string; onChange: (url:
   const handleFile = (f: File | undefined) => {
     if (!f) return;
     if (!/^image\//i.test(f.type)) {
-      setError("Escolha um arquivo de imagem (JPG, PNG, GIF, WebP…).");
+      setError(t("admin.upload.image_file_error"));
       return;
     }
     if (f.size > 25 * 1024 * 1024) {
-      setError("Imagem muito grande (máx. 25 MB).");
+      setError(t("admin.upload.image_size_error"));
       return;
     }
     setError("");
@@ -820,15 +833,15 @@ function DeviceImagePicker({ value, onChange }: { value: string; onChange: (url:
       >
         <span className="text-lg">{mobile ? "🖼️" : "📁"}</span>
         {busy
-          ? "Enviando imagem…"
+          ? t("admin.upload.uploading_image")
           : mobile
-            ? "Tocar para escolher da galeria de fotos"
-            : "Clique para escolher no explorador de arquivos"}
+            ? t("admin.upload.mobile_pick")
+            : t("admin.upload.desktop_pick")}
       </button>
       <p className="mt-1 text-[11px] text-[var(--c-ink)]/45">
         {mobile
-          ? "Abre a galeria do celular (rolo da câmera)."
-          : "Abre o gerenciador de arquivos do computador — navegue até a pasta das fotos."}
+          ? t("admin.upload.mobile_help")
+          : t("admin.upload.desktop_help")}
       </p>
       {error && <p className="mt-1 text-xs text-[var(--c-primary)]">{error}</p>}
       {value && (
@@ -857,6 +870,7 @@ function isVideo(mime: string) {
 
 function ImagesTab() {
   const utils = trpc.useUtils();
+  const { t } = useLang();
   const { data: mediaList } = trpc.admin.listMedia.useQuery();
   const [preview, setPreview] = useState<{ name: string; url: string; mime: string; size: number } | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -871,25 +885,25 @@ function ImagesTab() {
       invalidate();
       setPreview(null);
       setFile(null);
-      setNotice("Imagem enviada ✓");
+      setNotice(t("admin.media.sent"));
     },
-    onError: (e) => setNotice(`Erro: ${e.message}`),
+    onError: () => setNotice(`${t("admin.error")}: ${t("admin.generic_error")}`),
   });
   const deleteMut = trpc.admin.deleteMedia.useMutation({
-    onSuccess: () => { invalidate(); setNotice("Imagem excluída ✓"); },
+    onSuccess: () => { invalidate(); setNotice(t("admin.media.deleted")); },
   });
   const renameMut = trpc.admin.renameMedia.useMutation({
-    onSuccess: () => { invalidate(); setRenaming(null); setNotice("Nome atualizado ✓"); },
+    onSuccess: () => { invalidate(); setRenaming(null); setNotice(t("admin.media.renamed")); },
   });
 
   const pick = (f: File | undefined) => {
     if (!f) return;
     if (!MEDIA_REGEX.test(f.type)) {
-      setNotice("Formato não suportado. Use JPG, PNG, GIF, WebP, SVG ou vídeos MP4/WebM.");
+      setNotice(t("admin.media.unsupported"));
       return;
     }
     if (f.size > 50 * 1024 * 1024) {
-      setNotice("Arquivo muito grande (máx. 50 MB).");
+      setNotice(t("admin.media.too_large"));
       return;
     }
     setFile(f);
@@ -917,11 +931,9 @@ function ImagesTab() {
       )}
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="mb-1 font-bold">Enviar nova imagem ou vídeo</h2>
+        <h2 className="mb-1 font-bold">{t("admin.media.title")}</h2>
         <p className="mb-4 text-xs text-[var(--c-ink)]/55">
-          Imagens: JPG, JPEG, PNG, GIF, WebP, SVG, AVIF e BMP — sem limite de resolução. Vídeos:
-          MP4, WebM, OGG e MOV. Máximo de 50 MB por arquivo. Depois do envio, a mídia fica
-          disponível para qualquer obra na aba "Obras".
+          {t("admin.media.help")}
         </p>
         <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--c-ink)]/20 px-6 py-10 text-center transition hover:border-[var(--c-primary)]">
           <input
@@ -930,7 +942,7 @@ function ImagesTab() {
             className="hidden"
             onChange={(e) => pick(e.target.files?.[0])}
           />
-          <span className="text-sm font-medium">Clique para escolher uma imagem ou vídeo</span>
+          <span className="text-sm font-medium">{t("admin.media.pick")}</span>
           <span className="mt-1 text-xs text-[var(--c-ink)]/45">
             JPG · PNG · GIF · WebP · SVG · AVIF · MP4 · WebM · MOV
           </span>
@@ -941,7 +953,7 @@ function ImagesTab() {
             {isVideo(preview.mime) ? (
               <video src={preview.url} controls className="max-h-40 rounded" />
             ) : (
-              <img src={preview.url} alt="Pré-visualização" className="max-h-40 rounded object-contain" />
+              <img src={preview.url} alt={t("admin.media.preview_alt")} className="max-h-40 rounded object-contain" />
             )}
             <div className="flex-1 text-sm">
               <div className="font-bold">{preview.name}</div>
@@ -951,10 +963,10 @@ function ImagesTab() {
             </div>
             <div className="flex gap-2">
               <Button onClick={upload} disabled={uploadMut.isPending}>
-                {uploadMut.isPending ? "Enviando…" : "Confirmar envio"}
+                {uploadMut.isPending ? t("admin.media.uploading") : t("admin.media.confirm")}
               </Button>
               <Button variant="outline" onClick={() => { setPreview(null); setFile(null); }}>
-                Cancelar
+                {t("admin.cancel")}
               </Button>
             </div>
           </div>
@@ -962,9 +974,9 @@ function ImagesTab() {
       </div>
 
       <div>
-        <h2 className="mb-4 font-bold">Mídias enviadas ({mediaList?.length ?? 0})</h2>
+        <h2 className="mb-4 font-bold">{text(t, "admin.media.sent_list", { count: mediaList?.length ?? 0 })}</h2>
         {(!mediaList || mediaList.length === 0) && (
-          <p className="text-sm text-[var(--c-ink)]/55">Nenhuma mídia enviada ainda.</p>
+          <p className="text-sm text-[var(--c-ink)]/55">{t("admin.media.empty")}</p>
         )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {mediaList?.map((m) => (
@@ -994,26 +1006,26 @@ function ImagesTab() {
                     variant="outline"
                     onClick={() => {
                       navigator.clipboard.writeText(`${window.location.origin}${m.url}`);
-                      setNotice("URL copiada ✓");
+                      setNotice(t("admin.media.copied"));
                     }}
                   >
-                    Copiar URL
+                    {t("admin.media.copy_url")}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => { setRenaming(m.id); setNewName(m.name); }}
                   >
-                    Renomear
+                    {t("admin.media.rename")}
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
                     onClick={() => {
-                      if (confirm(`Excluir "${m.name}"?`)) deleteMut.mutate({ id: m.id });
+                      if (confirm(text(t, "admin.media.delete_confirm", { name: m.name }))) deleteMut.mutate({ id: m.id });
                     }}
                   >
-                    Excluir
+                    {t("admin.delete")}
                   </Button>
                 </div>
               </div>
@@ -1029,6 +1041,7 @@ function ImagesTab() {
 
 function TextsTab() {
   const utils = trpc.useUtils();
+  const { t } = useLang();
   const { data: texts } = trpc.admin.listTexts.useQuery();
   const update = trpc.admin.updateText.useMutation({
     onSuccess: () => {
@@ -1050,16 +1063,15 @@ function TextsTab() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-[var(--c-ink)]/65">
-        Todos os textos do site. Você pode escrever em qualquer idioma, incluindo árabe — o site
-        aceita múltiplos idiomas. Separe parágrafos com uma linha em branco.
+        {t("admin.texts.help")}
       </p>
-      {texts?.map((t) => (
-        <div key={t.key} className="rounded-xl bg-white p-4 shadow-sm">
-          <label className="mb-2 block text-sm font-bold">{t.label}</label>
+      {texts?.map((item) => (
+        <div key={item.key} className="rounded-xl bg-white p-4 shadow-sm">
+          <label className="mb-2 block text-sm font-bold">{item.label}</label>
           <Textarea
-            rows={t.value.length > 200 ? 6 : 2}
-            value={values[t.key] ?? ""}
-            onChange={(e) => setValues({ ...values, [t.key]: e.target.value })}
+            rows={item.value.length > 200 ? 6 : 2}
+            value={values[item.key] ?? ""}
+            onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
           />
           <div className="mt-2 flex items-center gap-3">
             <Button
@@ -1067,14 +1079,14 @@ function TextsTab() {
               disabled={update.isPending}
               onClick={() =>
                 update.mutate(
-                  { key: t.key, value: values[t.key] ?? "" },
-                  { onSuccess: () => setSavedKey(t.key) },
+                  { key: item.key, value: values[item.key] ?? "" },
+                  { onSuccess: () => setSavedKey(item.key) },
                 )
               }
             >
-              Salvar
+              {t("admin.texts.save")}
             </Button>
-            {savedKey === t.key && <span className="text-xs text-green-700">Salvo ✓</span>}
+            {savedKey === item.key && <span className="text-xs text-green-700">{t("admin.saved")}</span>}
           </div>
         </div>
       ))}
@@ -1086,6 +1098,7 @@ function TextsTab() {
 
 function DesignTab() {
   const utils = trpc.useUtils();
+  const { t } = useLang();
   const { data: settingsList } = trpc.admin.listSettings.useQuery();
   const save = trpc.admin.updateSetting.useMutation();
   const [vals, setVals] = useState<Record<string, string>>({});
@@ -1112,7 +1125,7 @@ function DesignTab() {
     }
     utils.admin.listSettings.invalidate();
     utils.content.settings.invalidate();
-    setNotice("Design salvo e aplicado ao site ✓");
+    setNotice(t("admin.design.saved"));
   };
 
   const baseSize = Number(vals["design.baseSize"] ?? "100");
@@ -1126,10 +1139,10 @@ function DesignTab() {
       )}
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="mb-4 font-bold">Fontes</h2>
+        <h2 className="mb-4 font-bold">{t("admin.design.fonts")}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="text-xs font-bold uppercase">Fonte dos títulos</label>
+            <label className="text-xs font-bold uppercase">{t("admin.design.title_font")}</label>
             <select
               className="w-full rounded-md border px-3 py-2 text-sm"
               value={vals["design.fontDisplay"] ?? "Cormorant Garamond"}
@@ -1139,7 +1152,7 @@ function DesignTab() {
             </select>
           </div>
           <div>
-            <label className="text-xs font-bold uppercase">Fonte do texto</label>
+            <label className="text-xs font-bold uppercase">{t("admin.design.body_font")}</label>
             <select
               className="w-full rounded-md border px-3 py-2 text-sm"
               value={vals["design.fontBody"] ?? "Inter"}
@@ -1150,7 +1163,7 @@ function DesignTab() {
           </div>
           <div>
             <label className="text-xs font-bold uppercase">
-              Tamanho base do texto — {baseSize}%
+              {text(t, "admin.design.base_size", { value: baseSize })}
             </label>
             <input
               type="range"
@@ -1169,7 +1182,7 @@ function DesignTab() {
                 checked={(vals["design.headingsBold"] ?? "1") !== "0"}
                 onChange={(e) => set("design.headingsBold", e.target.checked ? "1" : "0")}
               />
-              Títulos em <b>negrito</b>
+              <span>{t("admin.design.headings_bold")}</span>
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -1177,7 +1190,7 @@ function DesignTab() {
                 checked={(vals["design.headingsItalic"] ?? "0") === "1"}
                 onChange={(e) => set("design.headingsItalic", e.target.checked ? "1" : "0")}
               />
-              Títulos em <i>itálico</i>
+              <span>{t("admin.design.headings_italic")}</span>
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -1185,14 +1198,14 @@ function DesignTab() {
                 checked={(vals["design.bodyBold"] ?? "0") === "1"}
                 onChange={(e) => set("design.bodyBold", e.target.checked ? "1" : "0")}
               />
-              Texto em <b>negrito</b>
+              <span>{t("admin.design.body_bold")}</span>
             </label>
           </div>
         </div>
       </div>
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="mb-4 font-bold">Cores do site</h2>
+        <h2 className="mb-4 font-bold">{t("admin.design.colors")}</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {COLOR_FIELDS.map((c) => (
             <div key={c.key} className="flex items-center gap-3">
@@ -1203,7 +1216,7 @@ function DesignTab() {
                 className="h-10 w-14 cursor-pointer rounded border"
               />
               <div>
-                <div className="text-sm font-medium">{c.label}</div>
+                <div className="text-sm font-medium">{t(c.labelKey)}</div>
                 <div className="font-mono text-xs text-[var(--c-ink)]/50">
                   {vals[c.key] ?? c.def}
                 </div>
@@ -1214,22 +1227,21 @@ function DesignTab() {
       </div>
 
       <div className="rounded-xl border border-[var(--c-primary)]/30 bg-white p-6 shadow-sm">
-        <h2 className="mb-3 font-bold">Pré-visualização ao vivo</h2>
+        <h2 className="mb-3 font-bold">{t("admin.design.preview")}</h2>
         <div className="rounded-lg bg-[var(--c-bg)] p-6">
-          <div className="eyebrow text-[var(--c-primary)]">Exemplo de etiqueta</div>
-          <h3 className="mt-2 text-3xl">Título de exemplo do site</h3>
+          <div className="eyebrow text-[var(--c-primary)]">{t("admin.design.preview_label")}</div>
+          <h3 className="mt-2 text-3xl">{t("admin.design.preview_title")}</h3>
           <p className="mt-2 leading-relaxed">
-            Este é um parágrafo de exemplo com a fonte e o tamanho escolhidos. As mudanças aparecem
-            aqui — e em todo o site — imediatamente, antes mesmo de salvar.
+            {t("admin.design.preview_text")}
           </p>
           <span className="mt-3 inline-block bg-[var(--c-primary)] px-4 py-2 text-xs font-bold uppercase tracking-widest text-white">
-            Botão de exemplo
+            {t("admin.design.preview_button")}
           </span>
         </div>
       </div>
 
       <Button size="lg" onClick={saveAll} disabled={save.isPending}>
-        {save.isPending ? "Salvando…" : "Salvar design"}
+        {save.isPending ? t("admin.saving") : t("admin.design.save")}
       </Button>
     </div>
   );
@@ -1239,6 +1251,7 @@ function DesignTab() {
 
 function SectionsTab() {
   const utils = trpc.useUtils();
+  const { t } = useLang();
   const { data: settingsList } = trpc.admin.listSettings.useQuery();
   const save = trpc.admin.updateSetting.useMutation({
     onSuccess: () => {
@@ -1254,19 +1267,18 @@ function SectionsTab() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-[var(--c-ink)]/65">
-        Ative ou desative as seções da página inicial. A mudança aparece no site imediatamente após
-        salvar.
+        {t("admin.sections.help")}
       </p>
       {SECTIONS.map((s) => {
         const on = value(s.key) !== "0";
         return (
           <div key={s.key} className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm">
             <div>
-              <div className="font-bold">{s.label}</div>
-              <div className="text-xs text-[var(--c-ink)]/50">{on ? "Visível no site" : "Oculta"}</div>
+              <div className="font-bold">{t(s.labelKey)}</div>
+              <div className="text-xs text-[var(--c-ink)]/50">{on ? t("admin.visible") : t("admin.hidden")}</div>
             </div>
             <div className="flex items-center gap-3">
-              {savedKey === s.key && <span className="text-xs text-green-700">Salvo ✓</span>}
+              {savedKey === s.key && <span className="text-xs text-green-700">{t("admin.saved")}</span>}
               <Button
                 size="sm"
                 variant={on ? "destructive" : "default"}
@@ -1278,7 +1290,7 @@ function SectionsTab() {
                   )
                 }
               >
-                {on ? "Ocultar" : "Mostrar"}
+                {on ? t("admin.hide") : t("admin.show")}
               </Button>
             </div>
           </div>
@@ -1312,6 +1324,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (value: boolean) => v
 
 function useSettingsState() {
   const utils = trpc.useUtils();
+  const { t } = useLang();
   const { data: settingsList } = trpc.admin.listSettings.useQuery();
   const save = trpc.admin.updateSettings.useMutation();
   const [vals, setVals] = useState<Record<string, string>>({});
@@ -1336,8 +1349,7 @@ function useSettingsState() {
       setNotice(message);
       window.setTimeout(() => setNotice(""), 2500);
     } catch (error) {
-      const err = error instanceof Error ? error.message : "Erro ao salvar configurações";
-      setNotice(`Erro: ${err}`);
+      setNotice(`${t("admin.error")}: ${t("admin.settings.save_error")}`);
       window.setTimeout(() => setNotice(""), 4000);
       throw error;
     }
@@ -1348,6 +1360,7 @@ function useSettingsState() {
 
 function CouponTab() {
   const { vals, set, saveKeys, notice, saving } = useSettingsState();
+  const { t } = useLang();
   const utils = trpc.useUtils();
   const { data: works } = trpc.admin.listWorks.useQuery();
   const couponMut = trpc.admin.setWorkCoupon.useMutation({
@@ -1359,13 +1372,13 @@ function CouponTab() {
   });
 
   const enabled = (vals["coupon.enabled"] ?? "0") === "1";
-  const noticeIsError = notice.startsWith("Erro:");
+  const noticeIsError = notice.startsWith(`${t("admin.error")}:`);
 
   const handleSaveCoupon = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     await saveKeys(
       ["coupon.enabled", "coupon.name", "coupon.percent", "coupon.start", "coupon.end"],
-      "Cupom salvo ✓",
+      t("admin.coupon.saved"),
     ).catch(() => undefined);
   };
 
@@ -1374,30 +1387,29 @@ function CouponTab() {
       <form onSubmit={handleSaveCoupon} className="rounded-xl border-2 border-[var(--c-accent)]/60 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="font-bold">🎟️ Cupom de desconto</h2>
+            <h2 className="font-bold">{t("admin.coupon.title")}</h2>
             <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
-              Defina o nome do cupom e o percentual de desconto. O cupom aparece abaixo do preço
-              das obras escolhidas individualmente.
+              {t("admin.coupon.help")}
             </p>
           </div>
           <label className="flex items-center gap-3 rounded-lg border border-[var(--c-ink)]/10 px-3 py-2 text-sm font-semibold">
             <Toggle on={enabled} onChange={(value) => set("coupon.enabled", value ? "1" : "0")} />
-            Ativar cupom
+            {t("admin.coupon.enable")}
           </label>
         </div>
 
         <div className="mt-5 space-y-4 border-t border-[var(--c-ink)]/10 pt-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-xs font-bold uppercase">Nome do cupom</label>
+              <label className="text-xs font-bold uppercase">{t("admin.coupon.name")}</label>
               <Input
                 value={vals["coupon.name"] ?? ""}
                 onChange={(event) => set("coupon.name", event.target.value)}
-                placeholder="Ex.: CAFE10"
+                placeholder={t("admin.coupon.name_placeholder")}
               />
             </div>
             <div>
-              <label className="text-xs font-bold uppercase">Percentual de desconto</label>
+              <label className="text-xs font-bold uppercase">{t("admin.coupon.percent")}</label>
               <div className="flex items-center rounded-md border bg-white px-3 focus-within:border-[var(--c-primary)]">
                 <Input
                   type="number"
@@ -1414,7 +1426,7 @@ function CouponTab() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-xs font-bold uppercase">Data inicial</label>
+              <label className="text-xs font-bold uppercase">{t("admin.coupon.start")}</label>
               <input
                 type="date"
                 value={vals["coupon.start"] ?? ""}
@@ -1423,7 +1435,7 @@ function CouponTab() {
               />
             </div>
             <div>
-              <label className="text-xs font-bold uppercase">Data final</label>
+              <label className="text-xs font-bold uppercase">{t("admin.coupon.end")}</label>
               <input
                 type="date"
                 value={vals["coupon.end"] ?? ""}
@@ -1433,14 +1445,14 @@ function CouponTab() {
             </div>
           </div>
           <div className="rounded-lg border border-dashed border-[var(--c-accent)]/50 p-3 text-xs text-[var(--c-ink)]/65">
-            🎟️ <strong>Pré-visualização:</strong> {enabled ? vals["coupon.name"] || "Cupom" : "cupom desativado"}
-            {enabled && vals["coupon.percent"] ? ` — ${vals["coupon.percent"]}% de desconto nesta obra` : ""}
+            🎟️ <strong>{t("admin.coupon.preview")}</strong> {enabled ? vals["coupon.name"] || t("admin.coupon.default") : t("admin.coupon.disabled")}
+            {enabled && vals["coupon.percent"] ? ` — ${text(t, "admin.coupon.discount", { percent: vals["coupon.percent"] })}` : ""}
           </div>
         </div>
 
         <div className="mt-4 flex items-center gap-3">
           <Button size="sm" type="submit" disabled={saving}>
-            {saving ? "Salvando…" : "Salvar cupom"}
+            {saving ? t("admin.saving") : t("admin.coupon.save")}
           </Button>
           {notice && <span className={`text-xs ${noticeIsError ? "text-red-700" : "text-green-700"}`}>{notice}</span>}
         </div>
@@ -1449,7 +1461,7 @@ function CouponTab() {
       {enabled && (
         <div className="space-y-3">
           <p className="text-sm text-[var(--c-ink)]/65">
-            Escolha em quais obras o cupom aparece. A mudança é salva na hora.
+            {t("admin.coupon.choose_works")}
           </p>
           <div className="grid gap-3">
             {works?.map((work) => {
@@ -1460,11 +1472,11 @@ function CouponTab() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-bold">{work.title}</div>
                     <div className="text-xs text-[var(--c-ink)]/55">
-                      {work.category} · <span className="font-semibold text-[var(--c-primary)]">{work.price}</span>
+                      {categoryLabel(work.category, t)} · <span className="font-semibold text-[var(--c-primary)]">{work.price}</span>
                     </div>
                   </div>
                   <span className={`text-[10px] font-bold uppercase tracking-widest ${active ? "text-green-700" : "text-[var(--c-ink)]/40"}`}>
-                    {active ? "Cupom visível" : "Oculto"}
+                    {active ? t("admin.coupon.visible") : t("admin.coupon.hidden")}
                   </span>
                   <Button
                     size="sm"
@@ -1472,7 +1484,7 @@ function CouponTab() {
                     disabled={couponMut.isPending}
                     onClick={() => couponMut.mutate({ id: work.id, enabled: !active })}
                   >
-                    {active ? "Ocultar" : "Mostrar"}
+                    {active ? t("admin.hide") : t("admin.show")}
                   </Button>
                 </div>
               );
@@ -1486,11 +1498,12 @@ function CouponTab() {
 
 function PromocoesTab() {
   const { vals, set, saveKeys, notice, saving } = useSettingsState();
+  const { t } = useLang();
   const readingOn = (vals["prize.reading"] ?? "0") === "1";
   const workOn = (vals["prize.work"] ?? "0") === "1";
   const linkOn = (vals["prize.reading.link"] ?? "0") === "1";
   const [minimumInput, setMinimumInput] = useState("");
-  const noticeIsError = notice.startsWith("Erro:");
+  const noticeIsError = notice.startsWith(`${t("admin.error")}:`);
 
   useEffect(() => {
     const amount = Number(vals["promotion.minimumAmount"] ?? "7000");
@@ -1505,7 +1518,7 @@ function PromocoesTab() {
     if (amount === null || amount <= 0) {
       await saveKeys(
         ["promotion.minimumAmount", "prize.reading", "prize.work", "prize.reading.link"],
-        "Promoções salvas ✓",
+        t("admin.promotions.saved"),
         { "promotion.minimumAmount": "0" },
       ).catch(() => undefined);
       return;
@@ -1514,7 +1527,7 @@ function PromocoesTab() {
     set("promotion.minimumAmount", normalizedAmount);
     await saveKeys(
       ["promotion.minimumAmount", "prize.reading", "prize.work", "prize.reading.link"],
-      "Promoções salvas ✓",
+      t("admin.promotions.saved"),
       { "promotion.minimumAmount": normalizedAmount },
     ).catch(() => undefined);
     setMinimumInput(`R$ ${formatBRL(amount)}`);
@@ -1523,14 +1536,13 @@ function PromocoesTab() {
   return (
     <div className="space-y-6">
       <form onSubmit={handleSavePromotions} className="rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="font-bold">🎁 Promoção de compra</h2>
+        <h2 className="font-bold">{t("admin.promotions.title")}</h2>
         <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
-          Ao adquirir obras a partir de <strong>{minimumInput || "R$ 7.000,00"}</strong>, o cliente ganha os prêmios
-          ativados abaixo. O aviso aparece na página de cada obra.
+          {t("admin.promotions.help_prefix")} <strong>{minimumInput || "R$ 7.000,00"}</strong>, {t("admin.promotions.help_suffix")}
         </p>
 
         <div className="mt-5 max-w-xs">
-          <label className="text-xs font-bold uppercase">Valor mínimo da compra</label>
+          <label className="text-xs font-bold uppercase">{t("admin.promotions.minimum")}</label>
           <Input
             inputMode="decimal"
             value={minimumInput}
@@ -1547,9 +1559,9 @@ function PromocoesTab() {
           <div className="rounded-lg border border-[var(--c-ink)]/10 p-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <div className="text-sm font-semibold">☕ Sessão de leitura de borra de café</div>
+                <div className="text-sm font-semibold">{t("admin.promotions.reading")}</div>
                 <div className="text-xs text-[var(--c-ink)]/55">
-                  {readingOn ? "Prêmio ativo — aparece no site" : "Prêmio inativo — oculto do público"}
+                  {readingOn ? t("admin.promotions.active") : t("admin.promotions.inactive")}
                 </div>
               </div>
               <Toggle on={readingOn} onChange={(value) => set("prize.reading", value ? "1" : "0")} />
@@ -1557,11 +1569,11 @@ function PromocoesTab() {
             {readingOn && (
               <div className="mt-3 flex items-center justify-between gap-4 border-t border-[var(--c-ink)]/10 pt-3">
                 <div>
-                  <div className="text-xs font-semibold">🔗 Link do site de leitura de borra de café</div>
+                  <div className="text-xs font-semibold">{t("admin.promotions.reading_link")}</div>
                   <div className="text-[11px] text-[var(--c-ink)]/55">
                     {linkOn
-                      ? "Link www.leituradaborradecafe.com visível sob o prêmio"
-                      : "Link oculto — ative para exibir www.leituradaborradecafe.com"}
+                      ? t("admin.promotions.link_visible")
+                      : t("admin.promotions.link_hidden")}
                   </div>
                 </div>
                 <Toggle on={linkOn} onChange={(value) => set("prize.reading.link", value ? "1" : "0")} />
@@ -1571,9 +1583,9 @@ function PromocoesTab() {
 
           <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-ink)]/10 p-4">
             <div>
-              <div className="text-sm font-semibold">🖼️ Uma obra de arte de até R$ 250</div>
+              <div className="text-sm font-semibold">{t("admin.promotions.work")}</div>
               <div className="text-xs text-[var(--c-ink)]/55">
-                {workOn ? "Prêmio ativo — aparece no site" : "Prêmio inativo — oculto do público"}
+                {workOn ? t("admin.promotions.active") : t("admin.promotions.inactive")}
               </div>
             </div>
             <Toggle on={workOn} onChange={(value) => set("prize.work", value ? "1" : "0")} />
@@ -1582,7 +1594,7 @@ function PromocoesTab() {
 
         <div className="mt-4 flex items-center gap-3">
           <Button size="sm" type="submit" disabled={saving}>
-            {saving ? "Salvando…" : "Salvar promoções"}
+            {saving ? t("admin.saving") : t("admin.promotions.save")}
           </Button>
           {notice && <span className={`text-xs ${noticeIsError ? "text-red-700" : "text-green-700"}`}>{notice}</span>}
         </div>
@@ -1593,6 +1605,7 @@ function PromocoesTab() {
 
 function EntregaTab() {
   const { vals, set, saveKeys, notice, saving } = useSettingsState();
+  const { t } = useLang();
   const enabled = (vals["shipping.enabled"] ?? "1") === "1";
   const noteOn = (vals["shipping.note"] ?? "1") === "1";
   const intlOn = (vals["shipping.international"] ?? "0") === "1";
@@ -1600,17 +1613,17 @@ function EntregaTab() {
   return (
     <div className="space-y-6">
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="font-bold">🚚 Entrega</h2>
+        <h2 className="font-bold">{t("admin.shipping.title")}</h2>
         <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
-          Controla os avisos de entrega exibidos abaixo do preço nas páginas das obras.
+          {t("admin.shipping.help")}
         </p>
 
         <div className="mt-5 space-y-3">
           <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-ink)]/10 p-4">
             <div>
-              <div className="text-sm font-semibold">🇧🇷 Entrega em todo o Brasil</div>
+              <div className="text-sm font-semibold">{t("admin.shipping.brazil")}</div>
               <div className="text-xs text-[var(--c-ink)]/55">
-                {enabled ? "Aviso ativo — aparece nas obras" : "Aviso oculto do site público"}
+                {enabled ? t("admin.shipping.active") : t("admin.shipping.hidden")}
               </div>
             </div>
             <Toggle on={enabled} onChange={(value) => set("shipping.enabled", value ? "1" : "0")} />
@@ -1619,9 +1632,9 @@ function EntregaTab() {
           {enabled && (
             <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-ink)]/10 p-4">
               <div>
-                <div className="text-sm font-semibold">📦 Frete por conta do comprador</div>
+                <div className="text-sm font-semibold">{t("admin.shipping.buyer_pays")}</div>
                 <div className="text-xs text-[var(--c-ink)]/55">
-                  Nota em letras pequenas: <em>“(Observação: o comprador paga o frete)”</em>
+                  <em>{t("admin.shipping.note")}</em>
                 </div>
               </div>
               <Toggle on={noteOn} onChange={(value) => set("shipping.note", value ? "1" : "0")} />
@@ -1630,9 +1643,9 @@ function EntregaTab() {
 
           <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-ink)]/10 p-4">
             <div>
-              <div className="text-sm font-semibold">✈️ Envio internacional</div>
+              <div className="text-sm font-semibold">{t("admin.shipping.international")}</div>
               <div className="text-xs text-[var(--c-ink)]/55">
-                {intlOn ? "Aviso de envio internacional visível" : "Envio internacional oculto"}
+                {intlOn ? t("admin.shipping.international_visible") : t("admin.shipping.international_hidden")}
               </div>
             </div>
             <Toggle on={intlOn} onChange={(value) => set("shipping.international", value ? "1" : "0")} />
@@ -1643,9 +1656,9 @@ function EntregaTab() {
           <Button
             size="sm"
             disabled={saving}
-            onClick={() => saveKeys(["shipping.enabled", "shipping.note", "shipping.international"], "Entrega salva ✓")}
+            onClick={() => saveKeys(["shipping.enabled", "shipping.note", "shipping.international"], t("admin.shipping.saved"))}
           >
-            {saving ? "Salvando…" : "Salvar"}
+            {saving ? t("admin.saving") : t("admin.shipping.save")}
           </Button>
           {notice && <span className="text-xs text-green-700">{notice}</span>}
         </div>
@@ -1656,29 +1669,29 @@ function EntregaTab() {
 
 function IdiomasTab() {
   const { vals, set, saveKeys, notice, saving } = useSettingsState();
+  const { t } = useLang();
   const languages = [
-    { key: "lang.en", flag: "🇮🇪", name: "English (US)", desc: "Inglês americano — selecionável pelo ícone de globo" },
-    { key: "lang.es", flag: "🇪🇸", name: "Español", desc: "Espanhol — selecionável pelo ícone de globo" },
-    { key: "lang.ar", flag: "🇵🇸", name: "العربية", desc: "Árabe — leitura da direita para a esquerda" },
+    { key: "lang.en", flag: "🇮🇪", name: "English (US)", descKey: "admin.languages.en_desc" },
+    { key: "lang.es", flag: "🇪🇸", name: "Español", descKey: "admin.languages.es_desc" },
+    { key: "lang.ar", flag: "🇵🇸", name: "العربية", descKey: "admin.languages.ar_desc" },
   ];
 
   return (
     <div className="space-y-6">
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="font-bold">🌐 Idiomas do site</h2>
+        <h2 className="font-bold">{t("admin.languages.title")}</h2>
         <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
-          Ative ou desative cada idioma separadamente. Português (Brasil) é o idioma principal e
-          permanece sempre ativo.
+          {t("admin.languages.help")}
         </p>
 
         <div className="mt-5 space-y-3">
           <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-primary)]/30 bg-[var(--c-sand)]/60 p-4">
             <div>
-              <div className="text-sm font-semibold">🇧🇷 Português (Brasil) — idioma padrão</div>
-              <div className="text-xs text-[var(--c-ink)]/55">Sempre ativo — não pode ser desativado</div>
+              <div className="text-sm font-semibold">{t("admin.languages.pt")}</div>
+              <div className="text-xs text-[var(--c-ink)]/55">{t("admin.languages.pt_desc")}</div>
             </div>
             <span className="rounded-full bg-[var(--c-primary)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
-              Fixo
+              {t("admin.status_fixed")}
             </span>
           </div>
 
@@ -1691,7 +1704,7 @@ function IdiomasTab() {
                     {language.flag} {language.name}
                   </div>
                   <div className="text-xs text-[var(--c-ink)]/55">
-                    {on ? language.desc : "Idioma oculto do seletor"}
+                    {on ? t(language.descKey) : t("admin.languages.hidden")}
                   </div>
                 </div>
                 <Toggle on={on} onChange={(value) => set(language.key, value ? "1" : "0")} />
@@ -1704,9 +1717,9 @@ function IdiomasTab() {
           <Button
             size="sm"
             disabled={saving}
-            onClick={() => saveKeys(languages.map((language) => language.key), "Idiomas salvos ✓")}
+            onClick={() => saveKeys(languages.map((language) => language.key), t("admin.languages.saved"))}
           >
-            {saving ? "Salvando…" : "Salvar idiomas"}
+            {saving ? t("admin.saving") : t("admin.languages.save")}
           </Button>
           {notice && <span className="text-xs text-green-700">{notice}</span>}
         </div>
@@ -1718,15 +1731,16 @@ function IdiomasTab() {
 /* ============================= ESPAÇO DE CAFÉ ============================= */
 
 const DRAFT_TYPES = [
-  { id: "text", label: "Texto", icon: "✏️" },
-  { id: "image", label: "Foto", icon: "🖼️" },
-  { id: "video", label: "Vídeo", icon: "🎬" },
+  { id: "text", labelKey: "admin.cafe.text", icon: "✏️" },
+  { id: "image", labelKey: "admin.cafe.photo", icon: "🖼️" },
+  { id: "video", labelKey: "admin.cafe.video", icon: "🎬" },
 ] as const;
 
 type DraftType = (typeof DRAFT_TYPES)[number]["id"];
 
 function CafeTab() {
   const utils = trpc.useUtils();
+  const { t } = useLang();
   const { data: status } = trpc.cafe.status.useQuery();
   const enabled = status?.enabled ?? false;
 
@@ -1747,12 +1761,10 @@ function CafeTab() {
       >
         <div>
           <h2 className="font-bold">
-            ☕ Espaço de Café — {enabled ? "ativado" : "desativado"}
+            {text(t, "admin.cafe.title", { status: enabled ? t("admin.cafe.enabled") : t("admin.cafe.disabled") })}
           </h2>
           <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
-            Área de rascunho: textos, fotos e vídeos em preparação que{" "}
-            <strong>nunca aparecem no site público</strong>. Desativado, o espaço fica
-            completamente inacessível.
+            {t("admin.cafe.help")}
           </p>
         </div>
         <button
@@ -1776,10 +1788,9 @@ function CafeTab() {
       {!enabled ? (
         <div className="rounded-xl border border-dashed border-[var(--c-ink)]/25 bg-white/60 p-14 text-center">
           <div className="text-4xl">🔒</div>
-          <h3 className="mt-3 font-display text-xl font-semibold">Espaço de Café fechado</h3>
+          <h3 className="mt-3 font-display text-xl font-semibold">{t("admin.cafe.closed")}</h3>
           <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--c-ink)]/55">
-            Os rascunhos estão guardados em segurança. Ative o espaço acima para voltar a
-            editá-los.
+            {t("admin.cafe.closed_help")}
           </p>
         </div>
       ) : (
@@ -1791,6 +1802,7 @@ function CafeTab() {
 
 function CafeContent() {
   const utils = trpc.useUtils();
+  const { t } = useLang();
   const { data: drafts, error } = trpc.cafe.list.useQuery();
   const { data: mediaList } = trpc.admin.listMedia.useQuery();
   const [editing, setEditing] = useState<number | "new" | null>(null);
@@ -1802,15 +1814,15 @@ function CafeContent() {
 
   const invalidate = () => utils.cafe.list.invalidate();
   const createMut = trpc.cafe.create.useMutation({
-    onSuccess: () => { invalidate(); setEditing(null); setNotice("Rascunho criado ✓"); },
-    onError: (e) => setNotice(`Erro: ${e.message}`),
+    onSuccess: () => { invalidate(); setEditing(null); setNotice(t("admin.cafe.created")); },
+    onError: () => setNotice(`${t("admin.error")}: ${t("admin.generic_error")}`),
   });
   const updateMut = trpc.cafe.update.useMutation({
-    onSuccess: () => { invalidate(); setEditing(null); setNotice("Rascunho salvo ✓"); },
-    onError: (e) => setNotice(`Erro: ${e.message}`),
+    onSuccess: () => { invalidate(); setEditing(null); setNotice(t("admin.cafe.updated")); },
+    onError: () => setNotice(`${t("admin.error")}: ${t("admin.generic_error")}`),
   });
   const removeMut = trpc.cafe.remove.useMutation({
-    onSuccess: () => { invalidate(); setNotice("Rascunho excluído ✓"); },
+    onSuccess: () => { invalidate(); setNotice(t("admin.cafe.deleted")); },
   });
 
   const startNew = (t: DraftType) => {
@@ -1833,7 +1845,7 @@ function CafeContent() {
 
   const save = () => {
     if (!content.trim()) {
-      setNotice("Preencha o conteúdo do rascunho.");
+      setNotice(t("admin.cafe.required"));
       return;
     }
     const data = { type, title: title.trim(), content: content.trim(), note: note.trim() };
@@ -1844,18 +1856,21 @@ function CafeContent() {
   if (error) {
     return (
       <div className="rounded-xl bg-white p-6 text-sm text-[var(--c-primary)] shadow-sm">
-        {error.message}
+        {t("admin.generic_error")}
       </div>
     );
   }
 
-  const typeLabel = (t: string) => DRAFT_TYPES.find((x) => x.id === t)?.label ?? t;
-  const typeIcon = (t: string) => DRAFT_TYPES.find((x) => x.id === t)?.icon ?? "📄";
+  const typeLabel = (type: string) => {
+    const draftType = DRAFT_TYPES.find((x) => x.id === type);
+    return draftType ? t(draftType.labelKey) : type;
+  };
+  const typeIcon = (type: string) => DRAFT_TYPES.find((x) => x.id === type)?.icon ?? "📄";
 
   return (
     <div className="space-y-6">
       <div className="rounded-lg border border-[var(--c-accent)]/40 bg-[#fff8ec] px-4 py-2 text-xs text-[var(--c-ink)]/70">
-        Modo rascunho ativo — nada daqui aparece no site público.
+        {t("admin.cafe.mode")}
       </div>
 
       {notice && (
@@ -1866,9 +1881,9 @@ function CafeContent() {
 
       {/* Novo rascunho */}
       <div className="flex flex-wrap gap-2">
-        {DRAFT_TYPES.map((t) => (
-          <Button key={t.id} variant="outline" onClick={() => startNew(t.id)}>
-            {t.icon} Novo {t.label.toLowerCase()}
+        {DRAFT_TYPES.map((draftType) => (
+          <Button key={draftType.id} variant="outline" onClick={() => startNew(draftType.id)}>
+            {draftType.icon} {text(t, "admin.cafe.new_type", { type: typeLabel(draftType.id).toLowerCase() })}
           </Button>
         ))}
       </div>
@@ -1876,29 +1891,29 @@ function CafeContent() {
       {editing !== null && (
         <div className="rounded-xl bg-white p-6 shadow-md">
           <h3 className="mb-4 font-bold">
-            {editing === "new" ? "Novo rascunho" : "Editar rascunho"} — {typeLabel(type)}
+            {editing === "new" ? t("admin.cafe.new_draft") : t("admin.cafe.edit_draft")} — {typeLabel(type)}
           </h3>
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold uppercase">Título</label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nome interno do rascunho" />
+              <label className="text-xs font-bold uppercase">{t("admin.cafe.title_label")}</label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("admin.cafe.title_placeholder")} />
             </div>
             {type === "text" ? (
               <div>
-                <label className="text-xs font-bold uppercase">Texto</label>
-                <Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Escreva o texto em preparação…" />
+                <label className="text-xs font-bold uppercase">{t("admin.cafe.text_label")}</label>
+                <Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} placeholder={t("admin.cafe.text_placeholder")} />
               </div>
             ) : (
               <div>
                 <label className="text-xs font-bold uppercase">
-                  {type === "image" ? "Foto" : "Vídeo"} (da aba Imagens)
+                  {text(t, "admin.cafe.media_label", { type: typeLabel(type) })}
                 </label>
                 <select
                   className="w-full rounded-md border px-3 py-2 text-sm"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                 >
-                  <option value="">— escolher mídia enviada —</option>
+                  <option value="">{t("admin.cafe.choose_media")}</option>
                   {(mediaList ?? [])
                     .filter((m) => (type === "video" ? isVideo(m.mime) : !isVideo(m.mime)))
                     .map((m) => (
@@ -1909,7 +1924,7 @@ function CafeContent() {
                   className="mt-2"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Ou cole a URL da mídia"
+                  placeholder={t("admin.cafe.paste_url")}
                 />
                 {content && (
                   <div className="mt-3">
@@ -1923,14 +1938,14 @@ function CafeContent() {
               </div>
             )}
             <div>
-              <label className="text-xs font-bold uppercase">Anotação interna (opcional)</label>
-              <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ex.: publicar na próxima exposição" />
+              <label className="text-xs font-bold uppercase">{t("admin.cafe.note")}</label>
+              <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("admin.cafe.note_placeholder")} />
             </div>
             <div className="flex gap-2">
               <Button onClick={save} disabled={createMut.isPending || updateMut.isPending}>
-                Salvar rascunho
+                {t("admin.cafe.save")}
               </Button>
-              <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
+              <Button variant="outline" onClick={() => setEditing(null)}>{t("admin.cancel")}</Button>
             </div>
           </div>
         </div>
@@ -1940,7 +1955,7 @@ function CafeContent() {
       <div className="grid gap-3">
         {(!drafts || drafts.length === 0) && (
           <p className="text-sm text-[var(--c-ink)]/55">
-            Nenhum rascunho ainda. Comece com um texto, foto ou vídeo em preparação.
+            {t("admin.cafe.empty")}
           </p>
         )}
         {drafts?.map((d) => (
@@ -1948,22 +1963,22 @@ function CafeContent() {
             <span className="text-xl">{typeIcon(d.type)}</span>
             <div className="min-w-0 flex-1">
               <div className="truncate font-bold">
-                {d.title || <span className="text-[var(--c-ink)]/40">(sem título)</span>}
+                {d.title || <span className="text-[var(--c-ink)]/40">{t("admin.cafe.untitled")}</span>}
               </div>
               <div className="truncate text-xs text-[var(--c-ink)]/55">
                 {typeLabel(d.type)} · {d.type === "text" ? d.content.slice(0, 80) : d.content}
                 {d.note ? ` · 📝 ${d.note}` : ""}
               </div>
             </div>
-            <Button size="sm" variant="outline" onClick={() => startEdit(d.id)}>Editar</Button>
+            <Button size="sm" variant="outline" onClick={() => startEdit(d.id)}>{t("admin.edit")}</Button>
             <Button
               size="sm"
               variant="destructive"
               onClick={() => {
-                if (confirm("Excluir este rascunho?")) removeMut.mutate({ id: d.id });
+                if (confirm(t("admin.cafe.delete_confirm"))) removeMut.mutate({ id: d.id });
               }}
             >
-              Excluir
+              {t("admin.delete")}
             </Button>
           </div>
         ))}

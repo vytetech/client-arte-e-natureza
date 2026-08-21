@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { LOGIN_PATH } from "@/const";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLang } from "@/lib/i18n";
 import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
@@ -28,8 +29,8 @@ import { AuthLayoutSkeleton } from "./AuthLayoutSkeleton";
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
+  { icon: LayoutDashboard, labelKey: "admin.tab.works", path: "/" },
+  { icon: Users, labelKey: "admin.tab.users", path: "/some-path" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -47,6 +48,7 @@ export default function AuthLayout({
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
   const { isLoading, user } = useAuth();
+  const { t } = useLang();
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
@@ -62,11 +64,10 @@ export default function AuthLayout({
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
           <div className="flex flex-col items-center gap-6">
             <h1 className="text-2xl font-semibold tracking-tight text-center">
-              Sign in to continue
+              {t("admin.restricted")}
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Access to this dashboard requires authentication. Continue to
-              launch the login flow.
+              {t("admin.restricted")}
             </p>
           </div>
           <Button
@@ -76,7 +77,7 @@ export default function AuthLayout({
             size="lg"
             className="w-full shadow-lg hover:shadow-xl transition-all"
           >
-            Sign in
+            {t("login.submit")}
           </Button>
         </div>
       </div>
@@ -108,6 +109,7 @@ function AuthLayoutContent({
   setSidebarWidth,
 }: AuthLayoutContentProps) {
   const { user, logout } = useAuth();
+  const { t } = useLang();
   const location = useLocation();
   const navigate = useNavigate();
   const { state, toggleSidebar } = useSidebar();
@@ -166,14 +168,14 @@ function AuthLayoutContent({
               <button
                 onClick={toggleSidebar}
                 className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
-                aria-label="Toggle navigation"
+                aria-label={t("nav.menu")}
               >
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="font-semibold tracking-tight truncate">
-                    Navigation
+                    {t("footer.nav")}
                   </span>
                 </div>
               ) : null}
@@ -189,13 +191,13 @@ function AuthLayoutContent({
                     <SidebarMenuButton
                       isActive={isActive}
                       onClick={() => navigate(item.path)}
-                      tooltip={item.label}
+                      tooltip={t(item.labelKey)}
                       className={`h-10 transition-all font-normal`}
                     >
                       <item.icon
                         className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
                       />
-                      <span>{item.label}</span>
+                      <span>{t(item.labelKey)}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -228,7 +230,7 @@ function AuthLayoutContent({
                   className="cursor-pointer text-destructive focus:text-destructive"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
+                  <span>{t("admin.logout")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -252,7 +254,7 @@ function AuthLayoutContent({
               <div className="flex items-center gap-3">
                 <div className="flex flex-col gap-1">
                   <span className="tracking-tight text-foreground">
-                    {activeMenuItem?.label ?? "Menu"}
+                    {activeMenuItem ? t(activeMenuItem.labelKey) : t("nav.menu")}
                   </span>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useLang } from "@/lib/i18n";
 
 const MUSIC_VOLUME = 0.5;
 const BIRDS_VOLUME = 0.5;
@@ -7,6 +8,7 @@ export default function AmbientAudio() {
   const musicRef = useRef<HTMLAudioElement>(null);
   const birdsRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
+  const { t } = useLang();
 
   const start = async () => {
     const music = musicRef.current;
@@ -47,8 +49,8 @@ export default function AmbientAudio() {
       <audio ref={birdsRef} src="/audio/passaros.mp3" loop preload="auto" />
       <button
         onClick={toggle}
-        aria-label={playing ? "Desligar o som" : "Ligar o som"}
-        title={playing ? "Desligar o som" : "Ligar o som"}
+        aria-label={playing ? t("audio.disable") : t("audio.enable")}
+        title={playing ? t("audio.disable") : t("audio.enable")}
         className="fixed bottom-5 left-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--c-dark)] text-[var(--c-bg)] shadow-[0_8px_24px_rgba(20,16,12,0.45)] transition hover:scale-105"
       >
         {playing ? (

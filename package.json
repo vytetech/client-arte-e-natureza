@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "start": "NODE_ENV=production node dist/boot.js",
     "check": "tsc -b",
+    "i18n:check": "tsx scripts/check-i18n.ts",
     "format": "prettier --write .",
     "test": "vitest run",
     "admin:create": "tsx scripts/create-admin.ts",

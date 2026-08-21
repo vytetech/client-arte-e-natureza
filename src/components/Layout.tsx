@@ -33,7 +33,7 @@ function LogoMark({ className = "h-8" }: { className?: string }) {
 }
 
 function LanguageSwitcher() {
-  const { lang, setLang, enabled } = useLang();
+  const { lang, setLang, enabled, t } = useLang();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -49,8 +49,8 @@ function LanguageSwitcher() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        aria-label="Idioma / Language"
-        title="Idioma / Language"
+        aria-label={t("lang.selector")}
+        title={t("lang.selector")}
         className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-lg text-white/80 transition hover:border-white/40 hover:bg-white/10 hover:text-white"
       >
         🌐
@@ -127,7 +127,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <button
               className="text-2xl leading-none text-[#F5F2ED] transition hover:text-white md:hidden"
               onClick={() => setOpen(!open)}
-              aria-label="Menu"
+              aria-label={t("nav.menu")}
             >
               {open ? "✕" : "☰"}
             </button>
@@ -210,7 +210,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 Instagram @danieldetomiartenatureza
               </a>
               <Link to="/admin" className="mt-3 text-xs text-white/25 hover:text-white/50">
-                Área do administrador
+                {t("footer.admin")}
               </Link>
             </div>
           </div>
