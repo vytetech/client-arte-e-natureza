@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { WHATSAPP_URL } from "@/config";
+import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
 
 const FOTOS = [
@@ -13,6 +13,7 @@ const FOTOS = [
 
 export default function GaleriaCeuAberto() {
   const { t } = useLang();
+  const whatsapp = useWhatsApp();
   return (
     <section className="bg-[var(--c-dark)] py-24 text-[var(--c-bg)]">
       <div className="mx-auto max-w-6xl px-5">
@@ -57,7 +58,7 @@ export default function GaleriaCeuAberto() {
               {t("gca.cta_works")}
             </Link>
             <a
-              href={WHATSAPP_URL}
+              href={whatsapp.href}
               target="_blank"
               rel="noopener noreferrer"
               className="border border-[#25D366] bg-[#25D366] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-transparent hover:text-[#4ee38a]"

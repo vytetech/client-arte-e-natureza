@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { canonicalStatus, WORK_STATUSES } from "@contracts/status";
 import { LANG_META, useLang, type Lang, type LangCtx } from "@/lib/i18n";
 import { categoryLabel } from "@/lib/categoryLabels";
+import { formatWhatsAppNumber, normalizeWhatsAppNumber } from "@contracts/whatsapp";
 
 const CATEGORIES = [
   "Pinturas",
@@ -47,6 +48,7 @@ type Tab =
   | "cupom"
   | "promocoes"
   | "entrega"
+  | "contato"
   | "idiomas"
   | "cafe"
   | "usuarios";
@@ -60,6 +62,7 @@ const TABS: { id: Tab; labelKey: string }[] = [
   { id: "cupom", labelKey: "admin.tab.coupon" },
   { id: "promocoes", labelKey: "admin.tab.promotions" },
   { id: "entrega", labelKey: "admin.tab.shipping" },
+  { id: "contato", labelKey: "admin.tab.contact" },
   { id: "idiomas", labelKey: "admin.tab.languages" },
   { id: "cafe", labelKey: "admin.tab.cafe" },
   { id: "usuarios", labelKey: "admin.tab.users" },
@@ -179,6 +182,7 @@ export default function Admin() {
         {tab === "cupom" && <CouponTab />}
         {tab === "promocoes" && <PromocoesTab />}
         {tab === "entrega" && <EntregaTab />}
+        {tab === "contato" && <ContactTab />}
         {tab === "idiomas" && <IdiomasTab />}
         {tab === "cafe" && <CafeTab />}
         {tab === "usuarios" && <UsersTab />}
@@ -1757,6 +1761,59 @@ function EntregaTab() {
           {notice && <span className="text-xs text-green-700">{notice}</span>}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ContactTab() {
+  const { vals, set, saveKeys, notice, saving } = useSettingsState();
+  const { t } = useLang();
+  const [whatsappInput, setWhatsAppInput] = useState("");
+  const noticeIsError = notice.startsWith(`${t("admin.error")}:`);
+
+  useEffect(() => {
+    setWhatsAppInput(formatWhatsAppNumber(vals["contact.whatsapp"] ?? ""));
+  }, [vals["contact.whatsapp"]]);
+
+  const handleSaveContact = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const normalized = normalizeWhatsAppNumber(whatsappInput);
+    set("contact.whatsapp", normalized);
+    await saveKeys(["contact.whatsapp"], t("admin.contact.saved"), { "contact.whatsapp": normalized })
+      .then(() => setWhatsAppInput(formatWhatsAppNumber(normalized)))
+      .catch(() => undefined);
+  };
+
+  return (
+    <div className="space-y-6">
+      <form onSubmit={handleSaveContact} className="rounded-xl bg-white p-6 shadow-sm">
+        <h2 className="font-bold">{t("admin.contact.title")}</h2>
+        <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
+          {t("admin.contact.help")}
+        </p>
+
+        <div className="mt-5 max-w-sm">
+          <label className="text-xs font-bold uppercase">{t("admin.contact.whatsapp")}</label>
+          <Input
+            inputMode="tel"
+            autoComplete="tel"
+            value={whatsappInput}
+            onChange={(event) => setWhatsAppInput(event.target.value)}
+            onBlur={() => setWhatsAppInput(formatWhatsAppNumber(whatsappInput))}
+            placeholder={t("admin.contact.whatsapp_placeholder")}
+          />
+          <p className="mt-2 text-xs text-[var(--c-ink)]/50">
+            {t("admin.contact.format_help")}
+          </p>
+        </div>
+
+        <div className="mt-4 flex items-center gap-3">
+          <Button size="sm" type="submit" disabled={saving}>
+            {saving ? t("admin.saving") : t("admin.contact.save")}
+          </Button>
+          {notice && <span className={`text-xs ${noticeIsError ? "text-red-700" : "text-green-700"}`}>{notice}</span>}
+        </div>
+      </form>
     </div>
   );
 }

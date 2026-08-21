@@ -70,7 +70,6 @@ export interface WorkDetailConfig {
   notFoundLink: string
 }
 
-export const WHATSAPP_URL = "https://wa.me/5532984527407"
 export const INSTAGRAM_URL =
   "https://www.instagram.com/danieldetomiartenatureza"
 
@@ -313,7 +312,7 @@ export const galleryConfig: GalleryConfig = {
       location: "São João del-Rei — MG",
       medium: "Papel machê, metal de reúso, madeira de demolição",
       article:
-        "Na fotografia, Daniel Detomi posa ao lado de uma de suas criações: o dálmata sobre o fundo xadrez, dentro do ateliê em Tiradentes. Camiseta vinho, sorriso contido — o retrato de um artista que vive cercado pelas próprias criaturas.\n\nMineiro de São João del-Rei, Detomi desenvolveu seu trabalho criativo no início dos anos 90, na cidade histórica de Tiradentes. Conviveu com renomados artistas, como Fernando Pita e Toti (Oficina de Agosto), com quem foi pioneiro de um movimento artístico e cultural que transformou Tiradentes, Bichinho e adjacências em um pólo de arte reconhecido.\n\nSuas obras, de temáticas variadas, têm como foco o reúso das mais diversas matérias-primas — papel machê, chapas de metal, madeira de demolição — moldando a arte mineira, valorizando a cultura, promovendo a inclusão social e a conscientização ambiental.\n\nNo Atelier Daniel Detomi — Arte e Natureza, o visitante caminha entre esculturas monumentais no jardim e painéis nas paredes. Ateliê aberto a visitas em Tiradentes — MG: chame no WhatsApp +55 32 98452-7407 e agende a sua.",
+        "Na fotografia, Daniel Detomi posa ao lado de uma de suas criações: o dálmata sobre o fundo xadrez, dentro do ateliê em Tiradentes. Camiseta vinho, sorriso contido — o retrato de um artista que vive cercado pelas próprias criaturas.\n\nMineiro de São João del-Rei, Detomi desenvolveu seu trabalho criativo no início dos anos 90, na cidade histórica de Tiradentes. Conviveu com renomados artistas, como Fernando Pita e Toti (Oficina de Agosto), com quem foi pioneiro de um movimento artístico e cultural que transformou Tiradentes, Bichinho e adjacências em um pólo de arte reconhecido.\n\nSuas obras, de temáticas variadas, têm como foco o reúso das mais diversas matérias-primas — papel machê, chapas de metal, madeira de demolição — moldando a arte mineira, valorizando a cultura, promovendo a inclusão social e a conscientização ambiental.\n\nNo Atelier Daniel Detomi — Arte e Natureza, o visitante caminha entre esculturas monumentais no jardim e painéis nas paredes. Ateliê aberto a visitas em Tiradentes — MG: chame no WhatsApp e agende a sua.",
     },
   ],
 }
@@ -343,7 +342,7 @@ export const footerConfig: FooterConfig = {
   ],
   contactHeading: "CONTATO",
   contactLinks: [
-    { label: "WhatsApp +55 32 98452-7407", href: WHATSAPP_URL },
+    { label: "WhatsApp" },
     { label: "Instagram @danieldetomiartenatureza", href: INSTAGRAM_URL },
     { label: "Tiradentes — Minas Gerais — Brasil" },
     { label: "Ateliê aberto a visitas" },

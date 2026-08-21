@@ -1,4 +1,5 @@
-import { WHATSAPP_URL, INSTAGRAM_URL } from "@/config"
+import { INSTAGRAM_URL } from "@/config"
+import { useWhatsApp } from "@/hooks/useWhatsApp"
 import { useLang } from "@/lib/i18n"
 
 function WhatsAppIcon() {
@@ -21,6 +22,7 @@ function InstagramIcon() {
 
 export default function FloatingContact() {
   const { t } = useLang()
+  const whatsapp = useWhatsApp()
 
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col items-center gap-3">
@@ -39,15 +41,15 @@ export default function FloatingContact() {
         <InstagramIcon />
       </a>
       <a
-        href={WHATSAPP_URL}
+        href={whatsapp.href}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label={t("social.whatsapp")}
-        title="WhatsApp +55 32 98452-7407"
+        aria-label={`${t("social.whatsapp")}${whatsapp.display ? ` ${whatsapp.display}` : ""}`}
+        title={`${t("social.whatsapp")}${whatsapp.display ? ` ${whatsapp.display}` : ""}`}
         className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-[0_10px_28px_rgba(37,211,102,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:scale-110"
       >
         <span className="pointer-events-none absolute right-full mr-3 hidden whitespace-nowrap rounded-full bg-black/80 px-3 py-1.5 font-mono text-xs text-white group-hover:block">
-          +55 32 98452-7407
+          {whatsapp.display || t("social.whatsapp")}
         </span>
         <WhatsAppIcon />
       </a>

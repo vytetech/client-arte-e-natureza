@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import FloatingContact from "./FloatingContact";
 import AmbientAudio from "./AmbientAudio";
 import { useTheme } from "@/hooks/useTheme";
+import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang, LANG_META, type Lang } from "@/lib/i18n";
-import { WHATSAPP_URL, INSTAGRAM_URL } from "@/config";
+import { INSTAGRAM_URL } from "@/config";
 
 const NAV = [
   { to: "/", key: "nav.home" },
@@ -84,6 +85,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   useTheme();
   const { t } = useLang();
+  const whatsapp = useWhatsApp();
 
   useEffect(() => {
     setOpen(false);
@@ -203,8 +205,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div>
             <div className="eyebrow mb-4 text-white/35">{t("footer.contact")}</div>
             <div className="flex flex-col gap-2.5 text-sm">
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="text-[#4ee38a] hover:underline">
-                WhatsApp +55 32 98452-7407
+              <a href={whatsapp.href} target="_blank" rel="noopener noreferrer" className="text-[#4ee38a] hover:underline">
+                WhatsApp{whatsapp.display ? ` ${whatsapp.display}` : ""}
               </a>
               <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="text-[#e08bb5] hover:underline">
                 Instagram @danieldetomiartenatureza

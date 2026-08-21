@@ -7,8 +7,10 @@ import { TRPCError } from "@trpc/server";
 import { hashPassword, validatePasswordStrength } from "./lib/password";
 import { findUserByUsername, isValidUsername, normalizeUsername } from "./queries/users";
 import { normalizeStatus } from "@contracts/status";
+import { isValidWhatsAppNumber, normalizeWhatsAppNumber } from "@contracts/whatsapp";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { defaultSettings } from "./default-content";
 
 const workStatusInput = z.string().max(64).default("available").transform((value, ctx) => {
   const status = normalizeStatus(value);
@@ -81,6 +83,13 @@ function normalizeSettingValue(key: string, value: string) {
     const amount = Number(trimmed);
     assertBadRequest(Number.isFinite(amount) && amount > 0, "Valor mínimo da promoção deve ser maior que 0.");
     return String(amount);
+  }
+
+  if (key === "contact.whatsapp") {
+    const digits = normalizeWhatsAppNumber(trimmed);
+    assertBadRequest(!!digits, "Informe o número do WhatsApp.");
+    assertBadRequest(isValidWhatsAppNumber(digits), "Número do WhatsApp inválido.");
+    return digits;
   }
 
   return value;
@@ -558,7 +567,12 @@ export const adminRouter = createRouter({
     }),
 
   // ---- SETTINGS (design / seções) ----
-  listSettings: adminQuery.query(() => getDb().select().from(schema.settings)),
+  listSettings: adminQuery.query(async () => {
+    const rows = await getDb().select().from(schema.settings);
+    const map = new Map(Object.entries(defaultSettings).map(([key, value]) => [key, { key, value }]));
+    for (const row of rows) map.set(row.key, row);
+    return Array.from(map.values());
+  }),
 
   updateSetting: adminQuery
     .input(z.object({ key: z.string().min(1).max(128), value: z.string() }))

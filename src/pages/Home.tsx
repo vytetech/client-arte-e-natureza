@@ -4,7 +4,7 @@ import MapaSection from "@/components/MapaSection";
 import GaleriaCeuAberto from "@/components/GaleriaCeuAberto";
 import { useTexts } from "@/hooks/useTexts";
 import { useSettings } from "@/hooks/useTheme";
-import { WHATSAPP_URL } from "@/config";
+import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
 
 function Paras({ text, className }: { text: string; className?: string }) {
@@ -23,6 +23,7 @@ export default function Home() {
   const { t } = useTexts();
   const { visible } = useSettings();
   const { t: tr } = useLang();
+  const whatsapp = useWhatsApp();
 
   return (
     <Layout>
@@ -58,7 +59,7 @@ export default function Home() {
               {tr("home.cta_works")}
             </Link>
             <a
-              href={WHATSAPP_URL}
+              href={whatsapp.href}
               target="_blank"
               rel="noopener noreferrer"
               className="border border-white/40 px-7 py-3.5 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition hover:border-white hover:bg-white hover:text-[var(--c-ink)]"
@@ -167,7 +168,7 @@ export default function Home() {
             {tr("home.destino_text")}
           </p>
           <a
-            href={WHATSAPP_URL}
+            href={whatsapp.href}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-7 inline-block border border-[var(--c-ink)] px-7 py-3.5 text-[11px] font-bold uppercase tracking-[0.25em] transition hover:bg-[var(--c-ink)] hover:text-[var(--c-bg)]"

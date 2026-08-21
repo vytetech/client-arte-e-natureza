@@ -33,6 +33,7 @@ export const defaultTexts: Record<string, string> = {
 };
 
 export const defaultSettings: Record<string, string> = {
+  "contact.whatsapp": "5532984527407",
   "section.manifesto": "1",
   "section.linguagens": "1",
   "section.video": "1",

@@ -2,8 +2,8 @@ import { Link, useParams } from "react-router";
 import Layout from "@/components/Layout";
 import { trpc } from "@/providers/trpc";
 import { useSettings } from "@/hooks/useTheme";
+import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
-import { WHATSAPP_URL } from "@/config";
 import { statusTranslationKey } from "@contracts/status";
 import { categoryLabel } from "@/lib/categoryLabels";
 
@@ -46,10 +46,9 @@ export default function ObraDetail() {
   const promoWork = s("prize.work", "0") === "1";
   const readingLink = s("prize.reading.link", "0") === "1";
   const promotionMinimum = formatBRL(s("promotion.minimumAmount", "7000"));
-
-  const waLink = work
-    ? `${WHATSAPP_URL}?text=${encodeURIComponent(`${t("od.whatsapp_message")} "${work.title}" (${categoryLabel(work.category, t)}).`)}`
-    : WHATSAPP_URL;
+  const whatsapp = useWhatsApp(
+    work ? `${t("od.whatsapp_message")} "${work.title}" (${categoryLabel(work.category, t)}).` : undefined,
+  );
 
   return (
     <Layout>
@@ -138,7 +137,7 @@ export default function ObraDetail() {
                 </div>
               )}
               <a
-                href={waLink}
+                href={whatsapp.href}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-7 inline-block border border-[#25D366] bg-[#25D366] px-8 py-3.5 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition hover:bg-transparent hover:text-[#1a7a3c]"

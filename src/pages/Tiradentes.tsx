@@ -1,12 +1,14 @@
 import Layout from "@/components/Layout";
 import MapaSection from "@/components/MapaSection";
 import { useTexts } from "@/hooks/useTexts";
-import { WHATSAPP_URL } from "@/config";
+import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
 
 export default function Tiradentes() {
   const { t } = useTexts();
   const { t: tr } = useLang();
+  const whatsapp = useWhatsApp();
+  const tiradentesText = t("tiradentes_text").replaceAll("{whatsapp}", whatsapp.display || "WhatsApp");
 
   return (
     <Layout>
@@ -27,7 +29,7 @@ export default function Tiradentes() {
 
       <section className="mx-auto grid max-w-6xl gap-14 px-5 py-20 md:grid-cols-2">
         <div>
-          {t("tiradentes_text").split("\n\n").map((p, i) => (
+          {tiradentesText.split("\n\n").map((p, i) => (
             <p
               key={i}
               className={`mb-6 leading-relaxed text-[var(--c-ink)]/85 ${
@@ -38,7 +40,7 @@ export default function Tiradentes() {
             </p>
           ))}
           <a
-            href={WHATSAPP_URL}
+            href={whatsapp.href}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-4 inline-block border border-[var(--c-ink)] px-8 py-3.5 text-[11px] font-bold uppercase tracking-[0.25em] transition hover:bg-[var(--c-ink)] hover:text-[var(--c-bg)]"

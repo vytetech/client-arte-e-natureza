@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "react-router";
 import Layout from "@/components/Layout";
 import { trpc } from "@/providers/trpc";
-import { WHATSAPP_URL } from "@/config";
+import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
 import { statusTranslationKey } from "@contracts/status";
 import { categoryLabel } from "@/lib/categoryLabels";
@@ -23,6 +23,7 @@ export default function Galeria() {
   const [params, setParams] = useSearchParams();
   const cat = params.get("cat") ?? "";
   const { t, lang } = useLang();
+  const whatsapp = useWhatsApp();
   const { data: works, isLoading } = trpc.content.works.useQuery(lang);
 
   const categories = Array.from(new Set((works ?? []).map((w) => w.category)));
@@ -134,7 +135,7 @@ export default function Galeria() {
             {t("gal.cta_text")}
           </p>
           <a
-            href={WHATSAPP_URL}
+            href={whatsapp.href}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-7 inline-block border border-[#25D366] bg-[#25D366] px-8 py-3.5 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition hover:bg-transparent hover:text-[#4ee38a]"

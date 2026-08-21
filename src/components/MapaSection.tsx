@@ -1,4 +1,4 @@
-import { WHATSAPP_URL } from "@/config";
+import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
 
 const DIRECTIONS_URL =
@@ -10,6 +10,7 @@ const EMBED_URL =
 
 export default function MapaSection() {
   const { t } = useLang();
+  const whatsapp = useWhatsApp();
   return (
     <section id="como-chegar" className="border-t border-[var(--c-ink)]/10 py-24">
       <div className="mx-auto max-w-6xl px-5">
@@ -59,7 +60,7 @@ export default function MapaSection() {
                 {t("map.route")}
               </a>
               <a
-                href={WHATSAPP_URL}
+                href={whatsapp.href}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="border border-[var(--c-ink)] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.22em] transition hover:bg-[var(--c-ink)] hover:text-[var(--c-bg)]"

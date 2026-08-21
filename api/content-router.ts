@@ -91,7 +91,7 @@ export const contentRouter = createRouter({
       return defaultSettings;
     }
     const rows = await getDb().select().from(schema.settings);
-    const map: Record<string, string> = {};
+    const map: Record<string, string> = { ...defaultSettings };
     for (const r of rows) map[r.key] = r.value;
     return map;
   }),

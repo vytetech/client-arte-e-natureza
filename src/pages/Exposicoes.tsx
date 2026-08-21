@@ -1,11 +1,12 @@
 import Layout from "@/components/Layout";
 import { useTexts } from "@/hooks/useTexts";
-import { WHATSAPP_URL } from "@/config";
+import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
 
 export default function Exposicoes() {
   const { t } = useTexts();
   const { t: tr } = useLang();
+  const whatsapp = useWhatsApp();
 
   return (
     <Layout>
@@ -88,7 +89,7 @@ export default function Exposicoes() {
             {tr("expo.cta_title")}
           </h3>
           <a
-            href={WHATSAPP_URL}
+            href={whatsapp.href}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-6 inline-block border border-[var(--c-ink)] px-8 py-3.5 text-[11px] font-bold uppercase tracking-[0.25em] transition hover:bg-[var(--c-ink)] hover:text-[var(--c-bg)]"

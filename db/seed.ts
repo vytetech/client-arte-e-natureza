@@ -85,6 +85,10 @@ const texts: { key: string; label: string; value: string }[] = [
   { key: "footer_tagline", label: "Rodapé — Frase", value: "Arte e Natureza — Tiradentes, Minas Gerais" },
 ];
 
+const settings: { key: string; value: string }[] = [
+  { key: "contact.whatsapp", value: "5532984527407" },
+];
+
 async function seed() {
   const db = getDb();
   console.log("Seeding database...");
@@ -109,6 +113,20 @@ async function seed() {
     console.log(`INSERT work: ${work.slug}`);
   }
   console.log(`Works inserted: ${insertedWorks}; skipped: ${skippedWorks}.`);
+
+  let insertedSettings = 0;
+  let skippedSettings = 0;
+  for (const setting of settings) {
+    const result = await db.insert(schema.settings).values(setting).onConflictDoNothing().returning({ key: schema.settings.key });
+    if (result.length) {
+      insertedSettings++;
+      console.log(`INSERT setting: ${setting.key}`);
+    } else {
+      skippedSettings++;
+      console.log(`SKIP setting: ${setting.key}`);
+    }
+  }
+  console.log(`Settings inserted: ${insertedSettings}; skipped: ${skippedSettings}.`);
 
   for (const t of texts) {
     await db

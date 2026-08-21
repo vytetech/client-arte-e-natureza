@@ -34,7 +34,7 @@ const pt: Dict = {
   "audio.enable": "Ligar o som",
   "audio.disable": "Desligar o som",
   "social.instagram": "Instagram do Atelier Daniel Detomi",
-  "social.whatsapp": "WhatsApp do Atelier Daniel Detomi: +55 32 98452-7407",
+  "social.whatsapp": "WhatsApp do Atelier Daniel Detomi",
 
   "login.title": "Área do Administrador",
   "login.subtitle": "Atelier Daniel Detomi — Arte e Natureza",
@@ -230,7 +230,7 @@ const en: Dict = {
   "audio.enable": "Turn sound on",
   "audio.disable": "Turn sound off",
   "social.instagram": "Atelier Daniel Detomi Instagram",
-  "social.whatsapp": "Atelier Daniel Detomi WhatsApp: +55 32 98452-7407",
+  "social.whatsapp": "Atelier Daniel Detomi WhatsApp",
 
   "login.title": "Administrator Area",
   "login.subtitle": "Atelier Daniel Detomi — Art and Nature",
@@ -426,7 +426,7 @@ const es: Dict = {
   "audio.enable": "Activar sonido",
   "audio.disable": "Desactivar sonido",
   "social.instagram": "Instagram de Atelier Daniel Detomi",
-  "social.whatsapp": "WhatsApp de Atelier Daniel Detomi: +55 32 98452-7407",
+  "social.whatsapp": "WhatsApp de Atelier Daniel Detomi",
 
   "login.title": "Área del Administrador",
   "login.subtitle": "Atelier Daniel Detomi — Arte y Naturaleza",
@@ -622,7 +622,7 @@ const ar: Dict = {
   "audio.enable": "تشغيل الصوت",
   "audio.disable": "إيقاف الصوت",
   "social.instagram": "إنستغرام مرسم دانيال ديتومي",
-  "social.whatsapp": "واتساب مرسم دانيال ديتومي: +55 32 98452-7407",
+  "social.whatsapp": "واتساب مرسم دانيال ديتومي",
 
   "login.title": "منطقة الإدارة",
   "login.subtitle": "مرسم دانيال ديتومي — فن وطبيعة",
