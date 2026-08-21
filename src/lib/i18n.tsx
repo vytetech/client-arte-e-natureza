@@ -1,15 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSettings } from "@/hooks/useTheme";
 import { ADMIN_DICTS } from "@/lib/adminI18n";
+import { LANGUAGE_META, type Lang } from "@/lib/languages";
 
-export type Lang = "pt" | "en" | "es" | "ar";
-
-export const LANG_META: Record<Lang, { code: string; flag: string; name: string; rtl?: boolean }> = {
-  pt: { code: "PT", flag: "🇧🇷", name: "Português" },
-  en: { code: "EN", flag: "🇺🇸", name: "English" },
-  es: { code: "ES", flag: "🇪🇸", name: "Español" },
-  ar: { code: "AR", flag: "🇸🇦", name: "العربية", rtl: true },
-};
+export type { Lang } from "@/lib/languages";
 
 type Dict = Record<string, string>;
 
@@ -938,7 +932,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = effective === "pt" ? "pt-BR" : effective;
-    document.documentElement.dir = LANG_META[effective].rtl ? "rtl" : "ltr";
+    document.documentElement.dir = LANGUAGE_META[effective].rtl ? "rtl" : "ltr";
   }, [effective]);
 
   const setLang = (l: Lang) => {

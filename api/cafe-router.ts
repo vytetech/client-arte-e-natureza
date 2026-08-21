@@ -9,6 +9,15 @@ const TOGGLE_KEY = "cafe.enabled";
 const locales = ["pt", "en", "es", "ar"] as const;
 const localeInput = z.enum(locales);
 
+function logCafeError(operation: string, error: unknown) {
+  const err = error as { code?: string; message?: string };
+  console.error("cafe_operation_failed", {
+    operation,
+    code: err?.code,
+    message: error instanceof Error ? error.message : String(error),
+  });
+}
+
 function parseLocale(raw: unknown): (typeof locales)[number] {
   if (raw === "pt" || raw === "en" || raw === "es" || raw === "ar") return raw;
   if (
@@ -82,40 +91,48 @@ export const cafeRouter = createRouter({
   public: publicQuery
     .input((raw: unknown) => parseLocale(raw))
     .query(async ({ input: locale }) => {
-    const enabled = await isEnabled();
-    if (!enabled) return { enabled: false, items: [] };
+    try {
+      const enabled = await isEnabled();
+      if (!enabled) return { enabled: false, items: [] };
 
-    const rows = await getDb()
-      .select()
-      .from(schema.drafts)
-      .where(eq(schema.drafts.published, true))
-      .orderBy(desc(schema.drafts.updatedAt));
+      const rows = await getDb()
+        .select()
+        .from(schema.drafts)
+        .where(eq(schema.drafts.published, true))
+        .orderBy(desc(schema.drafts.updatedAt));
 
-    const translations = await getDb()
-      .select()
-      .from(schema.draftTranslations)
-      .where(eq(schema.draftTranslations.locale, locale));
-    const byDraftId = new Map(translations.map((translation) => [translation.draftId, translation]));
+      const translations = await getDb()
+        .select()
+        .from(schema.draftTranslations)
+        .where(eq(schema.draftTranslations.locale, locale));
+      const byDraftId = new Map(translations.map((translation) => [translation.draftId, translation]));
 
-    const items = rows
-      .map((draft) => {
-        const translation = byDraftId.get(draft.id);
-        const isText = draft.type === "text";
-        return {
-          id: draft.id,
-          type: draft.type,
-          title: locale === "pt" ? translation?.title || draft.title : translation?.title ?? "",
-          content: isText
-            ? locale === "pt"
-              ? translation?.content || draft.content
-              : translation?.content ?? ""
-            : draft.content,
-          updatedAt: draft.updatedAt,
-        };
-      })
-      .filter((draft) => draft.content.trim().length > 0);
+      const items = rows
+        .map((draft) => {
+          const translation = byDraftId.get(draft.id);
+          const isText = draft.type === "text";
+          return {
+            id: draft.id,
+            type: draft.type,
+            title: locale === "pt" ? translation?.title || draft.title : translation?.title ?? "",
+            content: isText
+              ? locale === "pt"
+                ? translation?.content || draft.content
+                : translation?.content ?? ""
+              : draft.content,
+            updatedAt: draft.updatedAt,
+          };
+        })
+        .filter((draft) => draft.content.trim().length > 0);
 
-    return { enabled: true, items };
+      return { enabled: true, items };
+    } catch (error) {
+      logCafeError("cafe_public_failed", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Erro ao carregar o Espaço de Café.",
+      });
+    }
   }),
 
   /** Estado do espaço (visível mesmo desativado, para renderizar o toggle) */
@@ -136,19 +153,28 @@ export const cafeRouter = createRouter({
 
   /** Lista rascunhos — bloqueado quando o espaço está desativado */
   list: adminQuery.query(async () => {
-    await requireEnabled();
-    const rows = await getDb().select().from(schema.drafts).orderBy(desc(schema.drafts.updatedAt));
-    const translations = await getDb().select().from(schema.draftTranslations);
-    const grouped = new Map<number, Record<string, { title: string; content: string }>>();
-    for (const translation of translations) {
-      const current = grouped.get(translation.draftId) ?? {};
-      current[translation.locale] = { title: translation.title, content: translation.content };
-      grouped.set(translation.draftId, current);
+    try {
+      await requireEnabled();
+      const rows = await getDb().select().from(schema.drafts).orderBy(desc(schema.drafts.updatedAt));
+      const translations = await getDb().select().from(schema.draftTranslations);
+      const grouped = new Map<number, Record<string, { title: string; content: string }>>();
+      for (const translation of translations) {
+        const current = grouped.get(translation.draftId) ?? {};
+        current[translation.locale] = { title: translation.title, content: translation.content };
+        grouped.set(translation.draftId, current);
+      }
+      return rows.map((draft) => ({
+        ...draft,
+        translations: grouped.get(draft.id) ?? {},
+      }));
+    } catch (error) {
+      logCafeError("cafe_list_failed", error);
+      if (error instanceof TRPCError) throw error;
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Erro ao carregar os rascunhos do Espaço de Café.",
+      });
     }
-    return rows.map((draft) => ({
-      ...draft,
-      translations: grouped.get(draft.id) ?? {},
-    }));
   }),
 
   create: adminQuery.input(draftInput).mutation(async ({ input }) => {

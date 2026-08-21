@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { canonicalStatus, WORK_STATUSES } from "@contracts/status";
-import { LANG_META, useLang, type Lang, type LangCtx } from "@/lib/i18n";
+import { useLang, type Lang, type LangCtx } from "@/lib/i18n";
+import { formatLanguageLabel } from "@/lib/languages";
 import { categoryLabel } from "@/lib/categoryLabels";
 import { formatWhatsAppNumber, normalizeWhatsAppNumber } from "@contracts/whatsapp";
 
@@ -671,7 +672,7 @@ function WorksTab() {
                   variant={editLang === locale ? "default" : "outline"}
                   onClick={() => setEditLang(locale)}
                 >
-                  {LANG_META[locale].flag} {LANG_META[locale].name}
+                  {formatLanguageLabel(locale)}
                 </Button>
               ))}
             </div>
@@ -1160,7 +1161,7 @@ function TextsTab() {
             variant={editLang === locale ? "default" : "outline"}
             onClick={() => setEditLang(locale)}
           >
-            {LANG_META[locale].flag} {LANG_META[locale].name}
+            {formatLanguageLabel(locale)}
           </Button>
         ))}
       </div>
@@ -1853,7 +1854,7 @@ function IdiomasTab() {
               <div key={language.key} className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-ink)]/10 p-4">
                 <div>
                   <div className="text-sm font-semibold">
-                    {LANG_META[language.lang].flag} {LANG_META[language.lang].name}
+                    {formatLanguageLabel(language.lang)}
                   </div>
                   <div className="text-xs text-[var(--c-ink)]/55">
                     {on ? t(language.descKey) : t("admin.languages.hidden")}
@@ -2167,7 +2168,7 @@ function CafeContent() {
                   variant={editLang === locale ? "default" : "outline"}
                   onClick={() => setEditLang(locale)}
                 >
-                  {LANG_META[locale].flag} {LANG_META[locale].name}
+                  {formatLanguageLabel(locale)}
                 </Button>
               ))}
             </div>
