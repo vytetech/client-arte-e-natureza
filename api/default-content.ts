@@ -6,7 +6,7 @@ export const defaultTexts: Record<string, string> = {
   hero_title: "ATELIER DANIEL DETOMI",
   hero_subtitle: "Arte e Natureza em Tiradentes - Minas Gerais",
   hero_text:
-    "Um artista que nao se limita a uma tecnica, mas a um territorio criativo, onde pintura, escultura, instalacao ambiental e desenho grafico convivem como manifestacoes de uma mesma visao.\n\nAqui, a arte nao fica atras de vidro: ela cresce unavailable, emerge da encosta e caminha entre as arvores.",
+    "Um artista que nao se limita a uma tecnica, mas a um territorio criativo, onde pintura, escultura, instalacao ambiental e desenho grafico convivem como manifestacoes de uma mesma visao.\n\nAqui, a arte nao fica atras de vidro: ela cresce no jardim, emerge da encosta e caminha entre as arvores.",
   home_painting_title: "A Pintura - o mundo lirico e o mundo grafico",
   home_painting_text:
     "Paisagens densas, fauna e flora brasileiras em cores vibrantes convivem com o universo da ilusao de otica, pop art e circo.",
@@ -28,7 +28,7 @@ export const defaultTexts: Record<string, string> = {
     "Papel mache, fauna brasileira e madeira de demolicao em uma mostra sobre cultura, inclusao e consciencia ambiental.",
   tiradentes_title: "Tiradentes - Minas Gerais",
   tiradentes_text:
-    "Tiradentes e uma das cidades historicas mais bem preservadas do Brasil. Ruas de pedra, casario colonial, igrejas barrocas e a Serra de Sao Jose inspiram artistas ha geracoes.\n\nO Atelier Daniel Detomi - Arte e Natureza faz parte dessa historia: um lugar onde a arte cresce unavailable e recebe visitantes de portas abertas.",
+    "Tiradentes e uma das cidades historicas mais bem preservadas do Brasil. Ruas de pedra, casario colonial, igrejas barrocas e a Serra de Sao Jose inspiram artistas ha geracoes.\n\nO Atelier Daniel Detomi - Arte e Natureza faz parte dessa historia: um lugar onde a arte cresce no jardim e recebe visitantes de portas abertas.",
   footer_tagline: "Arte e Natureza - Tiradentes, Minas Gerais",
 };
 

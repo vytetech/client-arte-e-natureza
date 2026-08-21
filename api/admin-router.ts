@@ -104,6 +104,7 @@ function validateCombinedSettings(settings: Record<string, string>, changedKeys:
 }
 
 const userRoleInput = z.enum(["admin"]);
+const localeInput = z.enum(["pt", "en", "es", "ar"]);
 
 const userCreateInput = z.object({
   name: z.string().trim().min(1, "Nome é obrigatório.").max(255),
@@ -283,7 +284,18 @@ export const adminRouter = createRouter({
       return { success: true };
     }),
 
-  listTexts: adminQuery.query(() => getDb().select().from(schema.siteTexts)),
+  listTexts: adminQuery.query(async () => {
+    const texts = await getDb().select().from(schema.siteTexts);
+    const translations = await getDb().select().from(schema.siteTextTranslations);
+    return texts.map((text) => ({
+      ...text,
+      translations: Object.fromEntries(
+        translations
+          .filter((translation) => translation.textId === text.id)
+          .map((translation) => [translation.locale, translation.value]),
+      ) as Record<"pt" | "en" | "es" | "ar", string | undefined>,
+    }));
+  }),
 
   updateText: adminQuery
     .input(z.object({ key: z.string().min(1), value: z.string() }))
@@ -295,12 +307,74 @@ export const adminRouter = createRouter({
       return { success: true };
     }),
 
-  listWorks: adminQuery.query(() =>
-    getDb().select().from(schema.works).orderBy(asc(schema.works.sortOrder)),
-  ),
+  updateTextTranslation: adminQuery
+    .input(z.object({ key: z.string().min(1), locale: localeInput, value: z.string() }))
+    .mutation(async ({ input }) => {
+      const rows = await getDb()
+        .select({ id: schema.siteTexts.id })
+        .from(schema.siteTexts)
+        .where(eq(schema.siteTexts.key, input.key))
+        .limit(1);
+      const text = rows.at(0);
+      if (!text) throw new TRPCError({ code: "NOT_FOUND", message: "Texto não encontrado." });
+
+      await getDb()
+        .insert(schema.siteTextTranslations)
+        .values({ textId: text.id, locale: input.locale, value: input.value })
+        .onConflictDoUpdate({
+          target: [schema.siteTextTranslations.textId, schema.siteTextTranslations.locale],
+          set: { value: input.value },
+        });
+
+      if (input.locale === "pt") {
+        await getDb()
+          .update(schema.siteTexts)
+          .set({ value: input.value })
+          .where(eq(schema.siteTexts.id, text.id));
+      }
+
+      return { success: true };
+    }),
+
+  listWorks: adminQuery.query(async () => {
+    const works = await getDb().select().from(schema.works).orderBy(asc(schema.works.sortOrder));
+    const translations = await getDb().select().from(schema.workTranslations);
+    return works.map((work) => ({
+      ...work,
+      translations: Object.fromEntries(
+        translations
+          .filter((translation) => translation.workId === work.id)
+          .map((translation) => [translation.locale, {
+            title: translation.title,
+            category: translation.category,
+            technique: translation.technique,
+            description: translation.description,
+          }]),
+      ) as Record<"pt" | "en" | "es" | "ar", {
+        title: string;
+        category: string;
+        technique: string;
+        description: string;
+      } | undefined>,
+    }));
+  }),
 
   createWork: adminQuery.input(workInput).mutation(async ({ input }) => {
-    await getDb().insert(schema.works).values(input);
+    const rows = await getDb().insert(schema.works).values(input).returning({ id: schema.works.id });
+    const workId = rows[0]?.id;
+    if (workId) {
+      await getDb()
+        .insert(schema.workTranslations)
+        .values({
+          workId,
+          locale: "pt",
+          title: input.title,
+          category: input.category,
+          technique: input.technique,
+          description: input.description,
+        })
+        .onConflictDoNothing();
+    }
     return { success: true };
   }),
 
@@ -311,6 +385,72 @@ export const adminRouter = createRouter({
         .update(schema.works)
         .set(input.data)
         .where(eq(schema.works.id, input.id));
+      await getDb()
+        .insert(schema.workTranslations)
+        .values({
+          workId: input.id,
+          locale: "pt",
+          title: input.data.title,
+          category: input.data.category,
+          technique: input.data.technique,
+          description: input.data.description,
+        })
+        .onConflictDoUpdate({
+          target: [schema.workTranslations.workId, schema.workTranslations.locale],
+          set: {
+            title: input.data.title,
+            category: input.data.category,
+            technique: input.data.technique,
+            description: input.data.description,
+          },
+        });
+      return { success: true };
+    }),
+
+  updateWorkTranslation: adminQuery
+    .input(z.object({
+      id: z.number(),
+      locale: localeInput,
+      data: z.object({
+        title: z.string().min(1).max(255),
+        category: z.string().min(1).max(64),
+        technique: z.string().max(255).default(""),
+        description: z.string().default(""),
+      }),
+    }))
+    .mutation(async ({ input }) => {
+      await getDb()
+        .insert(schema.workTranslations)
+        .values({
+          workId: input.id,
+          locale: input.locale,
+          title: input.data.title,
+          category: input.data.category,
+          technique: input.data.technique,
+          description: input.data.description,
+        })
+        .onConflictDoUpdate({
+          target: [schema.workTranslations.workId, schema.workTranslations.locale],
+          set: {
+            title: input.data.title,
+            category: input.data.category,
+            technique: input.data.technique,
+            description: input.data.description,
+          },
+        });
+
+      if (input.locale === "pt") {
+        await getDb()
+          .update(schema.works)
+          .set({
+            title: input.data.title,
+            category: input.data.category,
+            technique: input.data.technique,
+            description: input.data.description,
+          })
+          .where(eq(schema.works.id, input.id));
+      }
+
       return { success: true };
     }),
 

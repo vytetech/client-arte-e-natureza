@@ -22,8 +22,8 @@ const AMBIENT_PHOTOS = [
 export default function Galeria() {
   const [params, setParams] = useSearchParams();
   const cat = params.get("cat") ?? "";
-  const { data: works, isLoading } = trpc.content.works.useQuery();
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const { data: works, isLoading } = trpc.content.works.useQuery(lang);
 
   const categories = Array.from(new Set((works ?? []).map((w) => w.category)));
   const filtered = cat ? (works ?? []).filter((w) => w.category === cat) : (works ?? []);

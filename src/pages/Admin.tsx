@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { canonicalStatus, WORK_STATUSES } from "@contracts/status";
-import { useLang, type LangCtx } from "@/lib/i18n";
+import { LANG_META, useLang, type Lang, type LangCtx } from "@/lib/i18n";
 import { categoryLabel } from "@/lib/categoryLabels";
 
 const CATEGORIES = [
@@ -77,6 +77,10 @@ type WorkForm = {
   description: string;
   sortOrder: number;
 };
+
+type WorkTranslationForm = Pick<WorkForm, "title" | "category" | "technique" | "description">;
+
+const LANGS: Lang[] = ["pt", "en", "es", "ar"];
 
 const emptyWork: WorkForm = {
   slug: "",
@@ -496,6 +500,13 @@ function WorksTab() {
   const { data: mediaList } = trpc.admin.listMedia.useQuery();
   const [editing, setEditing] = useState<number | "new" | null>(null);
   const [form, setForm] = useState<WorkForm>(emptyWork);
+  const [editLang, setEditLang] = useState<Lang>("pt");
+  const [translations, setTranslations] = useState<Record<Lang, WorkTranslationForm>>({
+    pt: emptyWork,
+    en: emptyWork,
+    es: emptyWork,
+    ar: emptyWork,
+  });
   const [priceInput, setPriceInput] = useState("");
   const [notice, setNotice] = useState("");
   const [order, setOrder] = useState<number[]>([]);
@@ -519,6 +530,7 @@ function WorksTab() {
   const updateMut = trpc.admin.updateWork.useMutation({
     onSuccess: () => { invalidate(); setEditing(null); setNotice(t("admin.works.updated")); },
   });
+  const updateTranslationMut = trpc.admin.updateWorkTranslation.useMutation();
   const deleteMut = trpc.admin.deleteWork.useMutation({
     onSuccess: () => { invalidate(); setNotice(t("admin.works.deleted")); },
   });
@@ -543,6 +555,19 @@ function WorksTab() {
       description: w.description ?? "",
       sortOrder: w.sortOrder,
     });
+    const baseTranslation = {
+      title: w.title,
+      category: w.category,
+      technique: w.technique,
+      description: w.description ?? "",
+    };
+    setTranslations({
+      pt: w.translations?.pt ?? baseTranslation,
+      en: w.translations?.en ?? { ...baseTranslation, title: "", technique: "", description: "" },
+      es: w.translations?.es ?? { ...baseTranslation, title: "", technique: "", description: "" },
+      ar: w.translations?.ar ?? { ...baseTranslation, title: "", technique: "", description: "" },
+    });
+    setEditLang("pt");
     setEditing(id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -563,7 +588,37 @@ function WorksTab() {
     }
     const data = { ...form, price, status: canonicalStatus(form.status, "available") };
     if (editing === "new") createMut.mutate(data);
-    else if (typeof editing === "number") updateMut.mutate({ id: editing, data });
+    else if (typeof editing === "number") {
+      updateMut.mutate({ id: editing, data }, {
+        onSuccess: async () => {
+          for (const locale of LANGS) {
+            const translation = translations[locale];
+            if (locale !== "pt" && !translation.title.trim() && !translation.description.trim() && !translation.technique.trim()) continue;
+            await updateTranslationMut.mutateAsync({
+              id: editing,
+              locale,
+              data: {
+                title: translation.title || form.title,
+                category: form.category,
+                technique: translation.technique,
+                description: translation.description,
+              },
+            });
+          }
+        },
+      });
+    }
+  };
+
+  const activeTranslation = translations[editLang] ?? translations.pt;
+  const setTranslation = (patch: Partial<WorkTranslationForm>) => {
+    setTranslations((current) => ({
+      ...current,
+      [editLang]: { ...current[editLang], ...patch },
+    }));
+    if (editLang === "pt") {
+      setForm((current) => ({ ...current, ...patch }));
+    }
   };
 
   const onDrop = (targetId: number) => {
@@ -602,10 +657,28 @@ function WorksTab() {
       {editing !== null && (
         <div className="mb-8 rounded-xl bg-white p-6 shadow-md">
           <h2 className="mb-4 font-bold">{editing === "new" ? t("admin.works.new_title") : t("admin.works.edit_title")}</h2>
+          {editing !== "new" && (
+            <div className="mb-5 flex flex-wrap gap-2">
+              {LANGS.map((locale) => (
+                <Button
+                  key={locale}
+                  type="button"
+                  size="sm"
+                  variant={editLang === locale ? "default" : "outline"}
+                  onClick={() => setEditLang(locale)}
+                >
+                  {LANG_META[locale].flag} {LANG_META[locale].name}
+                </Button>
+              ))}
+            </div>
+          )}
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="text-xs font-bold uppercase">{t("admin.works.title")}</label>
-              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              <Input
+                value={editing === "new" ? form.title : activeTranslation.title}
+                onChange={(e) => editing === "new" ? setForm({ ...form, title: e.target.value }) : setTranslation({ title: e.target.value })}
+              />
             </div>
             <div>
               <label className="text-xs font-bold uppercase">{t("admin.works.slug")}</label>
@@ -647,7 +720,10 @@ function WorksTab() {
             </div>
             <div>
               <label className="text-xs font-bold uppercase">{t("admin.works.technique")}</label>
-              <Input value={form.technique} onChange={(e) => setForm({ ...form, technique: e.target.value })} />
+              <Input
+                value={editing === "new" ? form.technique : activeTranslation.technique}
+                onChange={(e) => editing === "new" ? setForm({ ...form, technique: e.target.value }) : setTranslation({ technique: e.target.value })}
+              />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -712,7 +788,11 @@ function WorksTab() {
             </div>
             <div className="md:col-span-2">
               <label className="text-xs font-bold uppercase">{t("admin.works.description")}</label>
-              <Textarea rows={6} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <Textarea
+                rows={6}
+                value={editing === "new" ? form.description : activeTranslation.description}
+                onChange={(e) => editing === "new" ? setForm({ ...form, description: e.target.value }) : setTranslation({ description: e.target.value })}
+              />
             </div>
           </div>
           <div className="mt-4 flex gap-2">
@@ -1043,28 +1123,42 @@ function TextsTab() {
   const utils = trpc.useUtils();
   const { t } = useLang();
   const { data: texts } = trpc.admin.listTexts.useQuery();
-  const update = trpc.admin.updateText.useMutation({
+  const update = trpc.admin.updateTextTranslation.useMutation({
     onSuccess: () => {
       utils.admin.listTexts.invalidate();
       utils.content.texts.invalidate();
     },
   });
   const [values, setValues] = useState<Record<string, string>>({});
+  const [editLang, setEditLang] = useState<Lang>("pt");
   const [savedKey, setSavedKey] = useState("");
 
   useEffect(() => {
     if (texts) {
       const v: Record<string, string> = {};
-      for (const t of texts) v[t.key] = t.value;
+      for (const item of texts) v[item.key] = item.translations?.[editLang] ?? (editLang === "pt" ? item.value : "");
       setValues(v);
     }
-  }, [texts]);
+  }, [texts, editLang]);
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-[var(--c-ink)]/65">
         {t("admin.texts.help")}
       </p>
+      <div className="flex flex-wrap gap-2">
+        {LANGS.map((locale) => (
+          <Button
+            key={locale}
+            type="button"
+            size="sm"
+            variant={editLang === locale ? "default" : "outline"}
+            onClick={() => setEditLang(locale)}
+          >
+            {LANG_META[locale].flag} {LANG_META[locale].name}
+          </Button>
+        ))}
+      </div>
       {texts?.map((item) => (
         <div key={item.key} className="rounded-xl bg-white p-4 shadow-sm">
           <label className="mb-2 block text-sm font-bold">{item.label}</label>
@@ -1079,7 +1173,7 @@ function TextsTab() {
               disabled={update.isPending}
               onClick={() =>
                 update.mutate(
-                  { key: item.key, value: values[item.key] ?? "" },
+                  { key: item.key, locale: editLang, value: values[item.key] ?? "" },
                   { onSuccess: () => setSavedKey(item.key) },
                 )
               }

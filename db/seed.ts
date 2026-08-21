@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { closeDb, getDb } from "../api/queries/connection";
 import * as schema from "./schema";
+import { LOCALES, textTranslations, workTranslations } from "./content-translations";
 
 const C = {
   PINTURAS: "Pinturas",
@@ -65,11 +66,11 @@ const works: schema.InsertWork[] = [
 const texts: { key: string; label: string; value: string }[] = [
   { key: "hero_title", label: "Início — Título principal", value: "ATELIER DANIEL DETOMI" },
   { key: "hero_subtitle", label: "Início — Subtítulo", value: "Arte e Natureza em Tiradentes — Minas Gerais" },
-  { key: "hero_text", label: "Início — Texto de abertura", value: "Um artista que não se limita a uma técnica, mas a um território criativo — onde a pintura de cavalete, a escultura, a instalação ambiental e o desenho gráfico coexistem como manifestações de uma mesma visão.\n\nAqui, a arte não fica atrás de vidro: ela cresce unavailable, emerge da encosta e caminha entre as árvores. Visite o ateliê em Tiradentes e encontre as obras entre a vegetação — como deve ser." },
+  { key: "hero_text", label: "Início — Texto de abertura", value: textTranslations.hero_text.pt },
   { key: "home_painting_title", label: "Início — Título bloco Pintura", value: "A Pintura — o mundo lírico e o mundo gráfico" },
   { key: "home_painting_text", label: "Início — Texto bloco Pintura", value: "De um lado, paisagens densas, fauna e flora brasileiras em cores vibrantes — tucanos, ipês, cenas tropicais. É o Brasil imaginário de Detomi.\n\nDo outro, o dálmata, o tênis xadrez, os arlequins — um universo de ilusão de ótica, pop art e circo, que revela formação técnica rigorosa e interesse pela percepção visual.\n\nDuas faces do mesmo olhar: observar a natureza com a mesma precisão com que se deconstrói uma grade xadrez." },
   { key: "home_sculpture_title", label: "Início — Título bloco Escultura", value: "A Escultura e o Recorte — o corpo na paisagem" },
-  { key: "home_sculpture_text", label: "Início — Texto bloco Escultura", value: "Araras, veados, capivaras e as grandes faces na encosta são obras que só existem plenamente em relação ao lugar.\n\nunavailable, na luz de Tiradentes, entre as plantas — cada visita ao ateliê é uma experiência de lugar, não apenas de obra." },
+  { key: "home_sculpture_text", label: "Início — Texto bloco Escultura", value: textTranslations.home_sculpture_text.pt },
   { key: "home_alterego_title", label: "Início — Título bloco Alter-egos", value: "O Indígena e o Palhaço — os alter-egos" },
   { key: "home_alterego_text", label: "Início — Texto bloco Alter-egos", value: "A cabeça indígena com o cocar é um autorretrato simbólico. Os palhaços equilibristas são uma reflexão sobre o artista como performer.\n\nDetomi não é apenas um pintor de natureza: é um pensador visual." },
   { key: "artist_bio", label: "O Artista — Biografia completa", value: "Daniel Detomi é mineiro, nascido em São João del-Rei. Desenvolveu seu trabalho criativo na cidade histórica de Tiradentes — MG, no início dos anos 90, junto a renomados artistas como Fernando Pita e Toti (Oficina de Agosto), dentre outros.\n\nNesta cidade histórica, fez parte de um conjunto de artistas que iniciaram um movimento artístico que se desenvolve até os dias de hoje — moldando a arte mineira, valorizando a cultura, promovendo a inclusão social e a conscientização ambiental.\n\nSuas obras, de temáticas variadas, têm como foco o reúso das mais diversas matérias-primas: papel machê em homenagem aos povos originários, a fauna brasileira em recortes de chapas de metal de reúso e painéis de madeira de demolição que retratam as paisagens e belezas de um Brasil tão rico e diverso.\n\nNo Atelier Daniel Detomi — Arte e Natureza, o visitante caminha entre esculturas monumentais no jardim e pinturas nas paredes. O ateliê é um lugar físico que se visita — e este site é um convite." },
@@ -80,7 +81,7 @@ const texts: { key: string; label: string; value: string }[] = [
   { key: "expo_terra_title", label: "Exposições — Banner 2 título", value: "TERRA BRASILIS" },
   { key: "expo_terra_text", label: "Exposições — Banner 2 texto", value: "Papel machê em homenagem aos povos originários, a fauna brasileira em recortes de chapas de metal de reúso e painéis de madeira de demolição retratando as paisagens e belezas do Brasil.\n\nUma mostra que valoriza a cultura, promove a inclusão social e a conscientização ambiental." },
   { key: "tiradentes_title", label: "Tiradentes — Título da página", value: "Tiradentes — Minas Gerais" },
-  { key: "tiradentes_text", label: "Tiradentes — Texto principal", value: "Fundada no início do século XVIII, Tiradentes é uma das cidades históricas mais bem preservadas do Brasil. Ruas de pedra, casario colonial, igrejas barrocas e a Serra de São José emoldurando o horizonte — a cidade inteira é um cenário que inspirou gerações de artistas.\n\nFoi aqui, no início dos anos 90, que um grupo de artistas — entre eles Daniel Detomi, Fernando Pita e Toti, da Oficina de Agosto — iniciou um movimento que transformou Tiradentes, Bichinho e adjacências em um pólo de arte reconhecido em todo o país.\n\nHoje, ateliês, galerias e oficinas dividem espaço com a gastronomia mineira e os festivais culturais. O Atelier Daniel Detomi — Arte e Natureza faz parte dessa história: um lugar onde a arte cresce unavailable e recebe visitantes de portas abertas.\n\nPara visitar, chame no WhatsApp +55 32 98452-7407 e agende. A placa na estrada indica o caminho — siga a seta vermelha." },
+  { key: "tiradentes_text", label: "Tiradentes — Texto principal", value: textTranslations.tiradentes_text.pt },
   { key: "footer_tagline", label: "Rodapé — Frase", value: "Arte e Natureza — Tiradentes, Minas Gerais" },
 ];
 
@@ -119,6 +120,58 @@ async function seed() {
       });
   }
   console.log(`Upserted ${texts.length} site texts.`);
+
+  let insertedTextTranslations = 0;
+  let skippedTextTranslations = 0;
+  const textRows = await db.select({ id: schema.siteTexts.id, key: schema.siteTexts.key }).from(schema.siteTexts);
+  for (const textRow of textRows) {
+    const translations = textTranslations[textRow.key];
+    if (!translations) continue;
+    for (const locale of LOCALES) {
+      const value = translations[locale];
+      const existing = await db
+        .select({ id: schema.siteTextTranslations.id })
+        .from(schema.siteTextTranslations)
+        .where(and(eq(schema.siteTextTranslations.textId, textRow.id), eq(schema.siteTextTranslations.locale, locale)))
+        .limit(1);
+      if (existing.length) {
+        skippedTextTranslations++;
+        continue;
+      }
+      await db
+        .insert(schema.siteTextTranslations)
+        .values({ textId: textRow.id, locale, value })
+        .onConflictDoNothing();
+      insertedTextTranslations++;
+    }
+  }
+  console.log(`Text translations inserted: ${insertedTextTranslations}; skipped: ${skippedTextTranslations}.`);
+
+  let insertedWorkTranslations = 0;
+  let skippedWorkTranslations = 0;
+  const workRows = await db.select({ id: schema.works.id, slug: schema.works.slug }).from(schema.works);
+  for (const workRow of workRows) {
+    const translations = workTranslations[workRow.slug];
+    if (!translations) continue;
+    for (const locale of LOCALES) {
+      const value = translations[locale];
+      const existing = await db
+        .select({ id: schema.workTranslations.id })
+        .from(schema.workTranslations)
+        .where(and(eq(schema.workTranslations.workId, workRow.id), eq(schema.workTranslations.locale, locale)))
+        .limit(1);
+      if (existing.length) {
+        skippedWorkTranslations++;
+        continue;
+      }
+      await db
+        .insert(schema.workTranslations)
+        .values({ workId: workRow.id, locale, ...value })
+        .onConflictDoNothing();
+      insertedWorkTranslations++;
+    }
+  }
+  console.log(`Work translations inserted: ${insertedWorkTranslations}; skipped: ${skippedWorkTranslations}.`);
 
   console.log("Done.");
 }

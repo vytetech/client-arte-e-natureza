@@ -14,8 +14,8 @@ const CATEGORIES = [
 ];
 
 export default function Obras() {
-  const { data: works } = trpc.content.works.useQuery();
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const { data: works } = trpc.content.works.useQuery(lang);
 
   return (
     <Layout>

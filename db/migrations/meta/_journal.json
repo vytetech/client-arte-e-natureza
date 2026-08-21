@@ -36,6 +36,13 @@
       "when": 1787312645758,
       "tag": "0004_optimal_xavin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787320448713,
+      "tag": "0005_slimy_metal_master",
+      "breakpoints": true
     }
   ]
 }

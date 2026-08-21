@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { LOCALES, textTranslations, workTranslations } from "../db/content-translations";
 
 const root = process.cwd();
 const files = [
@@ -69,6 +70,37 @@ for (const lang of langs) {
   } else {
     console.log(`[i18n] ${lang}: ${keys.length} keys OK`);
   }
+}
+
+if (failed) process.exit(1);
+
+for (const [key, translations] of Object.entries(textTranslations)) {
+  for (const locale of LOCALES) {
+    if (!translations[locale]?.trim()) {
+      failed = true;
+      console.error(`[i18n-content] text ${key} is missing ${locale}`);
+    }
+  }
+}
+
+for (const [slug, translations] of Object.entries(workTranslations)) {
+  for (const locale of LOCALES) {
+    const translation = translations[locale];
+    if (!translation?.title.trim() || !translation?.technique.trim() || !translation?.description.trim()) {
+      failed = true;
+      console.error(`[i18n-content] work ${slug} is missing ${locale}`);
+    }
+  }
+}
+
+if (Object.keys(workTranslations).length < 21) {
+  failed = true;
+  console.error(`[i18n-content] expected at least 21 translated works, found ${Object.keys(workTranslations).length}`);
+}
+
+if (!failed) {
+  console.log(`[i18n-content] ${Object.keys(textTranslations).length} site texts OK`);
+  console.log(`[i18n-content] ${Object.keys(workTranslations).length} works OK`);
 }
 
 if (failed) process.exit(1);

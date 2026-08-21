@@ -8,10 +8,12 @@ import {
   integer,
   boolean,
   customType,
+  unique,
 } from "drizzle-orm/pg-core";
 
 export const userRole = pgEnum("role", ["user", "admin"]);
 export const draftType = pgEnum("draft_type", ["text", "image", "video"]);
+export const locale = pgEnum("locale", ["pt", "en", "es", "ar"]);
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -57,6 +59,28 @@ export const works = pgTable("works", {
 export type Work = typeof works.$inferSelect;
 export type InsertWork = typeof works.$inferInsert;
 
+export const workTranslations = pgTable("work_translations", {
+  id: serial("id").primaryKey(),
+  workId: integer("workId")
+    .notNull()
+    .references(() => works.id, { onDelete: "cascade" }),
+  locale: locale("locale").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  category: varchar("category", { length: 64 }).notNull(),
+  technique: varchar("technique", { length: 255 }).default("").notNull(),
+  description: text("description").default("").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+}, (table) => ({
+  workLocaleUnique: unique("work_translations_work_locale_unique").on(table.workId, table.locale),
+}));
+
+export type WorkTranslation = typeof workTranslations.$inferSelect;
+export type InsertWorkTranslation = typeof workTranslations.$inferInsert;
+
 export const siteTexts = pgTable("site_texts", {
   id: serial("id").primaryKey(),
   key: varchar("key", { length: 128 }).notNull().unique(),
@@ -65,6 +89,25 @@ export const siteTexts = pgTable("site_texts", {
 });
 
 export type SiteText = typeof siteTexts.$inferSelect;
+
+export const siteTextTranslations = pgTable("site_text_translations", {
+  id: serial("id").primaryKey(),
+  textId: integer("textId")
+    .notNull()
+    .references(() => siteTexts.id, { onDelete: "cascade" }),
+  locale: locale("locale").notNull(),
+  value: text("value").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+}, (table) => ({
+  textLocaleUnique: unique("site_text_translations_text_locale_unique").on(table.textId, table.locale),
+}));
+
+export type SiteTextTranslation = typeof siteTextTranslations.$inferSelect;
+export type InsertSiteTextTranslation = typeof siteTextTranslations.$inferInsert;
 
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({
   dataType() {

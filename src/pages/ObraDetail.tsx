@@ -29,12 +29,12 @@ function formatBRL(value: string) {
 }
 
 export default function ObraDetail() {
+  const { visible, s } = useSettings();
+  const { t, lang } = useLang();
   const { slug } = useParams<{ slug: string }>();
-  const { data: work, isLoading } = trpc.content.workBySlug.useQuery(slug ?? "", {
+  const { data: work, isLoading } = trpc.content.workBySlug.useQuery({ slug: slug ?? "", locale: lang }, {
     enabled: !!slug,
   });
-  const { visible, s } = useSettings();
-  const { t } = useLang();
   const showShipping = visible("shipping.enabled");
   const showShippingNote = s("shipping.note", "1") === "1";
   const showIntl = s("shipping.international", "0") === "1";
