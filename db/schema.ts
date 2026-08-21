@@ -6,6 +6,7 @@ import {
   text,
   timestamp,
   integer,
+  boolean,
   customType,
 } from "drizzle-orm/pg-core";
 
@@ -16,9 +17,11 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   unionId: varchar("unionId", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }),
-  email: varchar("email", { length: 320 }),
+  email: varchar("email", { length: 320 }).unique(),
   avatar: text("avatar"),
+  passwordHash: text("passwordHash"),
   role: userRole("role").default("user").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
     .defaultNow()

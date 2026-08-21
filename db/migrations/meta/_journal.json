@@ -8,6 +8,13 @@
       "when": 1787282141367,
       "tag": "0000_flippant_star_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787283817413,
+      "tag": "0001_dashing_doctor_faustus",
+      "breakpoints": true
     }
   ]
 }

@@ -35,7 +35,7 @@ const COLOR_FIELDS = [
   { key: "design.sand", label: "Blocos claros", def: "#efe6d2" },
 ];
 
-type Tab = "obras" | "imagens" | "textos" | "design" | "secoes" | "cafe";
+type Tab = "obras" | "imagens" | "textos" | "design" | "secoes" | "cafe" | "usuarios";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "obras", label: "Obras e preços" },
@@ -44,6 +44,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "design", label: "Design e fontes" },
   { id: "secoes", label: "Seções da página" },
   { id: "cafe", label: "☕ Espaço de Café" },
+  { id: "usuarios", label: "Usuários" },
 ];
 
 type WorkForm = {
@@ -146,7 +147,307 @@ export default function Admin() {
         {tab === "design" && <DesignTab />}
         {tab === "secoes" && <SectionsTab />}
         {tab === "cafe" && <CafeTab />}
+        {tab === "usuarios" && <UsersTab />}
       </main>
+    </div>
+  );
+}
+
+/* ============================= USUÁRIOS ============================= */
+
+type UserForm = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: "admin";
+  isActive: boolean;
+};
+
+const emptyUserForm: UserForm = {
+  name: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  role: "admin",
+  isActive: true,
+};
+
+function formatDate(value: Date | string | null | undefined) {
+  if (!value) return "Nunca";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "Nunca";
+  return date.toLocaleString("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}
+
+function UsersTab() {
+  const utils = trpc.useUtils();
+  const { data: users, isLoading } = trpc.admin.listUsers.useQuery();
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState<UserForm>(emptyUserForm);
+  const [resetUserId, setResetUserId] = useState<number | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const invalidate = () => utils.admin.listUsers.invalidate();
+  const onError = (error: { message: string }) => setNotice(`Erro: ${error.message}`);
+
+  const createMut = trpc.admin.createUser.useMutation({
+    onSuccess: () => {
+      invalidate();
+      setForm(emptyUserForm);
+      setEditingId(null);
+      setNotice("Usuário criado ✓");
+    },
+    onError,
+  });
+  const updateMut = trpc.admin.updateUser.useMutation({
+    onSuccess: () => {
+      invalidate();
+      setForm(emptyUserForm);
+      setEditingId(null);
+      setNotice("Usuário salvo ✓");
+    },
+    onError,
+  });
+  const resetMut = trpc.admin.resetUserPassword.useMutation({
+    onSuccess: () => {
+      setResetUserId(null);
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setNotice("Senha redefinida ✓");
+    },
+    onError,
+  });
+  const deleteMut = trpc.admin.deleteUser.useMutation({
+    onSuccess: () => {
+      invalidate();
+      setNotice("Usuário excluído ✓");
+    },
+    onError,
+  });
+
+  const startCreate = () => {
+    setEditingId(null);
+    setForm(emptyUserForm);
+    setNotice("");
+  };
+
+  const startEdit = (user: NonNullable<typeof users>[number]) => {
+    setEditingId(user.id);
+    setForm({
+      name: user.name ?? "",
+      email: user.email ?? "",
+      password: "",
+      confirmPassword: "",
+      role: "admin",
+      isActive: user.isActive,
+    });
+    setNotice("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const saveUser = () => {
+    setNotice("");
+    if (editingId === null && form.password !== form.confirmPassword) {
+      setNotice("Erro: as senhas não conferem.");
+      return;
+    }
+
+    if (editingId === null) {
+      createMut.mutate({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+      });
+      return;
+    }
+
+    updateMut.mutate({
+      id: editingId,
+      name: form.name,
+      email: form.email,
+      isActive: form.isActive,
+    });
+  };
+
+  const resetPassword = (id: number) => {
+    setNotice("");
+    if (newPassword !== confirmNewPassword) {
+      setNotice("Erro: as senhas não conferem.");
+      return;
+    }
+    resetMut.mutate({ id, password: newPassword });
+  };
+
+  return (
+    <div className="space-y-6">
+      {notice && (
+        <div className="rounded-lg border border-[var(--c-ink)]/15 bg-white px-4 py-2 text-sm">
+          {notice}
+        </div>
+      )}
+
+      <div className="rounded-xl bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="font-bold">
+            {editingId === null ? "Novo usuário administrativo" : "Editar usuário"}
+          </h2>
+          {editingId !== null && (
+            <Button variant="outline" size="sm" onClick={startCreate}>
+              Novo usuário
+            </Button>
+          )}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="text-xs font-bold uppercase">Nome</label>
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </div>
+          <div>
+            <label className="text-xs font-bold uppercase">E-mail</label>
+            <Input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+          </div>
+          {editingId === null && (
+            <>
+              <div>
+                <label className="text-xs font-bold uppercase">Senha inicial</label>
+                <Input
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  autoComplete="new-password"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase">Confirmar senha</label>
+                <Input
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                  autoComplete="new-password"
+                />
+              </div>
+            </>
+          )}
+          <div>
+            <label className="text-xs font-bold uppercase">Perfil</label>
+            <select
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value as "admin" })}
+            >
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          {editingId !== null && (
+            <label className="flex items-end gap-2 pb-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.isActive}
+                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+              />
+              Usuário ativo
+            </label>
+          )}
+        </div>
+        <div className="mt-4 flex gap-2">
+          <Button onClick={saveUser} disabled={createMut.isPending || updateMut.isPending}>
+            {editingId === null ? "Criar usuário" : "Salvar usuário"}
+          </Button>
+          {editingId !== null && (
+            <Button variant="outline" onClick={startCreate}>
+              Cancelar
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {isLoading && <p className="text-sm text-[var(--c-ink)]/60">Carregando usuários…</p>}
+        {users?.map((user) => (
+          <div key={user.id} className="rounded-xl bg-white p-4 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="font-bold">{user.name ?? "Sem nome"}</div>
+                <div className="text-sm text-[var(--c-ink)]/60">{user.email}</div>
+                <div className="mt-1 text-xs text-[var(--c-ink)]/45">
+                  {user.isActive ? "Ativo" : "Inativo"} · {user.role} · Último acesso:{" "}
+                  {formatDate(user.lastSignInAt)}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => startEdit(user)}>
+                  Editar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setResetUserId(resetUserId === user.id ? null : user.id);
+                    setNewPassword("");
+                    setConfirmNewPassword("");
+                  }}
+                >
+                  Redefinir senha
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => {
+                    if (confirm(`Excluir o usuário "${user.email}"?`)) {
+                      deleteMut.mutate({ id: user.id });
+                    }
+                  }}
+                >
+                  Excluir
+                </Button>
+              </div>
+            </div>
+
+            {resetUserId === user.id && (
+              <div className="mt-4 grid gap-3 border-t pt-4 md:grid-cols-[1fr_1fr_auto]">
+                <div>
+                  <label className="text-xs font-bold uppercase">Nova senha</label>
+                  <Input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold uppercase">Confirmar nova senha</label>
+                  <Input
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    onClick={() => resetPassword(user.id)}
+                    disabled={resetMut.isPending}
+                  >
+                    Salvar senha
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

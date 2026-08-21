@@ -8,7 +8,7 @@ import { trpc } from "@/providers/trpc";
 export default function Login() {
   const navigate = useNavigate();
   const utils = trpc.useUtils();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -23,7 +23,7 @@ export default function Login() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    loginMut.mutate({ username, password });
+    loginMut.mutate({ username: email, password });
   };
 
   return (
@@ -37,13 +37,14 @@ export default function Login() {
           <form onSubmit={submit} className="space-y-3">
             <div>
               <label className="mb-1 block text-xs font-bold uppercase tracking-wider">
-                Usuário
+                E-mail
               </label>
               <Input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
-                placeholder="Usuário"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                placeholder="admin@exemplo.com"
               />
             </div>
             <div>

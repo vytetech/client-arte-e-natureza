@@ -3,11 +3,24 @@ import * as schema from "@db/schema";
 import type { InsertUser } from "@db/schema";
 import { getDb } from "./connection";
 
+export function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
 export async function findUserByUnionId(unionId: string) {
   const rows = await getDb()
     .select()
     .from(schema.users)
     .where(eq(schema.users.unionId, unionId))
+    .limit(1);
+  return rows.at(0);
+}
+
+export async function findUserByEmail(email: string) {
+  const rows = await getDb()
+    .select()
+    .from(schema.users)
+    .where(eq(schema.users.email, normalizeEmail(email)))
     .limit(1);
   return rows.at(0);
 }

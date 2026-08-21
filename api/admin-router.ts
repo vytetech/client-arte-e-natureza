@@ -1,8 +1,11 @@
 import { z } from "zod";
-import { eq, asc } from "drizzle-orm";
+import { and, asc, count, eq, ne } from "drizzle-orm";
 import * as schema from "@db/schema";
 import { getDb } from "./queries/connection";
 import { createRouter, adminQuery } from "./middleware";
+import { TRPCError } from "@trpc/server";
+import { hashPassword, validatePasswordStrength } from "./lib/password";
+import { findUserByEmail, normalizeEmail } from "./queries/users";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -19,7 +22,175 @@ const workInput = z.object({
   sortOrder: z.number().int().default(0),
 });
 
+const userRoleInput = z.enum(["admin"]);
+
+const userCreateInput = z.object({
+  name: z.string().trim().min(1, "Nome é obrigatório.").max(255),
+  email: z.string().trim().email("E-mail inválido.").max(320),
+  password: z.string().min(1),
+  role: userRoleInput.default("admin"),
+});
+
+const userUpdateInput = z.object({
+  id: z.number().int().positive(),
+  name: z.string().trim().min(1, "Nome é obrigatório.").max(255),
+  email: z.string().trim().email("E-mail inválido.").max(320),
+  isActive: z.boolean(),
+});
+
+const userSafeFields = {
+  id: schema.users.id,
+  name: schema.users.name,
+  email: schema.users.email,
+  role: schema.users.role,
+  isActive: schema.users.isActive,
+  createdAt: schema.users.createdAt,
+  updatedAt: schema.users.updatedAt,
+  lastSignInAt: schema.users.lastSignInAt,
+};
+
+function emailUnionId(email: string) {
+  return `email:${email}`;
+}
+
+async function ensureEmailAvailable(email: string, exceptUserId?: number) {
+  const existing = await findUserByEmail(email);
+  if (existing && existing.id !== exceptUserId) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "Este e-mail já está cadastrado.",
+    });
+  }
+}
+
+async function countOtherActiveAdmins(userId: number) {
+  const rows = await getDb()
+    .select({ value: count() })
+    .from(schema.users)
+    .where(
+      and(
+        eq(schema.users.role, "admin"),
+        eq(schema.users.isActive, true),
+        ne(schema.users.id, userId),
+      ),
+    );
+  return rows[0]?.value ?? 0;
+}
+
+async function assertCanDisableOrDeleteAdmin(userId: number) {
+  const otherActiveAdmins = await countOtherActiveAdmins(userId);
+  if (otherActiveAdmins < 1) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Não é possível remover ou desativar o último administrador ativo.",
+    });
+  }
+}
+
+function assertValidPassword(password: string) {
+  const error = validatePasswordStrength(password);
+  if (error) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: error });
+  }
+}
+
 export const adminRouter = createRouter({
+  listUsers: adminQuery.query(() =>
+    getDb()
+      .select(userSafeFields)
+      .from(schema.users)
+      .orderBy(asc(schema.users.name), asc(schema.users.email)),
+  ),
+
+  createUser: adminQuery.input(userCreateInput).mutation(async ({ input }) => {
+    const email = normalizeEmail(input.email);
+    assertValidPassword(input.password);
+    await ensureEmailAvailable(email);
+
+    const rows = await getDb()
+      .insert(schema.users)
+      .values({
+        unionId: emailUnionId(email),
+        name: input.name,
+        email,
+        role: input.role,
+        isActive: true,
+        passwordHash: hashPassword(input.password),
+      })
+      .returning(userSafeFields);
+
+    return rows[0];
+  }),
+
+  updateUser: adminQuery.input(userUpdateInput).mutation(async ({ input }) => {
+    const email = normalizeEmail(input.email);
+    const rows = await getDb()
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, input.id))
+      .limit(1);
+    const user = rows.at(0);
+    if (!user) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Usuário não encontrado." });
+    }
+
+    if (user.role === "admin" && user.isActive && !input.isActive) {
+      await assertCanDisableOrDeleteAdmin(user.id);
+    }
+    await ensureEmailAvailable(email, user.id);
+
+    const updated = await getDb()
+      .update(schema.users)
+      .set({
+        name: input.name,
+        email,
+        unionId: emailUnionId(email),
+        isActive: input.isActive,
+      })
+      .where(eq(schema.users.id, input.id))
+      .returning(userSafeFields);
+
+    return updated[0];
+  }),
+
+  resetUserPassword: adminQuery
+    .input(z.object({ id: z.number().int().positive(), password: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      assertValidPassword(input.password);
+      const updated = await getDb()
+        .update(schema.users)
+        .set({ passwordHash: hashPassword(input.password) })
+        .where(eq(schema.users.id, input.id))
+        .returning({ id: schema.users.id });
+
+      if (!updated.length) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Usuário não encontrado." });
+      }
+
+      return { success: true };
+    }),
+
+  deleteUser: adminQuery
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const rows = await getDb()
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.id, input.id))
+        .limit(1);
+      const user = rows.at(0);
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Usuário não encontrado." });
+      }
+
+      if (user.role === "admin" && user.isActive) {
+        await assertCanDisableOrDeleteAdmin(user.id);
+      }
+
+      await getDb().delete(schema.users).where(eq(schema.users.id, input.id));
+      return { success: true };
+    }),
+
   listTexts: adminQuery.query(() => getDb().select().from(schema.siteTexts)),
 
   updateText: adminQuery

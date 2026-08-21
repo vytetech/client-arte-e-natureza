@@ -19,5 +19,8 @@ export async function authenticateRequest(headers: Headers) {
   if (!user) {
     throw Errors.forbidden("User not found. Please re-login.");
   }
+  if (!user.isActive) {
+    throw Errors.forbidden("User is inactive. Please re-login.");
+  }
   return user;
 }

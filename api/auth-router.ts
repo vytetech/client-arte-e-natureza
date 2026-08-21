@@ -1,24 +1,15 @@
 import * as cookie from "cookie";
-import * as crypto from "crypto";
 import { z } from "zod";
 import { Session } from "@contracts/constants";
 import { getSessionCookieOptions } from "./lib/cookies";
 import { signSessionToken } from "./lib/session";
-import { upsertUser } from "./queries/users";
+import { verifyPassword } from "./lib/password";
+import { findUserByEmail, normalizeEmail } from "./queries/users";
 import { createRouter, authedQuery, publicQuery } from "./middleware";
 import { TRPCError } from "@trpc/server";
-
-// Local admin credentials (username: dandan)
-const ADMIN_USERNAME = "dandan";
-const ADMIN_PASSWORD_SCRYPT =
-  "b94372626f494e5fd4ab2ea5dceec0ca99d88d44c3a4c140ce44d83bba38ba5cef54b63b6266c3a0b7f78deb41b64e468d96ef76bbc2c64ff249cd8cd298cfa8";
-const ADMIN_SALT = "atelier-detomi-v1";
-
-function verifyPassword(password: string): boolean {
-  const hash = crypto.scryptSync(password, ADMIN_SALT, 64);
-  const expected = Buffer.from(ADMIN_PASSWORD_SCRYPT, "hex");
-  return hash.length === expected.length && crypto.timingSafeEqual(hash, expected);
-}
+import { eq } from "drizzle-orm";
+import * as schema from "@db/schema";
+import { getDb } from "./queries/connection";
 
 export const authRouter = createRouter({
   me: authedQuery.query((opts) => opts.ctx.user),
@@ -26,24 +17,22 @@ export const authRouter = createRouter({
   loginPassword: publicQuery
     .input(z.object({ username: z.string().min(1), password: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const okUser = input.username.trim().toLowerCase() === ADMIN_USERNAME;
-      const okPass = verifyPassword(input.password);
-      if (!okUser || !okPass) {
+      const email = normalizeEmail(input.username);
+      const user = await findUserByEmail(email);
+      const okPass = verifyPassword(input.password, user?.passwordHash);
+      if (!user || user.role !== "admin" || !user.isActive || !okPass) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "Usuário ou senha incorretos.",
         });
       }
 
-      const unionId = "local:dandan";
-      await upsertUser({
-        unionId,
-        name: "Administrador",
-        role: "admin",
-        lastSignInAt: new Date(),
-      });
+      await getDb()
+        .update(schema.users)
+        .set({ lastSignInAt: new Date() })
+        .where(eq(schema.users.id, user.id));
 
-      const token = await signSessionToken({ unionId });
+      const token = await signSessionToken({ unionId: user.unionId });
       const opts = getSessionCookieOptions(ctx.req.headers);
       ctx.resHeaders.append(
         "set-cookie",
