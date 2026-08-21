@@ -1,22 +1,55 @@
-# CLIENT-ARTE-E-NATUREZA
+# Atelier Daniel Detomi — Arte e Natureza
 
-Site institucional e painel administrativo do Atelier Daniel Detomi - Arte e Natureza.
+Site institucional e plataforma administrativa do Atelier Daniel Detomi — Arte e Natureza.
 
-O projeto usa frontend React/Vite, backend Hono + tRPC e persistencia em PostgreSQL via Drizzle ORM. A versao atual nao usa MySQL, Kimi ou OAuth externo.
+Projeto desenvolvido e mantido tecnicamente pela VyteTech.
+
+## Visão Geral
+
+Aplicação web com site público responsivo, painel administrativo protegido, conteúdo dinâmico e persistência em PostgreSQL.
+
+A arquitetura atual utiliza React/Vite no frontend, Hono + tRPC no backend, Drizzle ORM para acesso a dados e Render como ambiente de hospedagem.
 
 ## Funcionalidades
 
-- Site publico responsivo com paginas de Home, Artista, Obras, Galeria, Exposicoes, Tiradentes e detalhe de obra.
-- Conteudo dinamico vindo do banco para obras, textos e configuracoes.
-- Painel administrativo protegido por login proprio de administrador.
-- Gestao administrativa de obras, imagens/uploads, textos, design, secoes, idiomas, cupom, promocoes, entrega, Espaco de Cafe e usuarios.
-- Autenticacao por e-mail e senha, com senha armazenada como hash e sessao em cookie HttpOnly.
-- Internacionalizacao em portugues, ingles, espanhol e arabe, com suporte a idiomas habilitados/desabilitados pelo painel.
-- Cupom global com ativacao por obra.
-- Promocao de compra com valor minimo configuravel.
-- Uploads salvos no banco PostgreSQL para nao depender do filesystem efemero do Render.
+### Site Público
+
+- Home
+- Artista
+- Obras
+- Galeria
+- Exposições
+- Tiradentes
+- Detalhe de obra
+- Conteúdo responsivo
+- Internacionalização em português, inglês, espanhol e árabe
+- Exibição pública de cupom e promoções conforme configuração administrativa
+
+### Painel Administrativo
+
+- Obras
+- Textos
+- Imagens e uploads
+- Design
+- Seções
+- Idiomas
+- Cupom
+- Promoções
+- Entrega
+- Espaço de Café
+- Usuários administrativos
+
+### Segurança
+
+- Login próprio da aplicação
+- Senhas armazenadas apenas como hash
+- Sessão em cookie HttpOnly
+- Autorização administrativa validada no backend
+- Secrets configurados por variáveis de ambiente
 
 ## Stack
+
+### Frontend
 
 - React 19
 - TypeScript
@@ -24,66 +57,87 @@ O projeto usa frontend React/Vite, backend Hono + tRPC e persistencia em Postgre
 - Tailwind CSS
 - React Router
 - TanStack Query
-- tRPC
+- tRPC Client
+
+### Backend
+
+- Node.js
 - Hono
+- tRPC
+
+### Dados
+
+- PostgreSQL
 - Drizzle ORM
-- PostgreSQL (`pg`)
-- Render PostgreSQL em producao
+- `pg`
+
+### Infraestrutura
+
+- Render
+- Render PostgreSQL
 
 ## Requisitos
 
-- Node.js 20+
+- Node.js 20 LTS ou versão compatível definida pelo projeto
 - npm
-- PostgreSQL para persistencia local ou producao
+- PostgreSQL para persistência local ou produção
 
-## Variaveis De Ambiente
+Não há `.nvmrc` ou `.node-version` versionado neste repositório.
 
-Use `.env.example` como referencia.
+## Variáveis De Ambiente
 
-```env
-SESSION_SECRET=
-DATABASE_URL=
-PORT=3000
-ADMIN_NAME=
-ADMIN_EMAIL=
-ADMIN_PASSWORD=
-```
+Use `.env.example` como referência. Não versionar arquivos `.env` com valores reais.
 
-Descricao:
+### Permanentes Em Produção
 
-- `DATABASE_URL`: obrigatoria em producao e para painel/admin/persistencia. Formato PostgreSQL:
+| Variável | Obrigatória | Descrição |
+| --- | --- | --- |
+| `DATABASE_URL` | Sim | Connection string PostgreSQL usada pela aplicação e pelo Drizzle. |
+| `SESSION_SECRET` | Sim | Segredo usado para assinatura/verificação da sessão administrativa. |
+
+Formato esperado de `DATABASE_URL`:
 
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE
 ```
 
-- `SESSION_SECRET`: obrigatoria em producao. Em desenvolvimento, se ausente, o backend usa um segredo temporario local.
-- `PORT`: opcional. Usada no `npm start`; padrao `3000`.
-- `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`: usadas somente para criar o primeiro administrador com `npm run admin:create`.
+### Opcional
 
-Nao coloque credenciais reais no repositorio.
+| Variável | Obrigatória | Descrição |
+| --- | --- | --- |
+| `PORT` | Não | Porta usada pelo `npm start`. Padrão: `3000`. |
 
-## Instalacao Local
+### Temporárias Para Bootstrap
+
+| Variável | Uso |
+| --- | --- |
+| `ADMIN_NAME` | Nome do primeiro administrador. |
+| `ADMIN_EMAIL` | E-mail do primeiro administrador. |
+| `ADMIN_PASSWORD` | Senha inicial do primeiro administrador. |
+
+`ADMIN_NAME`, `ADMIN_EMAIL` e `ADMIN_PASSWORD` devem ser removidas do ambiente de produção após a criação do primeiro administrador.
+
+## Instalação Local
 
 ```bash
 npm install
 ```
 
-Crie um `.env` local com, no minimo, `DATABASE_URL` se for usar painel, banco e persistencia.
+Crie um `.env` local com `DATABASE_URL` quando for usar banco, painel administrativo e persistência.
 
-Depois execute as migrations:
+Aplicar migrations:
 
 ```bash
 npm run db:migrate
 ```
 
-Opcionalmente, popule o conteudo inicial idempotente:
+Popular conteúdo inicial idempotente, quando necessário:
 
 ```bash
 npm run db:seed
 ```
 
-Crie o primeiro administrador:
+Criar o primeiro administrador:
 
 ```bash
 ADMIN_NAME="Administrador" ADMIN_EMAIL="admin@example.com" ADMIN_PASSWORD="senha-forte" npm run admin:create
@@ -104,7 +158,7 @@ npm run admin:create
 npm run dev
 ```
 
-A aplicacao local roda em:
+URL local padrão:
 
 ```text
 http://localhost:3000
@@ -138,27 +192,39 @@ npm run db:push
 npm run db:seed
 ```
 
-### Banco
+## Banco De Dados
 
-- `npm run db:generate`: gera migration Drizzle a partir do schema.
-- `npm run db:migrate`: aplica migrations no banco configurado em `DATABASE_URL`.
-- `npm run db:push`: sincroniza schema diretamente; use com cuidado.
-- `npm run db:seed`: insere conteudo inicial ausente sem apagar registros existentes.
+- `npm run db:generate`: gera migration Drizzle a partir do schema atual.
+- `npm run db:migrate`: aplica migrations versionadas no banco definido por `DATABASE_URL`.
+- `npm run db:push`: sincroniza schema diretamente; usar apenas em desenvolvimento ou situações controladas.
+- `npm run db:seed`: insere conteúdo inicial ausente, sem apagar registros existentes.
 
-## Autenticacao Administrativa
+Em produção, prefira sempre migrations versionadas:
 
-O login administrativo e proprio da aplicacao.
+```text
+db:generate -> revisão da migration -> db:migrate
+```
+
+Não editar migrations já executadas em produção.
+
+## Autenticação Administrativa
+
+O login administrativo é próprio da aplicação.
 
 Fluxo:
 
 1. Administrador acessa `/login`.
 2. Backend valida e-mail e senha.
-3. Senha e comparada com `passwordHash`.
-4. Sessao e criada no backend.
-5. Cookie HttpOnly e enviado ao navegador.
-6. Rotas administrativas validam autenticacao e perfil `admin` no backend.
+3. Senha é comparada com `passwordHash`.
+4. Sessão é criada no backend.
+5. Cookie HttpOnly é enviado ao navegador.
+6. Rotas administrativas validam autenticação e perfil `admin` no backend.
 
-Nao existe login Kimi, OAuth Kimi, `APP_ID`, `APP_SECRET`, `KIMI_AUTH_URL`, `KIMI_OPEN_URL`, `VITE_KIMI_AUTH_URL` ou `VITE_APP_ID`.
+Depois do primeiro acesso, novos administradores podem ser gerenciados pelo painel em:
+
+```text
+Admin -> Usuários
+```
 
 ## Primeiro Administrador
 
@@ -176,30 +242,32 @@ Execute:
 npm run admin:create
 ```
 
-O comando e idempotente:
+O comando é idempotente:
 
-- se o e-mail nao existir, cria o administrador;
-- se o e-mail ja existir, nao duplica e finaliza com sucesso.
+- se o e-mail não existir, cria o administrador;
+- se o e-mail já existir, não duplica e finaliza com sucesso.
 
-Depois do primeiro acesso, novos administradores podem ser gerenciados pelo painel em:
+Remova as variáveis temporárias após a criação do primeiro administrador.
 
-```text
-Admin -> Usuarios
-```
+## Conteúdo Administrativo
 
-## Conteudo Inicial
+Textos, imagens, obras, preços, promoções e demais conteúdos cadastrados pelo painel administrativo são persistidos no ambiente de produção e ficam sob responsabilidade do administrador autorizado do site.
 
-O seed de conteudo e idempotente e nao apaga dados:
+Alterações feitas pelo painel não exigem modificação do código-fonte, salvo quando houver mudança estrutural da aplicação.
+
+## Conteúdo Inicial
+
+O seed de conteúdo é idempotente e não apaga dados:
 
 ```bash
 npm run db:seed
 ```
 
-Ele insere somente registros ausentes, preservando edicoes feitas pelo painel.
+Ele insere somente registros ausentes, preservando edições feitas pelo painel.
 
 ## Status De Obras
 
-Os status internos canonicos sao:
+Os status internos canônicos são:
 
 ```text
 available
@@ -208,137 +276,136 @@ reserved
 unavailable
 ```
 
-A traducao acontece somente na camada de apresentacao. Valores legados em portugues sao normalizados por compatibilidade.
+A tradução acontece somente na camada de apresentação. Valores legados em português são normalizados por compatibilidade.
+
+## Uploads
+
+Uploads persistentes são armazenados no PostgreSQL da aplicação e não dependem do filesystem efêmero da instância de aplicação.
+
+Arquivos estáticos versionados continuam em `public/`.
+
+## Segurança
+
+- Credenciais e secrets não devem ser versionados.
+- Senhas administrativas são armazenadas apenas como hash.
+- Sessões administrativas usam cookie HttpOnly.
+- A autorização administrativa é validada no backend.
+- Secrets de produção devem ser configurados somente no provedor de infraestrutura.
+- Migrations devem ser versionadas e revisadas antes de aplicação.
+- Não há credenciais hardcoded no código-fonte.
+
+## Produção
+
+- Código-fonte versionado em repositório privado.
+- Deploy conectado ao repositório no provedor de hospedagem.
+- Banco PostgreSQL separado da instância da aplicação.
+- Secrets configurados via environment variables.
+- Domínio configurado via DNS.
+- HTTPS gerenciado pelo provedor de hospedagem.
 
 ## Deploy No Render
+
+Ambiente atual de hospedagem: Render.
+
+Banco atual: PostgreSQL gerenciado.
 
 ### Build Command
 
 ```bash
-npm install && npm run build
+npm ci && npm run build
 ```
 
-### Start Command normal
+O projeto possui `package-lock.json`; por isso, `npm ci` é recomendado para instalação reproduzível em produção.
+
+### Start Command Permanente
 
 ```bash
 npm start
 ```
 
-### Variaveis no Render
+### Comandos Temporários De Operação
 
-Configure:
+Alguns planos/ambientes podem não disponibilizar shell interativo. Nesses casos, os comandos abaixo podem ser usados temporariamente como Start Command para executar uma operação e iniciar a aplicação em seguida.
 
-```env
-DATABASE_URL=
-SESSION_SECRET=
-```
-
-`DATABASE_URL` deve ser a connection string PostgreSQL fornecida pelo Render.
-
-### Aplicar migrations
-
-Como o plano gratuito do Render pode nao ter shell, use temporariamente o Start Command:
+Aplicar migrations:
 
 ```bash
 npm run db:migrate && npm start
 ```
 
-Depois que as migrations forem aplicadas com sucesso, volte para:
-
-```bash
-npm start
-```
-
-### Criar primeiro administrador no Render Free
-
-Configure temporariamente:
-
-```env
-ADMIN_NAME=
-ADMIN_EMAIL=
-ADMIN_PASSWORD=
-```
-
-Use temporariamente o Start Command:
+Criar primeiro administrador:
 
 ```bash
 npm run admin:create && npm start
 ```
 
-Depois que o administrador for criado, volte para:
-
-```bash
-npm start
-```
-
-### Popular conteudo inicial no Render Free
-
-Para inserir obras/textos iniciais ausentes:
+Popular conteúdo inicial:
 
 ```bash
 npm run db:seed && npm start
 ```
 
-Depois volte para:
+Após concluir a operação, volte o Start Command permanente para:
 
 ```bash
 npm start
 ```
 
+## Backup E Continuidade
+
+O código-fonte é versionado em repositório privado.
+
+Os dados dinâmicos são persistidos em PostgreSQL.
+
+Políticas de backup, retenção e recuperação do banco dependem dos recursos contratados no provedor de infraestrutura.
+
 ## Estrutura Principal
 
 ```text
 api/
-  admin-router.ts
-  auth-router.ts
-  cafe-router.ts
-  content-router.ts
-  boot.ts
-  context.ts
-  queries/
-  lib/
 contracts/
 db/
-  schema.ts
-  relations.ts
-  seed.ts
-  migrations/
 public/
-  images/
-  videos/
 src/
-  components/
-  hooks/
-  lib/
-  pages/
 scripts/
-  create-admin.ts
 ```
 
-## Validacao
+Diretórios principais:
 
-Antes de publicar alteracoes:
+- `api/`: backend, routers, contexto, autenticação e integração tRPC.
+- `contracts/`: tipos e contratos compartilhados.
+- `db/`: schema Drizzle, relações, seed e migrations.
+- `public/`: assets estáticos versionados.
+- `src/`: frontend React.
+- `scripts/`: scripts operacionais, como criação do primeiro administrador.
+
+## Validação Antes De Publicar
+
+Antes de publicar alterações:
 
 ```bash
 npm run check
 npm run build
 ```
 
-Quando houver alteracao de schema:
+Quando houver alteração de schema:
 
 ```bash
 npm run db:generate
 ```
 
-Depois aplique a migration no ambiente correto:
+Revise a migration gerada antes de aplicar.
+
+Depois aplique no ambiente correto:
 
 ```bash
 npm run db:migrate
 ```
 
-## Observacoes De Producao
+Não aplicar migration diretamente em produção sem revisão da migration gerada.
 
-- Nao versionar `.env`, `.env.local`, `.env.production`, `node_modules`, `dist` ou caches locais.
-- Nao depender do filesystem local do Render para uploads permanentes.
-- Nao editar migrations ja aplicadas em producao; gere sempre uma migration incremental.
-- Nao inserir senhas administrativas em codigo, migration, seed ou README.
+## Observações De Produção
+
+- Não versionar `.env`, `.env.local`, `.env.production`, `node_modules`, `dist` ou caches locais.
+- Não editar migrations já aplicadas em produção.
+- Não inserir senhas administrativas em código, migration, seed ou documentação.
