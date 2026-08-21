@@ -31,6 +31,24 @@ export const textTranslations: TextTranslations = {
     es: "Un artista que no se limita a una técnica, sino a un territorio creativo — donde la pintura de caballete, la escultura, la instalación ambiental y el dibujo gráfico conviven como manifestaciones de una misma visión.\n\nAquí, el arte no queda detrás del vidrio: crece en el jardín, emerge de la ladera y camina entre los árboles. Visita el atelier en Tiradentes y encuentra las obras entre la vegetación — como debe ser.",
     ar: "فنان لا يقتصر على تقنية واحدة، بل يتحرك داخل أرض إبداعية تتجاور فيها لوحة الحامل والمنحوتة والتركيب البيئي والرسم الغرافيكي كتعبيرات عن رؤية واحدة.\n\nهنا لا يبقى الفن خلف الزجاج: إنه ينمو في الحديقة، ويخرج من المنحدر، ويتحرك بين الأشجار. زر المرسم في تيرادنتيس واكتشف الأعمال بين النباتات كما ينبغي لها أن تكون.",
   },
+  "cafe.hero.eyebrow": {
+    pt: "Espaço de Café",
+    en: "Coffee Space",
+    es: "Espacio de Café",
+    ar: "مساحة القهوة",
+  },
+  "cafe.hero.title": {
+    pt: "Um encontro entre arte, conversa e cotidiano",
+    en: "A meeting point for art, conversation and everyday life",
+    es: "Un encuentro entre arte, conversación y vida cotidiana",
+    ar: "لقاء بين الفن والحوار والحياة اليومية",
+  },
+  "cafe.hero.description": {
+    pt: "Registros publicados pelo ateliê: pequenos encontros, imagens e histórias que aproximam a criação da vida diária.",
+    en: "Published notes from the studio: small encounters, images and stories that bring the creative process closer to daily life.",
+    es: "Registros publicados por el atelier: pequeños encuentros, imágenes e historias que acercan la creación a la vida diaria.",
+    ar: "مواد منشورة من المرسم: لقاءات صغيرة وصور وحكايات تقرّب عملية الخلق من تفاصيل الحياة اليومية.",
+  },
   home_painting_title: {
     pt: "A Pintura — o mundo lírico e o mundo gráfico",
     en: "Painting — the lyrical world and the graphic world",

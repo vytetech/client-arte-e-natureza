@@ -30,6 +30,10 @@ export const defaultTexts: Record<string, string> = {
   tiradentes_text:
     "Tiradentes e uma das cidades historicas mais bem preservadas do Brasil. Ruas de pedra, casario colonial, igrejas barrocas e a Serra de Sao Jose inspiram artistas ha geracoes.\n\nO Atelier Daniel Detomi - Arte e Natureza faz parte dessa historia: um lugar onde a arte cresce no jardim e recebe visitantes de portas abertas.",
   footer_tagline: "Arte e Natureza - Tiradentes, Minas Gerais",
+  "cafe.hero.eyebrow": "Espaço de Café",
+  "cafe.hero.title": "Um encontro entre arte, conversa e cotidiano",
+  "cafe.hero.description":
+    "Registros publicados pelo ateliê: pequenos encontros, imagens e histórias que aproximam a criação da vida diária.",
 };
 
 export const defaultSettings: Record<string, string> = {

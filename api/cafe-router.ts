@@ -96,10 +96,17 @@ export const cafeRouter = createRouter({
       if (!enabled) return { enabled: false, items: [] };
 
       const rows = await getDb()
-        .select()
+        .select({
+          id: schema.drafts.id,
+          type: schema.drafts.type,
+          title: schema.drafts.title,
+          content: schema.drafts.content,
+          updatedAt: schema.drafts.updatedAt,
+          createdAt: schema.drafts.createdAt,
+        })
         .from(schema.drafts)
         .where(eq(schema.drafts.published, true))
-        .orderBy(desc(schema.drafts.updatedAt));
+        .orderBy(desc(schema.drafts.updatedAt), desc(schema.drafts.createdAt));
 
       const translations = await getDb()
         .select()

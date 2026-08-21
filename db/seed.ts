@@ -83,6 +83,9 @@ const texts: { key: string; label: string; value: string }[] = [
   { key: "tiradentes_title", label: "Tiradentes — Título da página", value: "Tiradentes — Minas Gerais" },
   { key: "tiradentes_text", label: "Tiradentes — Texto principal", value: textTranslations.tiradentes_text.pt },
   { key: "footer_tagline", label: "Rodapé — Frase", value: "Arte e Natureza — Tiradentes, Minas Gerais" },
+  { key: "cafe.hero.eyebrow", label: "Espaço de Café — Chamada superior", value: textTranslations["cafe.hero.eyebrow"].pt },
+  { key: "cafe.hero.title", label: "Espaço de Café — Título público", value: textTranslations["cafe.hero.title"].pt },
+  { key: "cafe.hero.description", label: "Espaço de Café — Descrição pública", value: textTranslations["cafe.hero.description"].pt },
 ];
 
 const settings: { key: string; value: string }[] = [
