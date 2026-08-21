@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
-const MUSIC_VOLUME = 0.45;
-const BIRDS_VOLUME = 0.15;
+const MUSIC_VOLUME = 0.5;
+const BIRDS_VOLUME = 0.5;
 
 export default function AmbientAudio() {
   const musicRef = useRef<HTMLAudioElement>(null);
@@ -12,32 +12,21 @@ export default function AmbientAudio() {
     const music = musicRef.current;
     const birds = birdsRef.current;
     if (!music || !birds) return;
-    try {
-      music.volume = MUSIC_VOLUME;
-      birds.volume = BIRDS_VOLUME;
-      await music.play();
-      await birds.play();
-      setPlaying(true);
-    } catch {
+    music.volume = MUSIC_VOLUME;
+    birds.volume = BIRDS_VOLUME;
+    music.loop = true;
+    birds.loop = true;
+
+    const results = await Promise.allSettled([music.play(), birds.play()]);
+    const started = results.every((result) => result.status === "fulfilled");
+    setPlaying(started);
+
+    if (!started) {
+      music.pause();
+      birds.pause();
       setPlaying(false);
     }
   };
-
-  useEffect(() => {
-    start();
-    // Browsers block autoplay with sound — start on first interaction instead
-    const onFirstTouch = () => {
-      start();
-      window.removeEventListener("pointerdown", onFirstTouch);
-      window.removeEventListener("keydown", onFirstTouch);
-    };
-    window.addEventListener("pointerdown", onFirstTouch);
-    window.addEventListener("keydown", onFirstTouch);
-    return () => {
-      window.removeEventListener("pointerdown", onFirstTouch);
-      window.removeEventListener("keydown", onFirstTouch);
-    };
-  }, []);
 
   const toggle = () => {
     const music = musicRef.current;
