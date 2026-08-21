@@ -229,6 +229,16 @@ export const adminRouter = createRouter({
       return { success: true };
     }),
 
+  setWorkCoupon: adminQuery
+    .input(z.object({ id: z.number(), enabled: z.boolean() }))
+    .mutation(async ({ input }) => {
+      await getDb()
+        .update(schema.works)
+        .set({ couponEnabled: input.enabled })
+        .where(eq(schema.works.id, input.id));
+      return { success: true };
+    }),
+
   listImages: adminQuery.query(() => {
     const dir = path.resolve(process.cwd(), "public/images");
     try {

@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import { useTexts } from "@/hooks/useTexts";
+import { useLang } from "@/lib/i18n";
 
 const PHOTOS = [
   { src: "/images/artist-real-1.jpg", caption: "Com o alter-ego Guardião — papel machê e cocar de varetas pintadas" },
@@ -10,12 +11,13 @@ const PHOTOS = [
 
 export default function Artista() {
   const { t } = useTexts();
+  const { t: tr } = useLang();
 
   return (
     <Layout>
       <section className="bg-[var(--c-dark)] py-20 text-[var(--c-bg)]">
         <div className="mx-auto max-w-6xl px-5">
-          <div className="eyebrow text-[var(--c-accent)]">O Artista</div>
+          <div className="eyebrow text-[var(--c-accent)]">{tr("artista.eyebrow")}</div>
           <h1 className="mt-4 font-display text-5xl font-semibold md:text-6xl">Daniel Detomi</h1>
           <p className="mt-5 max-w-2xl font-display text-xl italic leading-relaxed text-white/70 md:text-2xl">
             “{t("artist_quote", "Do descarte nasce a obra.")}”
@@ -40,7 +42,7 @@ export default function Artista() {
           <figure className="mt-10">
             <img src="/images/atelier-interior-real.jpg" alt="Interior do ateliê" className="w-full object-cover" />
             <figcaption className="mt-3 border-l-2 border-[var(--c-primary)] pl-4 text-sm italic text-[var(--c-ink)]/60">
-              O interior do ateliê em Tiradentes: pinturas, esculturas e recortes dividem as paredes.
+              {tr("artista.cap_interior")}
             </figcaption>
           </figure>
         </div>

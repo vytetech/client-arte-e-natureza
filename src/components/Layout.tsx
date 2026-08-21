@@ -1,17 +1,18 @@
 import { Link, NavLink, useLocation } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import FloatingContact from "./FloatingContact";
 import AmbientAudio from "./AmbientAudio";
 import { useTheme } from "@/hooks/useTheme";
+import { useLang, LANG_META, type Lang } from "@/lib/i18n";
 import { WHATSAPP_URL, INSTAGRAM_URL } from "@/config";
 
 const NAV = [
-  { to: "/", label: "Início" },
-  { to: "/artista", label: "O Artista" },
-  { to: "/obras", label: "Obras" },
-  { to: "/galeria", label: "Galeria" },
-  { to: "/exposicoes", label: "Exposições" },
-  { to: "/tiradentes", label: "Tiradentes" },
+  { to: "/", key: "nav.home" },
+  { to: "/artista", key: "nav.artista" },
+  { to: "/obras", key: "nav.obras" },
+  { to: "/galeria", key: "nav.galeria" },
+  { to: "/exposicoes", key: "nav.exposicoes" },
+  { to: "/tiradentes", key: "nav.tiradentes" },
 ];
 
 function LogoMark({ className = "h-8" }: { className?: string }) {
@@ -31,12 +32,61 @@ function LogoMark({ className = "h-8" }: { className?: string }) {
   );
 }
 
+function LanguageSwitcher() {
+  const { lang, setLang, enabled } = useLang();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const close = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        aria-label="Idioma / Language"
+        title="Idioma / Language"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-lg text-white/80 transition hover:border-white/40 hover:bg-white/10 hover:text-white"
+      >
+        🌐
+      </button>
+      {open && (
+        <div className="absolute end-0 top-11 z-50 w-48 overflow-hidden rounded-lg border border-[var(--c-ink)]/10 bg-[var(--c-bg)] text-[var(--c-ink)] shadow-xl">
+          {enabled.map((l: Lang) => (
+            <button
+              key={l}
+              onClick={() => {
+                setLang(l);
+                setOpen(false);
+              }}
+              className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-[var(--c-sand)] ${
+                l === lang ? "bg-[var(--c-sand)] font-semibold text-[var(--c-primary)]" : "text-[var(--c-ink)]/75"
+              }`}
+            >
+              <span className="text-lg leading-none">{LANG_META[l].flag}</span>
+              <span>{LANG_META[l].name}</span>
+              {l === lang && <span className="ms-auto text-[var(--c-primary)]">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useTheme();
+  const { t } = useLang();
 
   useEffect(() => {
+    setOpen(false);
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
@@ -55,30 +105,33 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </Link>
-          <nav className="hidden items-center gap-7 md:flex">
-            {NAV.map((n) => (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                className={({ isActive }) =>
-                  `font-display text-[15px] tracking-wide transition-colors ${
-                    isActive
-                      ? "border-b border-[var(--c-primary)] pb-1 font-semibold text-[var(--c-primary)]"
-                      : "text-white/70 hover:text-white"
-                  }`
-                }
-              >
-                {n.label}
-              </NavLink>
-            ))}
-          </nav>
-          <button
-            className="text-2xl leading-none text-[#F5F2ED] transition hover:text-white md:hidden"
-            onClick={() => setOpen(!open)}
-            aria-label="Menu"
-          >
-            {open ? "✕" : "☰"}
-          </button>
+          <div className="flex items-center gap-4">
+            <nav className="hidden items-center gap-7 md:flex">
+              {NAV.map((n) => (
+                <NavLink
+                  key={n.to}
+                  to={n.to}
+                  className={({ isActive }) =>
+                    `font-display text-[15px] tracking-wide transition-colors ${
+                      isActive
+                        ? "border-b border-[var(--c-primary)] pb-1 font-semibold text-[var(--c-primary)]"
+                        : "text-white/70 hover:text-white"
+                    }`
+                  }
+                >
+                  {t(n.key)}
+                </NavLink>
+              ))}
+            </nav>
+            <LanguageSwitcher />
+            <button
+              className="text-2xl leading-none text-[#F5F2ED] transition hover:text-white md:hidden"
+              onClick={() => setOpen(!open)}
+              aria-label="Menu"
+            >
+              {open ? "✕" : "☰"}
+            </button>
+          </div>
         </div>
         {open && (
           <nav className="border-t border-white/10 px-5 py-3 md:hidden">
@@ -93,7 +146,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   }`
                 }
               >
-                {n.label}
+                {t(n.key)}
               </NavLink>
             ))}
           </nav>
@@ -115,11 +168,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
             <p className="mt-5 text-sm leading-relaxed text-white/50">
-              Estrada de Tiradentes, perto do Museu do Automóvel da Estrada Real
+              {t("footer.address")}
               <br />
-              Tiradentes — Minas Gerais — Brasil.
+              {t("footer.city")}
               <br />
-              Ateliê aberto a visitas mediante agendamento.
+              {t("footer.visit")}
             </p>
             <a
               href="https://www.google.com/maps/dir/?api=1&destination=-21.0955636,-44.1325055"
@@ -130,11 +183,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                 <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />
               </svg>
-              Ver no Google Maps
+              {t("footer.maps")}
             </a>
           </div>
           <div>
-            <div className="eyebrow mb-4 text-white/35">Navegação</div>
+            <div className="eyebrow mb-4 text-white/35">{t("footer.nav")}</div>
             <div className="flex flex-col gap-2.5">
               {NAV.map((n) => (
                 <Link
@@ -142,13 +195,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   to={n.to}
                   className="font-display text-[15px] text-white/65 transition hover:text-white"
                 >
-                  {n.label}
+                  {t(n.key)}
                 </Link>
               ))}
             </div>
           </div>
           <div>
-            <div className="eyebrow mb-4 text-white/35">Contato</div>
+            <div className="eyebrow mb-4 text-white/35">{t("footer.contact")}</div>
             <div className="flex flex-col gap-2.5 text-sm">
               <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="text-[#4ee38a] hover:underline">
                 WhatsApp +55 32 98452-7407
@@ -163,7 +216,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="border-t border-white/10 px-5 py-5 text-center text-xs tracking-wide text-white/35">
-          © 2026 Atelier Daniel Detomi — Feito com reúso, luz e gesto · Desenvolvido por{" "}
+          {t("footer.copy")} · Desenvolvido por{" "}
           <a
             href="https://www.vytetech.com"
             target="_blank"

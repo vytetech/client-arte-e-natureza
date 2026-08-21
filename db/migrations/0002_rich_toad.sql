@@ -1,0 +1,1 @@
+ALTER TABLE "works" ADD COLUMN "couponEnabled" boolean DEFAULT false NOT NULL;

@@ -2,6 +2,7 @@ import { Link, useSearchParams } from "react-router";
 import Layout from "@/components/Layout";
 import { trpc } from "@/providers/trpc";
 import { WHATSAPP_URL } from "@/config";
+import { useLang } from "@/lib/i18n";
 
 const ARTIST_PHOTOS = [
   { src: "/images/bastidores-1.jpg", alt: "Entalhando as asas de madeira de um novo guardião" },
@@ -20,6 +21,7 @@ export default function Galeria() {
   const [params, setParams] = useSearchParams();
   const cat = params.get("cat") ?? "";
   const { data: works, isLoading } = trpc.content.works.useQuery();
+  const { t } = useLang();
 
   const categories = Array.from(new Set((works ?? []).map((w) => w.category)));
   const filtered = cat ? (works ?? []).filter((w) => w.category === cat) : (works ?? []);
@@ -27,8 +29,8 @@ export default function Galeria() {
   return (
     <Layout>
       <section className="mx-auto max-w-6xl px-5 py-20">
-        <div className="eyebrow text-[var(--c-primary)]">Coleção</div>
-        <h1 className="mt-4 font-display text-5xl font-semibold md:text-6xl">Galeria</h1>
+        <div className="eyebrow text-[var(--c-primary)]">{t("gal.eyebrow")}</div>
+        <h1 className="mt-4 font-display text-5xl font-semibold md:text-6xl">{t("gal.title")}</h1>
 
         <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 border-b border-[var(--c-ink)]/10 pb-5">
           <button
@@ -37,7 +39,7 @@ export default function Galeria() {
               !cat ? "border-b border-[var(--c-primary)] font-semibold text-[var(--c-primary)]" : "text-[var(--c-ink)]/55 hover:text-[var(--c-primary)]"
             }`}
           >
-            Todas
+            {t("gal.all")}
           </button>
           {categories.map((c) => (
             <button
@@ -52,7 +54,7 @@ export default function Galeria() {
           ))}
         </div>
 
-        {isLoading && <p className="mt-14 text-[var(--c-ink)]/60">Carregando obras…</p>}
+        {isLoading && <p className="mt-14 text-[var(--c-ink)]/60">{t("gal.loading")}</p>}
 
         <div className="mt-14 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((w) => (
@@ -77,7 +79,7 @@ export default function Galeria() {
               <div className="mt-3 flex items-center justify-between border-t border-[var(--c-ink)]/10 pt-3">
                 <span className="font-display text-lg font-semibold">{w.price}</span>
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--c-ink)]/50">
-                  {w.status}
+                  {t(`status.${w.status}`)}
                 </span>
               </div>
             </Link>
@@ -86,8 +88,8 @@ export default function Galeria() {
 
         {/* BASTIDORES DO ATELIÊ */}
         <div className="mt-24 border-t border-[var(--c-ink)]/10 pt-16">
-          <div className="eyebrow text-[var(--c-primary)]">Bastidores</div>
-          <h2 className="mt-3 font-display text-3xl font-semibold">O processo, de perto</h2>
+          <div className="eyebrow text-[var(--c-primary)]">{t("gal.bast_eyebrow")}</div>
+          <h2 className="mt-3 font-display text-3xl font-semibold">{t("gal.bast_title")}</h2>
           <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
             {ARTIST_PHOTOS.map((p) => (
               <figure key={p.src} className="group">
@@ -106,8 +108,8 @@ export default function Galeria() {
 
         {/* O ATELIÊ E SUAS PAREDES */}
         <div className="mt-16">
-          <div className="eyebrow text-[var(--c-primary)]">Ambientações</div>
-          <h2 className="mt-3 font-display text-3xl font-semibold">O ateliê e suas paredes</h2>
+          <div className="eyebrow text-[var(--c-primary)]">{t("gal.amb_eyebrow")}</div>
+          <h2 className="mt-3 font-display text-3xl font-semibold">{t("gal.amb_title")}</h2>
           <div className="mt-8 grid gap-5 md:grid-cols-3">
             {AMBIENT_PHOTOS.map((p) => (
               <figure key={p.src} className="group">
@@ -125,9 +127,9 @@ export default function Galeria() {
         </div>
 
         <div className="mt-20 bg-[var(--c-dark)] px-8 py-12 text-center text-[var(--c-bg)]">
-          <h3 className="font-display text-3xl font-semibold">Gostou de alguma obra?</h3>
+          <h3 className="font-display text-3xl font-semibold">{t("gal.cta_title")}</h3>
           <p className="mx-auto mt-3 max-w-md font-display text-lg italic text-white/65">
-            Cada peça é única. Fale diretamente com o artista para preços, encomendas e visitas ao ateliê.
+            {t("gal.cta_text")}
           </p>
           <a
             href={WHATSAPP_URL}
@@ -135,7 +137,7 @@ export default function Galeria() {
             rel="noopener noreferrer"
             className="mt-7 inline-block border border-[#25D366] bg-[#25D366] px-8 py-3.5 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition hover:bg-transparent hover:text-[#4ee38a]"
           >
-            Falar no WhatsApp
+            {t("gal.cta_btn")}
           </a>
         </div>
       </section>

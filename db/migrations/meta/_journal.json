@@ -15,6 +15,13 @@
       "when": 1787283817413,
       "tag": "0001_dashing_doctor_faustus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787285354342,
+      "tag": "0002_rich_toad",
+      "breakpoints": true
     }
   ]
 }

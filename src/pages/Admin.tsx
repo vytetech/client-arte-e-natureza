@@ -35,7 +35,18 @@ const COLOR_FIELDS = [
   { key: "design.sand", label: "Blocos claros", def: "#efe6d2" },
 ];
 
-type Tab = "obras" | "imagens" | "textos" | "design" | "secoes" | "cafe" | "usuarios";
+type Tab =
+  | "obras"
+  | "imagens"
+  | "textos"
+  | "design"
+  | "secoes"
+  | "cupom"
+  | "promocoes"
+  | "entrega"
+  | "idiomas"
+  | "cafe"
+  | "usuarios";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "obras", label: "Obras e preços" },
@@ -43,6 +54,10 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "textos", label: "Textos do site" },
   { id: "design", label: "Design e fontes" },
   { id: "secoes", label: "Seções da página" },
+  { id: "cupom", label: "🎟️ Cupom" },
+  { id: "promocoes", label: "🎁 Promoções" },
+  { id: "entrega", label: "🚚 Entrega" },
+  { id: "idiomas", label: "Idiomas" },
   { id: "cafe", label: "☕ Espaço de Café" },
   { id: "usuarios", label: "Usuários" },
 ];
@@ -146,6 +161,10 @@ export default function Admin() {
         {tab === "textos" && <TextsTab />}
         {tab === "design" && <DesignTab />}
         {tab === "secoes" && <SectionsTab />}
+        {tab === "cupom" && <CouponTab />}
+        {tab === "promocoes" && <PromocoesTab />}
+        {tab === "entrega" && <EntregaTab />}
+        {tab === "idiomas" && <IdiomasTab />}
         {tab === "cafe" && <CafeTab />}
         {tab === "usuarios" && <UsersTab />}
       </main>
@@ -1262,6 +1281,382 @@ function SectionsTab() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/* ========================= CUPOM / PROMOÇÕES ========================= */
+
+function Toggle({ on, onChange }: { on: boolean; onChange: (value: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={() => onChange(!on)}
+      className={`relative h-8 w-16 shrink-0 rounded-full transition ${
+        on ? "bg-[var(--c-accent)]" : "bg-[var(--c-ink)]/25"
+      }`}
+    >
+      <span
+        className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all ${
+          on ? "left-9" : "left-1"
+        }`}
+      />
+    </button>
+  );
+}
+
+function useSettingsState() {
+  const utils = trpc.useUtils();
+  const { data: settingsList } = trpc.admin.listSettings.useQuery();
+  const save = trpc.admin.updateSetting.useMutation();
+  const [vals, setVals] = useState<Record<string, string>>({});
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (settingsList) {
+      const next: Record<string, string> = {};
+      for (const setting of settingsList) next[setting.key] = setting.value;
+      setVals(next);
+    }
+  }, [settingsList]);
+
+  const set = (key: string, value: string) => setVals((current) => ({ ...current, [key]: value }));
+
+  const saveKeys = async (keys: string[], message: string) => {
+    for (const key of keys) {
+      await save.mutateAsync({ key, value: vals[key] ?? "" });
+    }
+    utils.admin.listSettings.invalidate();
+    utils.content.settings.invalidate();
+    setNotice(message);
+    window.setTimeout(() => setNotice(""), 2500);
+  };
+
+  return { vals, set, saveKeys, notice, saving: save.isPending };
+}
+
+function CouponTab() {
+  const { vals, set, saveKeys, notice, saving } = useSettingsState();
+  const utils = trpc.useUtils();
+  const { data: works } = trpc.admin.listWorks.useQuery();
+  const couponMut = trpc.admin.setWorkCoupon.useMutation({
+    onSuccess: () => {
+      utils.admin.listWorks.invalidate();
+      utils.content.works.invalidate();
+      utils.content.workBySlug.invalidate();
+    },
+  });
+
+  const enabled = (vals["coupon.enabled"] ?? "0") === "1";
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl border-2 border-[var(--c-accent)]/60 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="font-bold">🎟️ Cupom de desconto</h2>
+            <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
+              Defina o nome do cupom e o percentual de desconto. O cupom aparece abaixo do preço
+              das obras escolhidas individualmente.
+            </p>
+          </div>
+          <Toggle on={enabled} onChange={(value) => set("coupon.enabled", value ? "1" : "0")} />
+        </div>
+
+        {enabled && (
+          <div className="mt-5 space-y-4 border-t border-[var(--c-ink)]/10 pt-5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-bold uppercase">Nome do cupom</label>
+                <Input
+                  value={vals["coupon.name"] ?? ""}
+                  onChange={(event) => set("coupon.name", event.target.value)}
+                  placeholder="Ex.: CAFE10"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase">Desconto (%)</label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={vals["coupon.percent"] ?? ""}
+                  onChange={(event) => set("coupon.percent", event.target.value.replace(/[^\d]/g, ""))}
+                  placeholder="Ex.: 10"
+                />
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-bold uppercase">Início da validade</label>
+                <input
+                  type="date"
+                  value={vals["coupon.start"] ?? ""}
+                  onChange={(event) => set("coupon.start", event.target.value)}
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase">Fim da validade</label>
+                <input
+                  type="date"
+                  value={vals["coupon.end"] ?? ""}
+                  onChange={(event) => set("coupon.end", event.target.value)}
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+            <div className="rounded-lg border border-dashed border-[var(--c-accent)]/50 p-3 text-xs text-[var(--c-ink)]/65">
+              🎟️ <strong>Pré-visualização:</strong> {vals["coupon.name"] || "Cupom"}
+              {vals["coupon.percent"] ? ` — ${vals["coupon.percent"]}% de desconto nesta obra` : ""}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center gap-3">
+          <Button
+            size="sm"
+            disabled={saving}
+            onClick={() =>
+              saveKeys(
+                ["coupon.enabled", "coupon.name", "coupon.percent", "coupon.start", "coupon.end"],
+                "Cupom salvo ✓",
+              )
+            }
+          >
+            {saving ? "Salvando…" : "Salvar cupom"}
+          </Button>
+          {notice && <span className="text-xs text-green-700">{notice}</span>}
+        </div>
+      </div>
+
+      {enabled && (
+        <div className="space-y-3">
+          <p className="text-sm text-[var(--c-ink)]/65">
+            Escolha em quais obras o cupom aparece. A mudança é salva na hora.
+          </p>
+          <div className="grid gap-3">
+            {works?.map((work) => {
+              const active = !!work.couponEnabled;
+              return (
+                <div key={work.id} className="flex items-center gap-4 rounded-xl bg-white p-3 shadow-sm">
+                  <img src={work.image} alt="" className="h-14 w-20 rounded object-cover" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-bold">{work.title}</div>
+                    <div className="text-xs text-[var(--c-ink)]/55">
+                      {work.category} · <span className="font-semibold text-[var(--c-primary)]">{work.price}</span>
+                    </div>
+                  </div>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest ${active ? "text-green-700" : "text-[var(--c-ink)]/40"}`}>
+                    {active ? "Cupom visível" : "Oculto"}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant={active ? "destructive" : "default"}
+                    disabled={couponMut.isPending}
+                    onClick={() => couponMut.mutate({ id: work.id, enabled: !active })}
+                  >
+                    {active ? "Ocultar" : "Mostrar"}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PromocoesTab() {
+  const { vals, set, saveKeys, notice, saving } = useSettingsState();
+  const readingOn = (vals["prize.reading"] ?? "0") === "1";
+  const workOn = (vals["prize.work"] ?? "0") === "1";
+  const linkOn = (vals["prize.reading.link"] ?? "0") === "1";
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl bg-white p-6 shadow-sm">
+        <h2 className="font-bold">🎁 Promoção de compra</h2>
+        <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
+          Ao adquirir obras a partir de <strong>R$ 7.000</strong>, o cliente ganha os prêmios
+          ativados abaixo. O aviso aparece na página de cada obra.
+        </p>
+
+        <div className="mt-5 space-y-3">
+          <div className="rounded-lg border border-[var(--c-ink)]/10 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold">☕ Sessão de leitura de borra de café</div>
+                <div className="text-xs text-[var(--c-ink)]/55">
+                  {readingOn ? "Prêmio ativo — aparece no site" : "Prêmio inativo — oculto do público"}
+                </div>
+              </div>
+              <Toggle on={readingOn} onChange={(value) => set("prize.reading", value ? "1" : "0")} />
+            </div>
+            {readingOn && (
+              <div className="mt-3 flex items-center justify-between gap-4 border-t border-[var(--c-ink)]/10 pt-3">
+                <div>
+                  <div className="text-xs font-semibold">🔗 Link do site de leitura de borra de café</div>
+                  <div className="text-[11px] text-[var(--c-ink)]/55">
+                    {linkOn
+                      ? "Link www.leituradaborradecafe.com visível sob o prêmio"
+                      : "Link oculto — ative para exibir www.leituradaborradecafe.com"}
+                  </div>
+                </div>
+                <Toggle on={linkOn} onChange={(value) => set("prize.reading.link", value ? "1" : "0")} />
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-ink)]/10 p-4">
+            <div>
+              <div className="text-sm font-semibold">🖼️ Uma obra de arte de até R$ 250</div>
+              <div className="text-xs text-[var(--c-ink)]/55">
+                {workOn ? "Prêmio ativo — aparece no site" : "Prêmio inativo — oculto do público"}
+              </div>
+            </div>
+            <Toggle on={workOn} onChange={(value) => set("prize.work", value ? "1" : "0")} />
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center gap-3">
+          <Button
+            size="sm"
+            disabled={saving}
+            onClick={() => saveKeys(["prize.reading", "prize.work", "prize.reading.link"], "Promoções salvas ✓")}
+          >
+            {saving ? "Salvando…" : "Salvar promoções"}
+          </Button>
+          {notice && <span className="text-xs text-green-700">{notice}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EntregaTab() {
+  const { vals, set, saveKeys, notice, saving } = useSettingsState();
+  const enabled = (vals["shipping.enabled"] ?? "1") === "1";
+  const noteOn = (vals["shipping.note"] ?? "1") === "1";
+  const intlOn = (vals["shipping.international"] ?? "0") === "1";
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl bg-white p-6 shadow-sm">
+        <h2 className="font-bold">🚚 Entrega</h2>
+        <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
+          Controla os avisos de entrega exibidos abaixo do preço nas páginas das obras.
+        </p>
+
+        <div className="mt-5 space-y-3">
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-ink)]/10 p-4">
+            <div>
+              <div className="text-sm font-semibold">🇧🇷 Entrega em todo o Brasil</div>
+              <div className="text-xs text-[var(--c-ink)]/55">
+                {enabled ? "Aviso ativo — aparece nas obras" : "Aviso oculto do site público"}
+              </div>
+            </div>
+            <Toggle on={enabled} onChange={(value) => set("shipping.enabled", value ? "1" : "0")} />
+          </div>
+
+          {enabled && (
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-ink)]/10 p-4">
+              <div>
+                <div className="text-sm font-semibold">📦 Frete por conta do comprador</div>
+                <div className="text-xs text-[var(--c-ink)]/55">
+                  Nota em letras pequenas: <em>“(Observação: o comprador paga o frete)”</em>
+                </div>
+              </div>
+              <Toggle on={noteOn} onChange={(value) => set("shipping.note", value ? "1" : "0")} />
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-ink)]/10 p-4">
+            <div>
+              <div className="text-sm font-semibold">✈️ Envio internacional</div>
+              <div className="text-xs text-[var(--c-ink)]/55">
+                {intlOn ? "Aviso de envio internacional visível" : "Envio internacional oculto"}
+              </div>
+            </div>
+            <Toggle on={intlOn} onChange={(value) => set("shipping.international", value ? "1" : "0")} />
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center gap-3">
+          <Button
+            size="sm"
+            disabled={saving}
+            onClick={() => saveKeys(["shipping.enabled", "shipping.note", "shipping.international"], "Entrega salva ✓")}
+          >
+            {saving ? "Salvando…" : "Salvar"}
+          </Button>
+          {notice && <span className="text-xs text-green-700">{notice}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IdiomasTab() {
+  const { vals, set, saveKeys, notice, saving } = useSettingsState();
+  const languages = [
+    { key: "lang.en", flag: "🇮🇪", name: "English (US)", desc: "Inglês americano — selecionável pelo ícone de globo" },
+    { key: "lang.es", flag: "🇪🇸", name: "Español", desc: "Espanhol — selecionável pelo ícone de globo" },
+    { key: "lang.ar", flag: "🇵🇸", name: "العربية", desc: "Árabe — leitura da direita para a esquerda" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl bg-white p-6 shadow-sm">
+        <h2 className="font-bold">🌐 Idiomas do site</h2>
+        <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--c-ink)]/60">
+          Ative ou desative cada idioma separadamente. Português (Brasil) é o idioma principal e
+          permanece sempre ativo.
+        </p>
+
+        <div className="mt-5 space-y-3">
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-primary)]/30 bg-[var(--c-sand)]/60 p-4">
+            <div>
+              <div className="text-sm font-semibold">🇧🇷 Português (Brasil) — idioma padrão</div>
+              <div className="text-xs text-[var(--c-ink)]/55">Sempre ativo — não pode ser desativado</div>
+            </div>
+            <span className="rounded-full bg-[var(--c-primary)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
+              Fixo
+            </span>
+          </div>
+
+          {languages.map((language) => {
+            const on = (vals[language.key] ?? "1") === "1";
+            return (
+              <div key={language.key} className="flex items-center justify-between gap-4 rounded-lg border border-[var(--c-ink)]/10 p-4">
+                <div>
+                  <div className="text-sm font-semibold">
+                    {language.flag} {language.name}
+                  </div>
+                  <div className="text-xs text-[var(--c-ink)]/55">
+                    {on ? language.desc : "Idioma oculto do seletor"}
+                  </div>
+                </div>
+                <Toggle on={on} onChange={(value) => set(language.key, value ? "1" : "0")} />
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex items-center gap-3">
+          <Button
+            size="sm"
+            disabled={saving}
+            onClick={() => saveKeys(languages.map((language) => language.key), "Idiomas salvos ✓")}
+          >
+            {saving ? "Salvando…" : "Salvar idiomas"}
+          </Button>
+          {notice && <span className="text-xs text-green-700">{notice}</span>}
+        </div>
+      </div>
     </div>
   );
 }

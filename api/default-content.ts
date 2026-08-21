@@ -42,7 +42,7 @@ export const defaultSettings: Record<string, string> = {
   "section.mapa": "1",
 };
 
-export const defaultWorks: Work[] = [
+const defaultWorksBase: Omit<Work, "couponEnabled">[] = [
   { id: 1, slug: "camaleao", title: "Camaleao", category: "Pinturas", technique: "Pintura sobre tela", status: "DISPONIVEL", year: "2026", price: "Sob consulta", image: "/images/work-12.jpg", description: "Um camaleao gigante em cores do Brasil.", sortOrder: 1, createdAt: now, updatedAt: now },
   { id: 2, slug: "revoada", title: "Revoada", category: "Pinturas", technique: "Pintura sobre tela", status: "DISPONIVEL", year: "2026", price: "Sob consulta", image: "/images/work-14.jpg", description: "Aves brasileiras em uma composicao vibrante.", sortOrder: 2, createdAt: now, updatedAt: now },
   { id: 3, slug: "tiradentes-panel", title: "Tiradentes", category: "Pinturas", technique: "Pintura sobre madeira de demolicao", status: "DISPONIVEL", year: "2026", price: "Sob consulta", image: "/images/work-13.jpg", description: "A paisagem historica de Tiradentes em madeira reaproveitada.", sortOrder: 3, createdAt: now, updatedAt: now },
@@ -63,3 +63,8 @@ export const defaultWorks: Work[] = [
   { id: 18, slug: "guardioes-da-encosta", title: "Guardioes da Encosta", category: "Arte Ambiental", technique: "Papel mache monumental in situ", status: "NO JARDIM", year: "2026", price: "Sob consulta", image: "/images/ambiental-mascaras.jpg", description: "Rostos monumentais integrados a paisagem.", sortOrder: 18, createdAt: now, updatedAt: now },
   { id: 19, slug: "vigia", title: "Vigia", category: "Arte Ambiental", technique: "Papel mache e metal de reuso", status: "NO JARDIM", year: "2026", price: "Sob consulta", image: "/images/work-4.jpg", description: "Mascara e seriema em dialogo com o jardim.", sortOrder: 19, createdAt: now, updatedAt: now },
 ];
+
+export const defaultWorks: Work[] = defaultWorksBase.map((work) => ({
+  ...work,
+  couponEnabled: false,
+}));

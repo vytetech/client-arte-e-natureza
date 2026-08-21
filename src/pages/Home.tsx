@@ -5,6 +5,7 @@ import GaleriaCeuAberto from "@/components/GaleriaCeuAberto";
 import { useTexts } from "@/hooks/useTexts";
 import { useSettings } from "@/hooks/useTheme";
 import { WHATSAPP_URL } from "@/config";
+import { useLang } from "@/lib/i18n";
 
 function Paras({ text, className }: { text: string; className?: string }) {
   return (
@@ -21,6 +22,7 @@ function Paras({ text, className }: { text: string; className?: string }) {
 export default function Home() {
   const { t } = useTexts();
   const { visible } = useSettings();
+  const { t: tr } = useLang();
 
   return (
     <Layout>
@@ -34,7 +36,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/15" />
         <div className="relative mx-auto w-full max-w-6xl px-5 pb-20 text-white">
           <div className="eyebrow fade-up text-[var(--c-accent)]" style={{ animationDelay: "0.1s" }}>
-            Tiradentes — Minas Gerais
+            {tr("home.hero_eyebrow")}
           </div>
           <h1
             className="fade-up mt-4 max-w-3xl font-display text-5xl font-semibold leading-[1.05] md:text-7xl"
@@ -53,7 +55,7 @@ export default function Home() {
               to="/obras"
               className="border border-[var(--c-primary)] bg-[var(--c-primary)] px-7 py-3.5 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition hover:bg-transparent hover:text-[var(--c-bg)]"
             >
-              Ver as Obras
+              {tr("home.cta_works")}
             </Link>
             <a
               href={WHATSAPP_URL}
@@ -61,7 +63,7 @@ export default function Home() {
               rel="noopener noreferrer"
               className="border border-white/40 px-7 py-3.5 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition hover:border-white hover:bg-white hover:text-[var(--c-ink)]"
             >
-              Agendar Visita
+              {tr("home.cta_visit")}
             </a>
           </div>
         </div>
@@ -73,7 +75,7 @@ export default function Home() {
       {/* MANIFESTO */}
       {visible("section.manifesto") && (
       <section className="mx-auto max-w-3xl px-5 py-24 text-center">
-        <div className="eyebrow text-[var(--c-primary)]">Arte e Natureza</div>
+        <div className="eyebrow text-[var(--c-primary)]">{tr("home.manifesto_eyebrow")}</div>
         <div className="mx-auto mt-5 h-px w-16 bg-[var(--c-primary)]/40" />
         <Paras
           text={t("hero_text")}
@@ -86,9 +88,9 @@ export default function Home() {
       {visible("section.linguagens") && (
       <section className="border-y border-[var(--c-ink)]/10 bg-[var(--c-sand)] py-24">
         <div className="mx-auto max-w-6xl px-5">
-          <div className="eyebrow text-[var(--c-primary)]">O território criativo</div>
+          <div className="eyebrow text-[var(--c-primary)]">{tr("home.lang_eyebrow")}</div>
           <h2 className="mt-4 font-display text-3xl font-semibold md:text-5xl">
-            Três linguagens, um só olhar
+            {tr("home.lang_title")}
           </h2>
           <div className="mt-14 grid gap-10 md:grid-cols-3">
             {[
@@ -123,9 +125,9 @@ export default function Home() {
       {visible("section.video") && (
       <section className="bg-[var(--c-dark)] py-20">
         <div className="mx-auto max-w-5xl px-5">
-          <div className="eyebrow text-[var(--c-accent)]">Bastidores</div>
+          <div className="eyebrow text-[var(--c-accent)]">{tr("home.video_eyebrow")}</div>
           <h2 className="mt-4 font-display text-3xl font-semibold text-[var(--c-bg)] md:text-4xl">
-            O ateliê em movimento
+            {tr("home.video_title")}
           </h2>
           <div className="mt-10 overflow-hidden border border-white/10">
             <video
@@ -139,7 +141,7 @@ export default function Home() {
             />
           </div>
           <p className="mt-4 text-sm italic text-white/50">
-            Pincel, chapa e papel machê: o processo de criação filmado dentro do ateliê.
+            {tr("home.video_caption")}
           </p>
         </div>
       </section>
@@ -157,15 +159,12 @@ export default function Home() {
           />
         </div>
         <div>
-          <div className="eyebrow text-[var(--c-primary)]">Como chegar</div>
+          <div className="eyebrow text-[var(--c-primary)]">{tr("home.destino_eyebrow")}</div>
           <h2 className="mt-4 font-display text-3xl font-semibold md:text-4xl">
-            O ateliê é um destino
+            {tr("home.destino_title")}
           </h2>
           <p className="mt-5 leading-relaxed text-[var(--c-ink)]/80">
-            Na estrada de terra de Tiradentes, uma placa com uma seta vermelha indica o caminho.
-            Siga-a: ao final, um jardim onde esculturas monumentais emergem da encosta e a fauna
-            do cerrado caminha no gramado. O ateliê é um lugar físico que se visita — e este site
-            é um convite.
+            {tr("home.destino_text")}
           </p>
           <a
             href={WHATSAPP_URL}
@@ -173,7 +172,7 @@ export default function Home() {
             rel="noopener noreferrer"
             className="mt-7 inline-block border border-[var(--c-ink)] px-7 py-3.5 text-[11px] font-bold uppercase tracking-[0.25em] transition hover:bg-[var(--c-ink)] hover:text-[var(--c-bg)]"
           >
-            Agendar visita pelo WhatsApp
+            {tr("home.destino_cta")}
           </a>
         </div>
       </section>
@@ -183,9 +182,9 @@ export default function Home() {
       {visible("section.imagens") && (
       <section className="border-t border-[var(--c-ink)]/10 bg-[var(--c-sand)] py-20">
         <div className="mx-auto max-w-6xl px-5">
-          <div className="eyebrow text-[var(--c-primary)]">Visite</div>
+          <div className="eyebrow text-[var(--c-primary)]">{tr("home.imagens_eyebrow")}</div>
           <h2 className="mt-4 font-display text-3xl font-semibold md:text-4xl">
-            O ateliê em imagens
+            {tr("home.imagens_title")}
           </h2>
           <div className="mt-10 grid grid-cols-2 gap-5 md:grid-cols-4">
             {[
