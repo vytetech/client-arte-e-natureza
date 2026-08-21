@@ -42,15 +42,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[var(--c-bg)] text-[var(--c-ink)]">
-      <header className="sticky top-0 z-40 border-b border-[var(--c-ink)]/10 bg-[var(--c-bg)]/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(10,8,6,0.72)] shadow-[0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-[10px]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
           <Link to="/" className="flex items-center gap-3">
             <LogoMark />
             <div className="leading-tight">
-              <div className="font-display text-lg font-semibold tracking-wide">
+              <div className="font-display text-lg font-semibold tracking-wide text-[#F5F2ED]">
                 Atelier Daniel Detomi
               </div>
-              <div className="eyebrow text-[var(--c-primary)]" style={{ fontSize: "0.55rem" }}>
+              <div className="eyebrow text-[rgba(245,242,237,0.55)]" style={{ fontSize: "0.55rem" }}>
                 Arte e Natureza
               </div>
             </div>
@@ -64,7 +64,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   `font-display text-[15px] tracking-wide transition-colors ${
                     isActive
                       ? "border-b border-[var(--c-primary)] pb-1 font-semibold text-[var(--c-primary)]"
-                      : "text-[var(--c-ink)]/60 hover:text-[var(--c-primary)]"
+                      : "text-white/70 hover:text-white"
                   }`
                 }
               >
@@ -73,7 +73,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
           <button
-            className="text-2xl leading-none md:hidden"
+            className="text-2xl leading-none text-[#F5F2ED] transition hover:text-white md:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Menu"
           >
@@ -81,7 +81,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
         {open && (
-          <nav className="border-t border-[var(--c-ink)]/10 px-5 py-3 md:hidden">
+          <nav className="border-t border-white/10 px-5 py-3 md:hidden">
             {NAV.map((n) => (
               <NavLink
                 key={n.to}
@@ -89,7 +89,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
                   `block py-2.5 font-display text-lg ${
-                    isActive ? "font-semibold text-[var(--c-primary)]" : "text-[var(--c-ink)]/70"
+                    isActive ? "font-semibold text-[var(--c-primary)]" : "text-white/70 hover:text-white"
                   }`
                 }
               >
@@ -168,7 +168,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             href="https://www.vytetech.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/50 transition hover:text-[var(--c-accent)]"
+            className="font-medium text-white/55 transition hover:text-white/80"
           >
             VyteTech
           </a>
