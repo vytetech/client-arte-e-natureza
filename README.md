@@ -158,10 +158,10 @@ npm run admin:create
 npm run dev
 ```
 
-URL local padrão:
+URL local padrão do Vite:
 
 ```text
-http://localhost:3000
+http://localhost:5173
 ```
 
 Rotas principais:
@@ -175,6 +175,15 @@ Rotas principais:
 - `/obra/:slug`
 - `/login`
 - `/admin`
+
+## Documentação Complementar
+
+Documentos de apoio mantidos para operação profissional do projeto:
+
+- `DOCUMENTACAO-CLIENTE.md`: manual de uso do painel para o cliente.
+- `docs/ARQUITETURA.md`: visão técnica da arquitetura, módulos e dados.
+- `docs/OPERACAO.md`: rotina de deploy, migrations, backup e suporte.
+- `docs/PADROES-VYTETECH.md`: padrões de entrega, manutenção e qualidade da VyteTech.
 
 ## Scripts
 
@@ -254,6 +263,21 @@ Remova as variáveis temporárias após a criação do primeiro administrador.
 Textos, imagens, obras, preços, promoções e demais conteúdos cadastrados pelo painel administrativo são persistidos no ambiente de produção e ficam sob responsabilidade do administrador autorizado do site.
 
 Alterações feitas pelo painel não exigem modificação do código-fonte, salvo quando houver mudança estrutural da aplicação.
+
+## Espaço De Café
+
+O Espaço de Café é um módulo editorial opcional.
+
+Características:
+
+- Pode ser ativado ou desativado no painel.
+- Só aparece no menu público quando está ativo e possui conteúdo publicado.
+- Suporta itens de texto, imagem e vídeo.
+- Mantém rascunhos privados até publicação.
+- Suporta título, conteúdo e descrição pública em `pt`, `en`, `es` e `ar`.
+- Mantém anotação interna privada, sem retorno na API pública.
+
+Dados públicos do Café são servidos pela query pública do módulo e filtrados por `published = true`.
 
 ## Conteúdo Inicial
 

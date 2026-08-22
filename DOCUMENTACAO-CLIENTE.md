@@ -110,15 +110,24 @@ Revise sempre as condições comerciais antes de ativar uma promoção.
 
 ## Espaço De Café
 
-O Espaço de Café permite cadastrar e organizar conteúdos relacionados a textos, imagens e vídeos.
+O Espaço de Café permite cadastrar e organizar conteúdos editoriais relacionados ao cotidiano do ateliê, como textos, imagens e vídeos.
 
 O administrador pode:
 
-- Criar conteúdos.
-- Editar título, conteúdo e observações.
-- Definir tipo de conteúdo.
+- Criar rascunhos de texto, foto ou vídeo.
+- Editar título, conteúdo principal e descrição pública.
+- Cadastrar traduções em português, inglês, espanhol e árabe.
+- Publicar ou despublicar cada item.
 - Remover itens.
-- Controlar a ativação da área quando aplicável.
+- Controlar a ativação geral da área.
+
+Regras importantes:
+
+- Rascunhos não aparecem no site público.
+- Itens publicados aparecem somente quando o Espaço de Café estiver ativo.
+- A descrição pública aparece no site abaixo do título quando preenchida.
+- A anotação interna é exclusiva do painel e nunca aparece publicamente.
+- Se um idioma estiver ativo, revise título, conteúdo e descrição antes de publicar.
 
 ## Usuários
 
