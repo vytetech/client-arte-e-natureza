@@ -47,7 +47,7 @@ export const defaultSettings: Record<string, string> = {
   "section.mapa": "1",
 };
 
-const defaultWorksBase: Omit<Work, "couponEnabled">[] = [
+const defaultWorksBase: Omit<Work, "couponEnabled" | "isUniquePiece" | "editionNumber" | "editionTotal" | "editionLabel">[] = [
   { id: 1, slug: "camaleao", title: "Camaleao", category: "Pinturas", technique: "Pintura sobre tela", status: "available", year: "2026", price: "Sob consulta", image: "/images/work-12.jpg", description: "Um camaleao gigante em cores do Brasil.", sortOrder: 1, createdAt: now, updatedAt: now },
   { id: 2, slug: "revoada", title: "Revoada", category: "Pinturas", technique: "Pintura sobre tela", status: "available", year: "2026", price: "Sob consulta", image: "/images/work-14.jpg", description: "Aves brasileiras em uma composicao vibrante.", sortOrder: 2, createdAt: now, updatedAt: now },
   { id: 3, slug: "tiradentes-panel", title: "Tiradentes", category: "Pinturas", technique: "Pintura sobre madeira de demolicao", status: "available", year: "2026", price: "Sob consulta", image: "/images/work-13.jpg", description: "A paisagem historica de Tiradentes em madeira reaproveitada.", sortOrder: 3, createdAt: now, updatedAt: now },
@@ -72,4 +72,8 @@ const defaultWorksBase: Omit<Work, "couponEnabled">[] = [
 export const defaultWorks: Work[] = defaultWorksBase.map((work) => ({
   ...work,
   couponEnabled: false,
+  isUniquePiece: false,
+  editionNumber: null,
+  editionTotal: null,
+  editionLabel: "",
 }));

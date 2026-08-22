@@ -77,12 +77,32 @@ type WorkForm = {
   status: string;
   year: string;
   price: string;
+  isUniquePiece: boolean;
+  editionNumber: number | null;
+  editionTotal: number | null;
+  editionLabel: string;
   image: string;
   description: string;
   sortOrder: number;
 };
 
 type WorkTranslationForm = Pick<WorkForm, "title" | "category" | "technique" | "description">;
+type VariantTranslationForm = {
+  name: string;
+  description: string;
+  dimensions: string;
+};
+type WorkVariantForm = {
+  id?: number;
+  name: string;
+  description: string;
+  dimensions: string;
+  price: number;
+  active: boolean;
+  status: string;
+  sortOrder: number;
+  translations: Record<Lang, VariantTranslationForm>;
+};
 
 const LANGS: Lang[] = ["pt", "en", "es", "ar"];
 
@@ -94,10 +114,33 @@ const emptyWork: WorkForm = {
   status: "available",
   year: "2026",
   price: "Sob consulta",
+  isUniquePiece: false,
+  editionNumber: null,
+  editionTotal: null,
+  editionLabel: "",
   image: "",
   description: "",
   sortOrder: 99,
 };
+
+function emptyVariant(sortOrder: number): WorkVariantForm {
+  const emptyTranslation = { name: "", description: "", dimensions: "" };
+  return {
+    name: "",
+    description: "",
+    dimensions: "",
+    price: 0,
+    active: true,
+    status: "available",
+    sortOrder,
+    translations: {
+      pt: emptyTranslation,
+      en: emptyTranslation,
+      es: emptyTranslation,
+      ar: emptyTranslation,
+    },
+  };
+}
 
 /** "R$ 12.500,50" → 12500.5 ; null se não houver número */
 function parseBRL(text: string): number | null {
@@ -512,6 +555,7 @@ function WorksTab() {
     es: emptyWork,
     ar: emptyWork,
   });
+  const [variants, setVariants] = useState<WorkVariantForm[]>([]);
   const [priceInput, setPriceInput] = useState("");
   const [notice, setNotice] = useState("");
   const [order, setOrder] = useState<number[]>([]);
@@ -542,6 +586,18 @@ function WorksTab() {
   const reorderMut = trpc.admin.reorderWorks.useMutation({
     onSuccess: () => { invalidate(); setNotice(t("admin.works.reordered")); },
   });
+  const createVariantMut = trpc.admin.createWorkVariant.useMutation({
+    onSuccess: () => { invalidate(); setNotice(t("admin.variants.created")); },
+    onError: () => setNotice(`${t("admin.error")}: ${t("admin.generic_error")}`),
+  });
+  const updateVariantMut = trpc.admin.updateWorkVariant.useMutation({
+    onSuccess: () => { invalidate(); setNotice(t("admin.variants.saved")); },
+    onError: () => setNotice(`${t("admin.error")}: ${t("admin.generic_error")}`),
+  });
+  const deleteVariantMut = trpc.admin.deleteWorkVariant.useMutation({
+    onSuccess: () => { invalidate(); setNotice(t("admin.variants.deleted")); },
+    onError: () => setNotice(`${t("admin.error")}: ${t("admin.generic_error")}`),
+  });
 
   const startEdit = (id: number) => {
     const w = works?.find((x) => x.id === id);
@@ -556,6 +612,10 @@ function WorksTab() {
       status: canonicalStatus(w.status, "available"),
       year: w.year,
       price: w.price,
+      isUniquePiece: w.isUniquePiece,
+      editionNumber: w.editionNumber,
+      editionTotal: w.editionTotal,
+      editionLabel: w.editionLabel,
       image: w.image,
       description: w.description ?? "",
       sortOrder: w.sortOrder,
@@ -572,6 +632,29 @@ function WorksTab() {
       es: w.translations?.es ?? { ...baseTranslation, title: "", technique: "", description: "" },
       ar: w.translations?.ar ?? { ...baseTranslation, title: "", technique: "", description: "" },
     });
+    setVariants((w.variants ?? []).map((variant) => {
+      const baseVariant = {
+        name: variant.name,
+        description: variant.description,
+        dimensions: variant.dimensions,
+      };
+      return {
+        id: variant.id,
+        name: variant.name,
+        description: variant.description,
+        dimensions: variant.dimensions,
+        price: Number(variant.price),
+        active: variant.active,
+        status: canonicalStatus(variant.status, "available"),
+        sortOrder: variant.sortOrder,
+        translations: {
+          pt: variant.translations?.pt ?? baseVariant,
+          en: variant.translations?.en ?? { name: "", description: "", dimensions: "" },
+          es: variant.translations?.es ?? { name: "", description: "", dimensions: "" },
+          ar: variant.translations?.ar ?? { name: "", description: "", dimensions: "" },
+        },
+      };
+    }));
     setEditLang("pt");
     setEditing(id);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -591,7 +674,17 @@ function WorksTab() {
       setNotice(t("admin.works.required"));
       return;
     }
-    const data = { ...form, price, status: canonicalStatus(form.status, "available") };
+    if (!form.isUniquePiece && form.editionNumber !== null && form.editionTotal !== null && form.editionNumber > form.editionTotal) {
+      setNotice(t("admin.works.edition_help"));
+      return;
+    }
+    const data = {
+      ...form,
+      price,
+      status: canonicalStatus(form.status, "available"),
+      editionNumber: form.isUniquePiece ? null : form.editionNumber,
+      editionTotal: form.isUniquePiece ? null : form.editionTotal,
+    };
     if (editing === "new") createMut.mutate(data);
     else if (typeof editing === "number") {
       updateMut.mutate({ id: editing, data }, {
@@ -626,6 +719,59 @@ function WorksTab() {
     }
   };
 
+  const addVariant = () => setVariants((current) => [...current, emptyVariant(current.length + 1)]);
+  const updateVariant = (index: number, patch: Partial<WorkVariantForm>) => {
+    setVariants((current) => current.map((variant, i) => (i === index ? { ...variant, ...patch } : variant)));
+  };
+  const updateVariantTranslation = (index: number, patch: Partial<VariantTranslationForm>) => {
+    setVariants((current) => current.map((variant, i) => {
+      if (i !== index) return variant;
+      const translations = {
+        ...variant.translations,
+        [editLang]: { ...variant.translations[editLang], ...patch },
+      };
+      const basePatch = editLang === "pt" ? patch : {};
+      return { ...variant, ...basePatch, translations };
+    }));
+  };
+  const saveVariant = (variant: WorkVariantForm) => {
+    if (typeof editing !== "number") {
+      setNotice(t("admin.works.save"));
+      return;
+    }
+    if (!variant.name.trim() || !Number.isFinite(variant.price) || variant.price < 0) {
+      setNotice(t("admin.variants.required"));
+      return;
+    }
+    const data = {
+      workId: editing,
+      name: variant.name.trim(),
+      description: variant.description.trim(),
+      dimensions: variant.dimensions.trim(),
+      price: Number(variant.price),
+      active: variant.active,
+      status: canonicalStatus(variant.status, "available"),
+      sortOrder: Number.isInteger(variant.sortOrder) ? variant.sortOrder : 0,
+      translations: {
+        ...variant.translations,
+        pt: { name: variant.name.trim(), description: variant.description.trim(), dimensions: variant.dimensions.trim() },
+      },
+    };
+    if (variant.id) {
+      updateVariantMut.mutate({ id: variant.id, data });
+    } else {
+      createVariantMut.mutate(data);
+    }
+  };
+  const removeVariant = (index: number, variant: WorkVariantForm) => {
+    if (!confirm(t("admin.variants.delete_confirm"))) return;
+    if (variant.id) {
+      deleteVariantMut.mutate({ id: variant.id });
+      return;
+    }
+    setVariants((current) => current.filter((_, i) => i !== index));
+  };
+
   const onDrop = (targetId: number) => {
     const from = dragId.current;
     if (from === null || from === targetId) return;
@@ -650,7 +796,7 @@ function WorksTab() {
         <p className="text-sm text-[var(--c-ink)]/70">
           {text(t, "admin.works.count", { count: works?.length ?? 0 })}
         </p>
-        <Button onClick={() => { setForm(emptyWork); setPriceInput(""); setEditing("new"); }}>{t("admin.works.new")}</Button>
+        <Button onClick={() => { setForm(emptyWork); setVariants([]); setPriceInput(""); setEditing("new"); }}>{t("admin.works.new")}</Button>
       </div>
 
       {notice && (
@@ -722,6 +868,55 @@ function WorksTab() {
               <p className="mt-1 text-[11px] text-[var(--c-ink)]/45">
                 {t("admin.works.price_help")}
               </p>
+            </div>
+            <div className="md:col-span-2 rounded-lg border border-[var(--c-ink)]/10 bg-[var(--c-sand)]/45 p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-sm font-bold">{t("admin.works.edition")}</h3>
+                <label className="flex items-center gap-2 text-sm font-semibold">
+                  <input
+                    type="checkbox"
+                    checked={form.isUniquePiece}
+                    onChange={(e) => setForm({
+                      ...form,
+                      isUniquePiece: e.target.checked,
+                      editionNumber: e.target.checked ? null : form.editionNumber,
+                      editionTotal: e.target.checked ? null : form.editionTotal,
+                    })}
+                  />
+                  {t("admin.works.unique_piece")}
+                </label>
+              </div>
+              {!form.isUniquePiece && (
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div>
+                    <label className="text-xs font-bold uppercase">{t("admin.works.edition_number")}</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={form.editionNumber ?? ""}
+                      onChange={(e) => setForm({ ...form, editionNumber: e.target.value ? Number(e.target.value) : null })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase">{t("admin.works.edition_total")}</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={form.editionTotal ?? ""}
+                      onChange={(e) => setForm({ ...form, editionTotal: e.target.value ? Number(e.target.value) : null })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase">{t("admin.works.edition_label")}</label>
+                    <Input
+                      value={form.editionLabel}
+                      onChange={(e) => setForm({ ...form, editionLabel: e.target.value })}
+                      placeholder="03/10"
+                    />
+                  </div>
+                </div>
+              )}
+              <p className="mt-2 text-[11px] text-[var(--c-ink)]/50">{t("admin.works.edition_help")}</p>
             </div>
             <div>
               <label className="text-xs font-bold uppercase">{t("admin.works.technique")}</label>
@@ -800,6 +995,105 @@ function WorksTab() {
               />
             </div>
           </div>
+          {editing !== "new" && (
+            <div className="mt-6 rounded-xl border border-[var(--c-ink)]/10 bg-white p-4">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-bold">{t("admin.variants.title")}</h3>
+                  <p className="mt-1 text-xs text-[var(--c-ink)]/55">{t("admin.variants.empty")}</p>
+                </div>
+                <Button type="button" variant="outline" onClick={addVariant}>{t("admin.variants.add")}</Button>
+              </div>
+              <div className="space-y-4">
+                {variants.map((variant, index) => {
+                  const activeVariantTranslation = variant.translations[editLang] ?? variant.translations.pt;
+                  return (
+                    <div key={variant.id ?? `new-${index}`} className="rounded-lg border border-[var(--c-ink)]/12 p-4">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                        <div className="font-bold">{variant.name || t("admin.variants.name")}</div>
+                        <label className="flex items-center gap-2 text-sm font-semibold">
+                          <input
+                            type="checkbox"
+                            checked={variant.active}
+                            onChange={(e) => updateVariant(index, { active: e.target.checked })}
+                          />
+                          {t("admin.variants.active")}
+                        </label>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div>
+                          <label className="text-xs font-bold uppercase">{t("admin.variants.name")}</label>
+                          <Input
+                            value={editLang === "pt" ? variant.name : activeVariantTranslation.name}
+                            onChange={(e) => updateVariantTranslation(index, { name: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold uppercase">{t("admin.variants.description")}</label>
+                          <Input
+                            value={editLang === "pt" ? variant.description : activeVariantTranslation.description}
+                            onChange={(e) => updateVariantTranslation(index, { description: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold uppercase">{t("admin.variants.dimensions")}</label>
+                          <Input
+                            value={editLang === "pt" ? variant.dimensions : activeVariantTranslation.dimensions}
+                            onChange={(e) => updateVariantTranslation(index, { dimensions: e.target.value })}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-xs font-bold uppercase">{t("admin.variants.price")}</label>
+                            <Input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={variant.price}
+                              onChange={(e) => updateVariant(index, { price: Number(e.target.value) })}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold uppercase">{t("admin.variants.order")}</label>
+                            <Input
+                              type="number"
+                              value={variant.sortOrder}
+                              onChange={(e) => updateVariant(index, { sortOrder: Number(e.target.value) })}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold uppercase">{t("admin.variants.status")}</label>
+                          <select
+                            className="w-full rounded-md border px-3 py-2 text-sm"
+                            value={canonicalStatus(variant.status, "available")}
+                            onChange={(e) => updateVariant(index, { status: e.target.value })}
+                          >
+                            {WORK_STATUSES.map((status) => (
+                              <option key={status} value={status}>{t(`status.${status}`)}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => saveVariant(variant)}
+                          disabled={createVariantMut.isPending || updateVariantMut.isPending}
+                        >
+                          {t("admin.variants.save")}
+                        </Button>
+                        <Button type="button" size="sm" variant="destructive" onClick={() => removeVariant(index, variant)}>
+                          {t("admin.delete")}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           <div className="mt-4 flex gap-2">
             <Button onClick={save} disabled={createMut.isPending || updateMut.isPending}>{t("admin.works.save")}</Button>
             <Button variant="outline" onClick={() => setEditing(null)}>{t("admin.cancel")}</Button>

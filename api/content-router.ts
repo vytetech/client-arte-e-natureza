@@ -53,6 +53,43 @@ async function localizeWorks(locale: Locale) {
   });
 }
 
+async function localizeWorkVariants(workId: number, locale: Locale) {
+  const variants = await getDb()
+    .select()
+    .from(schema.workVariants)
+    .where(and(eq(schema.workVariants.workId, workId), eq(schema.workVariants.active, true)))
+    .orderBy(asc(schema.workVariants.sortOrder), asc(schema.workVariants.id));
+
+  if (locale === "pt") {
+    return variants.map((variant) => ({ ...variant, price: Number(variant.price) }));
+  }
+
+  const translations = await getDb()
+    .select()
+    .from(schema.workVariantTranslations)
+    .where(eq(schema.workVariantTranslations.locale, locale));
+  const byVariantId = new Map(translations.map((translation) => [translation.variantId, translation]));
+
+  return variants.map((variant) => {
+    const translation = byVariantId.get(variant.id);
+    return translation
+      ? {
+        ...variant,
+        price: Number(variant.price),
+        name: translation.name,
+        description: translation.description,
+        dimensions: translation.dimensions,
+      }
+      : {
+        ...variant,
+        price: Number(variant.price),
+        name: "",
+        description: "",
+        dimensions: "",
+      };
+  });
+}
+
 function useDefaultContent() {
   return !hasDatabaseConfig();
 }
@@ -115,7 +152,9 @@ export const contentRouter = createRouter({
         .where(eq(schema.works.slug, input.slug))
         .limit(1);
       const work = rows.at(0);
-      if (!work || input.locale === "pt") return work ?? null;
+      if (!work) return null;
+      const variants = await localizeWorkVariants(work.id, input.locale);
+      if (input.locale === "pt") return { ...work, variants };
 
       const translations = await getDb()
         .select()
@@ -124,7 +163,7 @@ export const contentRouter = createRouter({
         .limit(1);
       const translation = translations.at(0);
       return translation
-        ? { ...work, title: translation.title, technique: translation.technique, description: translation.description }
-        : { ...work, title: "", technique: "", description: "" };
+        ? { ...work, title: translation.title, technique: translation.technique, description: translation.description, variants }
+        : { ...work, title: "", technique: "", description: "", variants };
     }),
 });

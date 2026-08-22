@@ -7,6 +7,7 @@ import {
   timestamp,
   integer,
   boolean,
+  numeric,
   customType,
   unique,
 } from "drizzle-orm/pg-core";
@@ -46,6 +47,10 @@ export const works = pgTable("works", {
   year: varchar("year", { length: 16 }).default("2026").notNull(),
   price: varchar("price", { length: 64 }).default("Sob consulta").notNull(),
   couponEnabled: boolean("couponEnabled").default(false).notNull(),
+  isUniquePiece: boolean("isUniquePiece").default(false).notNull(),
+  editionNumber: integer("editionNumber"),
+  editionTotal: integer("editionTotal"),
+  editionLabel: varchar("editionLabel", { length: 64 }).default("").notNull(),
   image: varchar("image", { length: 512 }).notNull(),
   description: text("description"),
   sortOrder: integer("sortOrder").default(0).notNull(),
@@ -58,6 +63,49 @@ export const works = pgTable("works", {
 
 export type Work = typeof works.$inferSelect;
 export type InsertWork = typeof works.$inferInsert;
+
+export const workVariants = pgTable("work_variants", {
+  id: serial("id").primaryKey(),
+  workId: integer("workId")
+    .notNull()
+    .references(() => works.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 120 }).notNull(),
+  description: text("description").default("").notNull(),
+  dimensions: varchar("dimensions", { length: 120 }).default("").notNull(),
+  price: numeric("price", { precision: 12, scale: 2 }).notNull(),
+  active: boolean("active").default(true).notNull(),
+  status: varchar("status", { length: 64 }).default("available").notNull(),
+  sortOrder: integer("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+});
+
+export type WorkVariant = typeof workVariants.$inferSelect;
+export type InsertWorkVariant = typeof workVariants.$inferInsert;
+
+export const workVariantTranslations = pgTable("work_variant_translations", {
+  id: serial("id").primaryKey(),
+  variantId: integer("variantId")
+    .notNull()
+    .references(() => workVariants.id, { onDelete: "cascade" }),
+  locale: locale("locale").notNull(),
+  name: varchar("name", { length: 120 }).notNull(),
+  description: text("description").default("").notNull(),
+  dimensions: varchar("dimensions", { length: 120 }).default("").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+}, (table) => ({
+  variantLocaleUnique: unique("work_variant_translations_variant_locale_unique").on(table.variantId, table.locale),
+}));
+
+export type WorkVariantTranslation = typeof workVariantTranslations.$inferSelect;
+export type InsertWorkVariantTranslation = typeof workVariantTranslations.$inferInsert;
 
 export const workTranslations = pgTable("work_translations", {
   id: serial("id").primaryKey(),

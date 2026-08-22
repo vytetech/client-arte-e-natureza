@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router";
+import { useEffect, useMemo, useState } from "react";
 import Layout from "@/components/Layout";
 import PromotionSection from "@/components/PromotionSection";
 import { trpc } from "@/providers/trpc";
@@ -21,6 +22,26 @@ function isCurrentDateInRange(start: string, end: string) {
   return (!startDate || now >= startDate) && (!endDate || now <= endDate);
 }
 
+function formatBRL(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function interpolate(message: string, values: Record<string, string>) {
+  return Object.entries(values).reduce(
+    (current, [key, value]) => current.replaceAll(`{${key}}`, value),
+    message,
+  );
+}
+
+type PublicVariant = {
+  id: number;
+  name: string;
+  description: string;
+  dimensions: string;
+  price: number;
+  status: string;
+};
+
 export default function ObraDetail() {
   const { visible, s } = useSettings();
   const { t, lang } = useLang();
@@ -28,6 +49,15 @@ export default function ObraDetail() {
   const { data: work, isLoading } = trpc.content.workBySlug.useQuery({ slug: slug ?? "", locale: lang }, {
     enabled: !!slug,
   });
+  const workWithVariants = work as (typeof work & { variants?: PublicVariant[] }) | undefined;
+  const activeVariants = useMemo(() => workWithVariants?.variants ?? [], [workWithVariants?.variants]);
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
+  const selectedVariant = activeVariants.find((variant) => variant.id === selectedVariantId) ?? activeVariants[0];
+  useEffect(() => {
+    if (activeVariants.length > 0 && !activeVariants.some((variant) => variant.id === selectedVariantId)) {
+      setSelectedVariantId(activeVariants[0].id);
+    }
+  }, [activeVariants, selectedVariantId]);
   const showShipping = visible("shipping.enabled");
   const showShippingNote = s("shipping.note", "1") === "1";
   const showIntl = s("shipping.international", "0") === "1";
@@ -35,9 +65,25 @@ export default function ObraDetail() {
   const couponName = s("coupon.name", t("od.coupon_default"));
   const couponPct = s("coupon.percent", "");
   const showCoupon = couponOn && !!work?.couponEnabled && isCurrentDateInRange(s("coupon.start", ""), s("coupon.end", ""));
-  const whatsapp = useWhatsApp(
-    work ? `${t("od.whatsapp_message")} "${work.title}" (${categoryLabel(work.category, t)}).` : undefined,
-  );
+  const variantPrice = selectedVariant ? formatBRL(selectedVariant.price) : "";
+  const whatsapp = useWhatsApp(work
+    ? selectedVariant
+      ? interpolate(t("od.variant_whatsapp_message"), {
+        title: work.title,
+        variant: selectedVariant.name,
+        price: variantPrice,
+      })
+      : `${t("od.whatsapp_message")} "${work.title}" (${categoryLabel(work.category, t)}).`
+    : undefined);
+  const editionLabel = work
+    ? work.isUniquePiece
+      ? t("od.unique_piece")
+      : work.editionLabel?.trim()
+        ? work.editionLabel.trim()
+        : work.editionNumber && work.editionTotal
+          ? `${String(work.editionNumber).padStart(2, "0")}/${work.editionTotal}`
+          : ""
+    : "";
 
   return (
     <Layout>
@@ -70,12 +116,68 @@ export default function ObraDetail() {
                 <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.artista")}</dt><dd>Daniel Detomi</dd></div>
                 <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.tecnica")}</dt><dd>{work.technique}</dd></div>
                 <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.ano")}</dt><dd>{work.year}</dd></div>
-                <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.situacao")}</dt><dd>{t(statusTranslationKey(work.status))}</dd></div>
+                {editionLabel && (
+                  <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.edition")}</dt><dd>{editionLabel}</dd></div>
+                )}
+                {activeVariants.length === 0 && (
+                  <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.situacao")}</dt><dd>{t(statusTranslationKey(work.status))}</dd></div>
+                )}
               </dl>
-              <div className="mt-7 border-l-2 border-[var(--c-primary)] pl-5">
-                <div className="eyebrow text-[var(--c-ink)]/50" style={{ fontSize: "0.55rem" }}>{t("od.preco")}</div>
-                <div className="mt-1 font-display text-3xl font-semibold text-[var(--c-primary)]">{work.price}</div>
-              </div>
+              {activeVariants.length === 0 ? (
+                <div className="mt-7 border-l-2 border-[var(--c-primary)] pl-5">
+                  <div className="eyebrow text-[var(--c-ink)]/50" style={{ fontSize: "0.55rem" }}>{t("od.preco")}</div>
+                  <div className="mt-1 font-display text-3xl font-semibold text-[var(--c-primary)]">{work.price}</div>
+                </div>
+              ) : (
+                <div className="mt-7">
+                  <h2 className="font-display text-2xl font-semibold">{t("od.variants_title")}</h2>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {activeVariants.map((variant) => {
+                      const selected = selectedVariant?.id === variant.id;
+                      return (
+                        <button
+                          key={variant.id}
+                          type="button"
+                          onClick={() => setSelectedVariantId(variant.id)}
+                          className={`text-left transition ${
+                            selected
+                              ? "border-[var(--c-primary)] bg-[var(--c-primary)]/5"
+                              : "border-[var(--c-ink)]/15 bg-white hover:border-[var(--c-primary)]/60"
+                          } border p-4`}
+                          aria-pressed={selected}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="font-display text-xl font-semibold">{variant.name}</div>
+                              {variant.description && (
+                                <p className="mt-1 text-sm leading-relaxed text-[var(--c-ink)]/65">{variant.description}</p>
+                              )}
+                            </div>
+                            <span className={`shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] ${
+                              variant.status === "available" ? "text-green-700" : "text-[var(--c-primary)]"
+                            }`}>
+                              {t(statusTranslationKey(variant.status))}
+                            </span>
+                          </div>
+                          {variant.dimensions && (
+                            <div className="mt-3 text-xs text-[var(--c-ink)]/55">
+                              {t("od.dimensions")}: {variant.dimensions}
+                            </div>
+                          )}
+                          <div className="mt-3 font-display text-2xl font-semibold text-[var(--c-primary)]">
+                            {formatBRL(variant.price)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selectedVariant && (
+                    <div className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--c-ink)]/50">
+                      {t("od.selected_variant")}: {selectedVariant.name} — {variantPrice}
+                    </div>
+                  )}
+                </div>
+              )}
               {showCoupon && (
                 <div className="mt-4 rounded-lg border border-[var(--c-accent)]/50 bg-[#fff8ec] px-4 py-3">
                   <div className="text-sm font-semibold text-[var(--c-ink)]">

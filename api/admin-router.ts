@@ -29,9 +29,21 @@ const workInput = z.object({
   status: workStatusInput,
   year: z.string().max(16).default("2026"),
   price: z.string().max(64).default("Sob consulta"),
+  isUniquePiece: z.boolean().default(false),
+  editionNumber: z.number().int().positive().nullable().default(null),
+  editionTotal: z.number().int().positive().nullable().default(null),
+  editionLabel: z.string().max(64).default(""),
   image: z.string().min(1).max(512),
   description: z.string().default(""),
   sortOrder: z.number().int().default(0),
+}).superRefine((value, ctx) => {
+  if (value.isUniquePiece) return;
+  if ((value.editionNumber === null) !== (value.editionTotal === null)) {
+    ctx.addIssue({ code: "custom", message: "Informe número e total da edição." });
+  }
+  if (value.editionNumber !== null && value.editionTotal !== null && value.editionNumber > value.editionTotal) {
+    ctx.addIssue({ code: "custom", message: "Número da peça não pode ser maior que o total da edição." });
+  }
 });
 
 const booleanSettingKeys = new Set([
@@ -114,6 +126,74 @@ function validateCombinedSettings(settings: Record<string, string>, changedKeys:
 
 const userRoleInput = z.enum(["admin"]);
 const localeInput = z.enum(["pt", "en", "es", "ar"]);
+const variantStatusInput = workStatusInput;
+
+const variantTranslationInput = z.object({
+  name: z.string().max(120).default(""),
+  description: z.string().default(""),
+  dimensions: z.string().max(120).default(""),
+});
+
+const variantInput = z.object({
+  workId: z.number().int().positive(),
+  name: z.string().trim().min(1).max(120),
+  description: z.string().default(""),
+  dimensions: z.string().max(120).default(""),
+  price: z.number().min(0),
+  active: z.boolean().default(true),
+  status: variantStatusInput,
+  sortOrder: z.number().int().default(0),
+  translations: z.object({
+    pt: variantTranslationInput.optional(),
+    en: variantTranslationInput.optional(),
+    es: variantTranslationInput.optional(),
+    ar: variantTranslationInput.optional(),
+  }).optional(),
+});
+
+type VariantTranslationPayload = z.infer<typeof variantTranslationInput>;
+
+async function upsertVariantTranslations(
+  variantId: number,
+  base: VariantTranslationPayload,
+  translations: Partial<Record<"pt" | "en" | "es" | "ar", VariantTranslationPayload>> = {},
+) {
+  for (const locale of ["pt", "en", "es", "ar"] as const) {
+    const translation = locale === "pt" ? translations.pt ?? base : translations[locale];
+    if (!translation) continue;
+    if (locale !== "pt" && !translation.name.trim() && !translation.description.trim() && !translation.dimensions.trim()) continue;
+    await getDb()
+      .insert(schema.workVariantTranslations)
+      .values({
+        variantId,
+        locale,
+        name: translation.name || base.name,
+        description: translation.description,
+        dimensions: translation.dimensions,
+      })
+      .onConflictDoUpdate({
+        target: [schema.workVariantTranslations.variantId, schema.workVariantTranslations.locale],
+        set: {
+          name: translation.name || base.name,
+          description: translation.description,
+          dimensions: translation.dimensions,
+        },
+      });
+  }
+}
+
+function variantValues(input: z.infer<typeof variantInput>) {
+  return {
+    workId: input.workId,
+    name: input.name,
+    description: input.description,
+    dimensions: input.dimensions,
+    price: String(input.price),
+    active: input.active,
+    status: input.status,
+    sortOrder: input.sortOrder,
+  };
+}
 
 const userCreateInput = z.object({
   name: z.string().trim().min(1, "Nome é obrigatório.").max(255),
@@ -348,8 +428,29 @@ export const adminRouter = createRouter({
   listWorks: adminQuery.query(async () => {
     const works = await getDb().select().from(schema.works).orderBy(asc(schema.works.sortOrder));
     const translations = await getDb().select().from(schema.workTranslations);
+    const variants = await getDb().select().from(schema.workVariants).orderBy(asc(schema.workVariants.sortOrder), asc(schema.workVariants.id));
+    const variantTranslations = await getDb().select().from(schema.workVariantTranslations);
     return works.map((work) => ({
       ...work,
+      variants: variants
+        .filter((variant) => variant.workId === work.id)
+        .map((variant) => ({
+          ...variant,
+          price: Number(variant.price),
+          translations: Object.fromEntries(
+            variantTranslations
+              .filter((translation) => translation.variantId === variant.id)
+              .map((translation) => [translation.locale, {
+                name: translation.name,
+                description: translation.description,
+                dimensions: translation.dimensions,
+              }]),
+          ) as Record<"pt" | "en" | "es" | "ar", {
+            name: string;
+            description: string;
+            dimensions: string;
+          } | undefined>,
+        })),
       translations: Object.fromEntries(
         translations
           .filter((translation) => translation.workId === work.id)
@@ -413,6 +514,102 @@ export const adminRouter = createRouter({
             description: input.data.description,
           },
         });
+      return { success: true };
+    }),
+
+  listWorkVariants: adminQuery
+    .input(z.object({ workId: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const variants = await getDb()
+        .select()
+        .from(schema.workVariants)
+        .where(eq(schema.workVariants.workId, input.workId))
+        .orderBy(asc(schema.workVariants.sortOrder), asc(schema.workVariants.id));
+      const translations = await getDb().select().from(schema.workVariantTranslations);
+      return variants.map((variant) => ({
+        ...variant,
+        price: Number(variant.price),
+        translations: Object.fromEntries(
+          translations
+            .filter((translation) => translation.variantId === variant.id)
+            .map((translation) => [translation.locale, {
+              name: translation.name,
+              description: translation.description,
+              dimensions: translation.dimensions,
+            }]),
+        ) as Record<"pt" | "en" | "es" | "ar", {
+          name: string;
+          description: string;
+          dimensions: string;
+        } | undefined>,
+      }));
+    }),
+
+  createWorkVariant: adminQuery.input(variantInput).mutation(async ({ input }) => {
+    const rows = await getDb()
+      .insert(schema.workVariants)
+      .values(variantValues(input))
+      .returning({ id: schema.workVariants.id });
+    const variantId = rows[0]?.id;
+    if (!variantId) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Variação não criada." });
+    await upsertVariantTranslations(
+      variantId,
+      { name: input.name, description: input.description, dimensions: input.dimensions },
+      input.translations,
+    );
+    return { success: true, id: variantId };
+  }),
+
+  updateWorkVariant: adminQuery
+    .input(z.object({ id: z.number().int().positive(), data: variantInput.omit({ workId: true }).extend({ workId: z.number().int().positive().optional() }) }))
+    .mutation(async ({ input }) => {
+      await getDb()
+        .update(schema.workVariants)
+        .set({
+          name: input.data.name,
+          description: input.data.description,
+          dimensions: input.data.dimensions,
+          price: String(input.data.price),
+          active: input.data.active,
+          status: input.data.status,
+          sortOrder: input.data.sortOrder,
+        })
+        .where(eq(schema.workVariants.id, input.id));
+      await upsertVariantTranslations(
+        input.id,
+        { name: input.data.name, description: input.data.description, dimensions: input.data.dimensions },
+        input.data.translations,
+      );
+      return { success: true };
+    }),
+
+  toggleWorkVariant: adminQuery
+    .input(z.object({ id: z.number().int().positive(), active: z.boolean() }))
+    .mutation(async ({ input }) => {
+      await getDb()
+        .update(schema.workVariants)
+        .set({ active: input.active })
+        .where(eq(schema.workVariants.id, input.id));
+      return { success: true };
+    }),
+
+  deleteWorkVariant: adminQuery
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      await getDb().delete(schema.workVariants).where(eq(schema.workVariants.id, input.id));
+      return { success: true };
+    }),
+
+  reorderWorkVariants: adminQuery
+    .input(z.object({ orderedIds: z.array(z.number().int().positive()).min(1) }))
+    .mutation(async ({ input }) => {
+      const db = getDb();
+      for (let i = 0; i < input.orderedIds.length; i++) {
+        await db
+          .update(schema.workVariants)
+          .set({ sortOrder: i + 1 })
+          .where(eq(schema.workVariants.id, input.orderedIds[i]));
+      }
       return { success: true };
     }),
 
