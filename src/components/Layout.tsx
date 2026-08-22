@@ -59,22 +59,28 @@ function LanguageSwitcher() {
         🌐
       </button>
       {open && (
-        <div className="absolute end-0 top-11 z-50 w-56 overflow-hidden rounded-lg border border-[var(--c-ink)]/10 bg-[var(--c-bg)] text-[var(--c-ink)] shadow-xl">
+        <div className="absolute end-0 top-11 z-50 w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--c-ink)]/10 bg-white p-2 text-[var(--c-ink)] shadow-[0_18px_45px_rgba(20,16,12,0.16)]">
           {enabled.map((l: Lang) => (
             <button
               key={l}
+              dir="ltr"
               onClick={() => {
                 setLang(l);
                 setOpen(false);
               }}
-              className={`flex w-full items-center gap-3 px-4 py-3 text-start text-sm transition hover:bg-[var(--c-sand)] ${
-                l === lang ? "bg-[var(--c-sand)] font-semibold text-[var(--c-primary)]" : "text-[var(--c-ink)]/75"
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition hover:bg-[#f8ecef] ${
+                l === lang ? "bg-[#f8ecef] font-semibold text-[var(--c-primary)]" : "text-[var(--c-ink)]/75"
               }`}
             >
+              <span className="w-7 shrink-0 font-mono text-xs font-bold tracking-wide">
+                {LANGUAGE_META[l].countryCode}
+              </span>
               <span dir="auto" className="min-w-0 flex-1 truncate">
                 {LANGUAGE_META[l].label}
               </span>
-              {l === lang && <span className="ms-auto text-sm font-bold text-[var(--c-primary)]">✓</span>}
+              <span className="ms-auto w-4 shrink-0 text-right text-sm font-bold text-[var(--c-primary)]">
+                {l === lang ? "✓" : ""}
+              </span>
             </button>
           ))}
         </div>
