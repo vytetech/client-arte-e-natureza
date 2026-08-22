@@ -9,7 +9,7 @@ type CafeItem = {
   type: "text" | "image" | "video";
   title: string;
   content: string;
-  description: string;
+  description?: string;
 };
 
 function Paragraphs({ text, className = "text-base leading-8 text-[var(--c-ink)]/75 md:text-[17px]" }: { text: string; className?: string }) {
@@ -32,7 +32,7 @@ function Paragraphs({ text, className = "text-base leading-8 text-[var(--c-ink)]
 function CafeArticle({ item, index, imageAlt }: { item: CafeItem; index: number; imageAlt: string }) {
   const title = item.title.trim();
   const content = item.content.trim();
-  const description = item.description.trim();
+  const description = (item.description ?? "").trim();
   const mediaFirst = index % 2 === 0;
 
   if (item.type === "text") {

@@ -123,16 +123,22 @@ export const cafeRouter = createRouter({
         .map((draft) => {
           const translation = byDraftId.get(draft.id);
           const isText = draft.type === "text";
+          const title = locale === "pt" ? translation?.title || draft.title : translation?.title ?? "";
+          const description = locale === "pt"
+            ? translation?.description || draft.description || ""
+            : translation?.description ?? "";
+          const content = isText
+            ? locale === "pt"
+              ? translation?.content || draft.content
+              : translation?.content ?? ""
+            : draft.content;
+
           return {
             id: draft.id,
             type: draft.type,
-            title: locale === "pt" ? translation?.title || draft.title : translation?.title ?? "",
-            description: locale === "pt" ? translation?.description || draft.description || "" : translation?.description ?? "",
-            content: isText
-              ? locale === "pt"
-                ? translation?.content || draft.content
-                : translation?.content ?? ""
-              : draft.content,
+            title,
+            description,
+            content,
             updatedAt: draft.updatedAt,
           };
         })
