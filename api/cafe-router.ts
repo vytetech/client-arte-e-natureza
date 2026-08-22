@@ -53,17 +53,19 @@ const draftInput = z.object({
   type: z.enum(["text", "image", "video"]),
   title: z.string().max(255).default(""),
   content: z.string().min(1, "Conteúdo obrigatório"),
+  description: z.string().default(""),
   note: z.string().default(""),
   published: z.boolean().optional(),
   translations: z.record(localeInput, z.object({
     title: z.string().max(255).default(""),
     content: z.string().default(""),
+    description: z.string().default(""),
   })).optional(),
 });
 
 async function upsertDraftTranslations(
   draftId: number,
-  translations: Record<string, { title: string; content: string }> | undefined,
+  translations: Record<string, { title: string; content: string; description?: string }> | undefined,
 ) {
   if (!translations) return;
   for (const locale of locales) {
@@ -76,12 +78,14 @@ async function upsertDraftTranslations(
         locale,
         title: value.title ?? "",
         content: value.content ?? "",
+        description: value.description ?? "",
       })
       .onConflictDoUpdate({
         target: [schema.draftTranslations.draftId, schema.draftTranslations.locale],
         set: {
           title: value.title ?? "",
           content: value.content ?? "",
+          description: value.description ?? "",
         },
       });
   }
@@ -101,6 +105,7 @@ export const cafeRouter = createRouter({
           type: schema.drafts.type,
           title: schema.drafts.title,
           content: schema.drafts.content,
+          description: schema.drafts.description,
           updatedAt: schema.drafts.updatedAt,
           createdAt: schema.drafts.createdAt,
         })
@@ -122,6 +127,7 @@ export const cafeRouter = createRouter({
             id: draft.id,
             type: draft.type,
             title: locale === "pt" ? translation?.title || draft.title : translation?.title ?? "",
+            description: locale === "pt" ? translation?.description || draft.description || "" : translation?.description ?? "",
             content: isText
               ? locale === "pt"
                 ? translation?.content || draft.content
@@ -164,10 +170,14 @@ export const cafeRouter = createRouter({
       await requireEnabled();
       const rows = await getDb().select().from(schema.drafts).orderBy(desc(schema.drafts.updatedAt));
       const translations = await getDb().select().from(schema.draftTranslations);
-      const grouped = new Map<number, Record<string, { title: string; content: string }>>();
+      const grouped = new Map<number, Record<string, { title: string; content: string; description: string }>>();
       for (const translation of translations) {
         const current = grouped.get(translation.draftId) ?? {};
-        current[translation.locale] = { title: translation.title, content: translation.content };
+        current[translation.locale] = {
+          title: translation.title,
+          content: translation.content,
+          description: translation.description,
+        };
         grouped.set(translation.draftId, current);
       }
       return rows.map((draft) => ({
@@ -192,6 +202,7 @@ export const cafeRouter = createRouter({
         type: input.type,
         title: input.title,
         content: input.content,
+        description: input.description,
         note: input.note,
         published: input.published ?? false,
       })
@@ -210,6 +221,7 @@ export const cafeRouter = createRouter({
           type: input.data.type,
           title: input.data.title,
           content: input.data.content,
+          description: input.data.description,
           note: input.data.note,
         })
         .where(eq(schema.drafts.id, input.id));

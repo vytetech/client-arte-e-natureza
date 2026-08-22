@@ -131,6 +131,7 @@ export const drafts = pgTable("drafts", {
   type: draftType("type").notNull(),
   title: varchar("title", { length: 255 }).default("").notNull(),
   content: text("content").notNull(), // texto livre ou URL da mídia (/api/media/:id)
+  description: text("description"),
   note: text("note"),
   published: boolean("published").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -150,6 +151,7 @@ export const draftTranslations = pgTable("draft_translations", {
   locale: locale("locale").notNull(),
   title: varchar("title", { length: 255 }).default("").notNull(),
   content: text("content").default("").notNull(),
+  description: text("description").default("").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
     .defaultNow()

@@ -9,9 +9,10 @@ type CafeItem = {
   type: "text" | "image" | "video";
   title: string;
   content: string;
+  description: string;
 };
 
-function Paragraphs({ text }: { text: string }) {
+function Paragraphs({ text, className = "text-base leading-8 text-[var(--c-ink)]/75 md:text-[17px]" }: { text: string; className?: string }) {
   const paragraphs = text
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
@@ -20,7 +21,7 @@ function Paragraphs({ text }: { text: string }) {
   if (!paragraphs.length) return null;
 
   return (
-    <div className="space-y-5 text-base leading-8 text-[var(--c-ink)]/75 md:text-[17px]">
+    <div className={`space-y-5 ${className}`}>
       {paragraphs.map((paragraph, index) => (
         <p key={index}>{paragraph}</p>
       ))}
@@ -31,6 +32,7 @@ function Paragraphs({ text }: { text: string }) {
 function CafeArticle({ item, index, imageAlt }: { item: CafeItem; index: number; imageAlt: string }) {
   const title = item.title.trim();
   const content = item.content.trim();
+  const description = item.description.trim();
   const mediaFirst = index % 2 === 0;
 
   if (item.type === "text") {
@@ -40,6 +42,11 @@ function CafeArticle({ item, index, imageAlt }: { item: CafeItem; index: number;
         <div className={title ? "mt-6" : ""}>
           <Paragraphs text={content} />
         </div>
+        {description && (
+          <div className="mt-7 max-w-2xl font-display">
+            <Paragraphs text={description} className="text-lg italic leading-8 text-[var(--c-ink)]/55" />
+          </div>
+        )}
       </article>
     );
   }
@@ -67,6 +74,11 @@ function CafeArticle({ item, index, imageAlt }: { item: CafeItem; index: number;
     <div className="flex flex-col justify-center">
       {title && <h2 className="font-display text-3xl font-semibold leading-tight text-[var(--c-ink)] md:text-5xl">{title}</h2>}
       {title && <div className="mt-5 h-px w-16 bg-[var(--c-primary)]/55" />}
+      {description && (
+        <div className="mt-6 max-w-md font-display">
+          <Paragraphs text={description} className="text-lg italic leading-8 text-[var(--c-ink)]/60" />
+        </div>
+      )}
     </div>
   );
 

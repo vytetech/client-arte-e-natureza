@@ -1964,15 +1964,16 @@ function CafeContent() {
   const [type, setType] = useState<DraftType>("text");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [description, setDescription] = useState("");
   const [note, setNote] = useState("");
   const [notice, setNotice] = useState("");
   const [uploadedFile, setUploadedFile] = useState<{ name: string; mime: string; size: number } | null>(null);
   const [editLang, setEditLang] = useState<Lang>("pt");
-  const [draftTranslations, setDraftTranslations] = useState<Record<Lang, { title: string; content: string }>>({
-    pt: { title: "", content: "" },
-    en: { title: "", content: "" },
-    es: { title: "", content: "" },
-    ar: { title: "", content: "" },
+  const [draftTranslations, setDraftTranslations] = useState<Record<Lang, { title: string; content: string; description: string }>>({
+    pt: { title: "", content: "", description: "" },
+    en: { title: "", content: "", description: "" },
+    es: { title: "", content: "", description: "" },
+    ar: { title: "", content: "", description: "" },
   });
 
   const invalidate = () => {
@@ -2008,14 +2009,15 @@ function CafeContent() {
     setType(t);
     setTitle("");
     setContent("");
+    setDescription("");
     setNote("");
     setUploadedFile(null);
     setEditLang("pt");
     setDraftTranslations({
-      pt: { title: "", content: "" },
-      en: { title: "", content: "" },
-      es: { title: "", content: "" },
-      ar: { title: "", content: "" },
+      pt: { title: "", content: "", description: "" },
+      en: { title: "", content: "", description: "" },
+      es: { title: "", content: "", description: "" },
+      ar: { title: "", content: "", description: "" },
     });
     setEditing("new");
   };
@@ -2026,14 +2028,15 @@ function CafeContent() {
     setType(d.type as DraftType);
     setTitle(d.title);
     setContent(d.content);
+    setDescription(d.description ?? "");
     setNote(d.note ?? "");
     setUploadedFile(null);
     setEditLang("pt");
     setDraftTranslations({
-      pt: d.translations?.pt ?? { title: d.title, content: d.content },
-      en: d.translations?.en ?? { title: "", content: "" },
-      es: d.translations?.es ?? { title: "", content: "" },
-      ar: d.translations?.ar ?? { title: "", content: "" },
+      pt: d.translations?.pt ?? { title: d.title, content: d.content, description: d.description ?? "" },
+      en: d.translations?.en ?? { title: "", content: "", description: "" },
+      es: d.translations?.es ?? { title: "", content: "", description: "" },
+      ar: d.translations?.ar ?? { title: "", content: "", description: "" },
     });
     setEditing(id);
   };
@@ -2049,9 +2052,16 @@ function CafeContent() {
     }
     const translations = {
       ...draftTranslations,
-      pt: { title: title.trim(), content: content.trim() },
+      pt: { title: title.trim(), content: content.trim(), description: description.trim() },
     };
-    const data = { type, title: title.trim(), content: content.trim(), note: note.trim(), translations };
+    const data = {
+      type,
+      title: title.trim(),
+      content: content.trim(),
+      description: description.trim(),
+      note: note.trim(),
+      translations,
+    };
     if (editing === "new") createMut.mutate(data);
     else if (typeof editing === "number") updateMut.mutate({ id: editing, data });
   };
@@ -2111,6 +2121,7 @@ function CafeContent() {
   };
   const localizedTitle = editLang === "pt" ? title : draftTranslations[editLang].title;
   const localizedContent = editLang === "pt" ? content : draftTranslations[editLang].content;
+  const localizedDescription = editLang === "pt" ? description : draftTranslations[editLang].description;
   const setLocalizedTitle = (value: string) => {
     if (editLang === "pt") {
       setTitle(value);
@@ -2129,6 +2140,16 @@ function CafeContent() {
     setDraftTranslations((current) => ({
       ...current,
       [editLang]: { ...current[editLang], content: value },
+    }));
+  };
+  const setLocalizedDescription = (value: string) => {
+    if (editLang === "pt") {
+      setDescription(value);
+      return;
+    }
+    setDraftTranslations((current) => ({
+      ...current,
+      [editLang]: { ...current[editLang], description: value },
     }));
   };
 
@@ -2175,6 +2196,10 @@ function CafeContent() {
             <div>
               <label className="text-xs font-bold uppercase">{t("admin.cafe.title_label")}</label>
               <Input value={localizedTitle} onChange={(e) => setLocalizedTitle(e.target.value)} placeholder={t("admin.cafe.title_placeholder")} />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase">{t("admin.cafe.description_label")}</label>
+              <Textarea rows={3} value={localizedDescription} onChange={(e) => setLocalizedDescription(e.target.value)} placeholder={t("admin.cafe.description_placeholder")} />
             </div>
             {type === "text" ? (
               <div>

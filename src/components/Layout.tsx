@@ -71,12 +71,6 @@ function LanguageSwitcher() {
                 l === lang ? "bg-[var(--c-sand)] font-semibold text-[var(--c-primary)]" : "text-[var(--c-ink)]/75"
               }`}
             >
-              <span className="w-6 shrink-0 font-mono text-[11px] font-bold tracking-widest text-[var(--c-ink)]/45">
-                {LANGUAGE_META[l].countryCode}
-              </span>
-              <span className="w-6 shrink-0 font-mono text-[11px] font-bold tracking-widest text-[var(--c-ink)]/45">
-                {LANGUAGE_META[l].localeCode}
-              </span>
               <span dir="auto" className="min-w-0 flex-1 truncate">
                 {LANGUAGE_META[l].label}
               </span>
