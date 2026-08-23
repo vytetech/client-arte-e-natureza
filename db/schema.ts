@@ -51,6 +51,9 @@ export const works = pgTable("works", {
   editionNumber: integer("editionNumber"),
   editionTotal: integer("editionTotal"),
   editionLabel: varchar("editionLabel", { length: 64 }).default("").notNull(),
+  widthCm: numeric("widthCm", { precision: 8, scale: 2 }),
+  heightCm: numeric("heightCm", { precision: 8, scale: 2 }),
+  thicknessCm: numeric("thicknessCm", { precision: 8, scale: 2 }),
   image: varchar("image", { length: 512 }).notNull(),
   description: text("description"),
   sortOrder: integer("sortOrder").default(0).notNull(),
@@ -63,6 +66,21 @@ export const works = pgTable("works", {
 
 export type Work = typeof works.$inferSelect;
 export type InsertWork = typeof works.$inferInsert;
+
+export const workImages = pgTable("work_images", {
+  id: serial("id").primaryKey(),
+  workId: integer("workId")
+    .notNull()
+    .references(() => works.id, { onDelete: "cascade" }),
+  url: varchar("url", { length: 512 }).notNull(),
+  alt: varchar("alt", { length: 255 }).default("").notNull(),
+  isPrimary: boolean("isPrimary").default(false).notNull(),
+  sortOrder: integer("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WorkImage = typeof workImages.$inferSelect;
+export type InsertWorkImage = typeof workImages.$inferInsert;
 
 export const workVariants = pgTable("work_variants", {
   id: serial("id").primaryKey(),

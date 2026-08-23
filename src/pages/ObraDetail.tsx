@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Layout from "@/components/Layout";
 import PromotionSection from "@/components/PromotionSection";
 import { trpc } from "@/providers/trpc";
@@ -41,6 +41,19 @@ type PublicVariant = {
   price: number;
   status: string;
 };
+type PublicWorkImage = {
+  url: string;
+  alt: string;
+  isPrimary: boolean;
+  sortOrder: number;
+};
+
+function formatDimension(value: unknown) {
+  if (value === null || value === undefined || value === "") return "";
+  const numberValue = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(numberValue) || numberValue <= 0) return "";
+  return numberValue.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+}
 
 export default function ObraDetail() {
   const { visible, s } = useSettings();
@@ -53,11 +66,26 @@ export default function ObraDetail() {
   const activeVariants = useMemo(() => workWithVariants?.variants ?? [], [workWithVariants?.variants]);
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const selectedVariant = activeVariants.find((variant) => variant.id === selectedVariantId) ?? activeVariants[0];
-  useEffect(() => {
-    if (activeVariants.length > 0 && !activeVariants.some((variant) => variant.id === selectedVariantId)) {
-      setSelectedVariantId(activeVariants[0].id);
-    }
-  }, [activeVariants, selectedVariantId]);
+  const gallery = useMemo<PublicWorkImage[]>(() => {
+    if (!work) return [];
+    const images = ((work as typeof work & { images?: PublicWorkImage[] }).images ?? [])
+      .filter((image) => !!image.url)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    return images.length > 0
+      ? images
+      : [{ url: work.image, alt: work.title, isPrimary: true, sortOrder: 1 }];
+  }, [work]);
+  const [selectedImageUrl, setSelectedImageUrl] = useState("");
+  const selectedImage = gallery.find((image) => image.url === selectedImageUrl)
+    ?? gallery.find((image) => image.isPrimary)
+    ?? gallery[0];
+  const dimensions = work
+    ? [
+      formatDimension(work.widthCm),
+      formatDimension(work.heightCm),
+      formatDimension(work.thicknessCm),
+    ].filter(Boolean)
+    : [];
   const showShipping = visible("shipping.enabled");
   const showShippingNote = s("shipping.note", "1") === "1";
   const showIntl = s("shipping.international", "0") === "1";
@@ -107,7 +135,27 @@ export default function ObraDetail() {
           <div className="mt-10 grid gap-12 md:grid-cols-2">
             <div className="relative">
               <div className="absolute -left-3 -top-3 h-full w-full border border-[var(--c-primary)]/25" />
-              <img src={work.image} alt={work.title} className="relative w-full object-cover" />
+              <img src={selectedImage?.url ?? work.image} alt={selectedImage?.alt || work.title} className="relative w-full object-cover" />
+              {gallery.length > 1 && (
+                <div className="relative mt-4 grid grid-cols-4 gap-3 sm:grid-cols-5">
+                  {gallery.map((image) => {
+                    const active = (selectedImage?.url ?? work.image) === image.url;
+                    return (
+                      <button
+                        key={image.url}
+                        type="button"
+                        onClick={() => setSelectedImageUrl(image.url)}
+                        className={`overflow-hidden border transition ${
+                          active ? "border-[var(--c-primary)]" : "border-transparent opacity-70 hover:opacity-100"
+                        }`}
+                        aria-label={image.alt || work.title}
+                      >
+                        <img src={image.url} alt="" className="h-20 w-full object-cover" />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <div>
               <span className="eyebrow text-[var(--c-primary)]">{categoryLabel(work.category, t)}</span>
@@ -118,6 +166,9 @@ export default function ObraDetail() {
                 <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.ano")}</dt><dd>{work.year}</dd></div>
                 {editionLabel && (
                   <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.edition")}</dt><dd>{editionLabel}</dd></div>
+                )}
+                {dimensions.length > 0 && (
+                  <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.dimensions")}</dt><dd>{dimensions.join(" x ")} cm</dd></div>
                 )}
                 {activeVariants.length === 0 && (
                   <div className="flex gap-2"><dt className="w-24 font-bold text-[var(--c-ink)]">{t("od.situacao")}</dt><dd>{t(statusTranslationKey(work.status))}</dd></div>

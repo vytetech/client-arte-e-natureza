@@ -30,22 +30,77 @@ function localizedDefaultTexts(locale: Locale) {
 
 function localizeDefaultWork(work: (typeof defaultWorks)[number], locale: Locale) {
   const translation = workTranslations[work.slug]?.[locale] as WorkTranslationSeed | undefined;
-  if (!translation) return locale === "pt" ? work : { ...work, title: "", technique: "", description: "" };
+  const images = [{
+    id: 0,
+    workId: work.id,
+    url: work.image,
+    alt: work.title,
+    isPrimary: true,
+    sortOrder: 1,
+    createdAt: work.createdAt,
+  }];
+  if (!translation) return locale === "pt" ? { ...work, images } : { ...work, images, title: "", technique: "", description: "" };
   return {
     ...work,
+    images,
     title: translation.title,
     technique: translation.technique,
     description: translation.description,
   };
 }
 
+function coerceWorkDimensions<T extends object>(work: T): T & {
+  widthCm: number | null;
+  heightCm: number | null;
+  thicknessCm: number | null;
+} {
+  const dimensions = work as T & { widthCm?: unknown; heightCm?: unknown; thicknessCm?: unknown };
+  return {
+    ...work,
+    widthCm: dimensions.widthCm === null || dimensions.widthCm === undefined ? null : Number(dimensions.widthCm),
+    heightCm: dimensions.heightCm === null || dimensions.heightCm === undefined ? null : Number(dimensions.heightCm),
+    thicknessCm: dimensions.thicknessCm === null || dimensions.thicknessCm === undefined ? null : Number(dimensions.thicknessCm),
+  };
+}
+
+async function listPublicWorkImages() {
+  return getDb()
+    .select()
+    .from(schema.workImages)
+    .orderBy(asc(schema.workImages.sortOrder), asc(schema.workImages.id));
+}
+
+function attachImages<T extends { id: number; image: string; title?: string; createdAt?: Date }>(
+  works: T[],
+  images: Awaited<ReturnType<typeof listPublicWorkImages>>,
+) {
+  return works.map((work) => {
+    const gallery = images.filter((image) => image.workId === work.id);
+    return {
+      ...coerceWorkDimensions(work),
+      images: gallery.length > 0
+        ? gallery
+        : [{
+          id: 0,
+          workId: work.id,
+          url: work.image,
+          alt: work.title ?? "",
+          isPrimary: true,
+          sortOrder: 1,
+          createdAt: work.createdAt ?? new Date(0),
+        }],
+    };
+  });
+}
+
 async function localizeWorks(locale: Locale) {
   const rows = await getDb().select().from(schema.works).orderBy(asc(schema.works.sortOrder));
-  if (locale === "pt") return rows;
+  const images = await listPublicWorkImages();
+  if (locale === "pt") return attachImages(rows, images);
 
   const translations = await getDb().select().from(schema.workTranslations).where(eq(schema.workTranslations.locale, locale));
   const byWorkId = new Map(translations.map((translation) => [translation.workId, translation]));
-  return rows.map((work) => {
+  return attachImages(rows, images).map((work) => {
     const translation = byWorkId.get(work.id);
     return translation
       ? { ...work, title: translation.title, technique: translation.technique, description: translation.description }
@@ -153,8 +208,16 @@ export const contentRouter = createRouter({
         .limit(1);
       const work = rows.at(0);
       if (!work) return null;
+      const [workImages] = await Promise.all([
+        getDb()
+          .select()
+          .from(schema.workImages)
+          .where(eq(schema.workImages.workId, work.id))
+          .orderBy(asc(schema.workImages.sortOrder), asc(schema.workImages.id)),
+      ]);
+      const workWithImages = attachImages([work], workImages)[0];
       const variants = await localizeWorkVariants(work.id, input.locale);
-      if (input.locale === "pt") return { ...work, variants };
+      if (input.locale === "pt") return { ...workWithImages, variants };
 
       const translations = await getDb()
         .select()
@@ -163,7 +226,7 @@ export const contentRouter = createRouter({
         .limit(1);
       const translation = translations.at(0);
       return translation
-        ? { ...work, title: translation.title, technique: translation.technique, description: translation.description, variants }
-        : { ...work, title: "", technique: "", description: "", variants };
+        ? { ...workWithImages, title: translation.title, technique: translation.technique, description: translation.description, variants }
+        : { ...workWithImages, title: "", technique: "", description: "", variants };
     }),
 });

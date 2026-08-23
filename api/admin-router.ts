@@ -21,6 +21,14 @@ const workStatusInput = z.string().max(64).default("available").transform((value
   return status;
 });
 
+const dimensionInput = z.number().min(0).max(999999.99).nullable().default(null);
+const workImageInput = z.object({
+  url: z.string().min(1).max(512),
+  alt: z.string().max(255).default(""),
+  isPrimary: z.boolean().default(false),
+  sortOrder: z.number().int().default(0),
+});
+
 const workInput = z.object({
   slug: z.string().min(1).max(64),
   title: z.string().min(1).max(255),
@@ -33,7 +41,11 @@ const workInput = z.object({
   editionNumber: z.number().int().positive().nullable().default(null),
   editionTotal: z.number().int().positive().nullable().default(null),
   editionLabel: z.string().max(64).default(""),
+  widthCm: dimensionInput,
+  heightCm: dimensionInput,
+  thicknessCm: dimensionInput,
   image: z.string().min(1).max(512),
+  images: z.array(workImageInput).default([]),
   description: z.string().default(""),
   sortOrder: z.number().int().default(0),
 }).superRefine((value, ctx) => {
@@ -152,6 +164,71 @@ const variantInput = z.object({
 });
 
 type VariantTranslationPayload = z.infer<typeof variantTranslationInput>;
+type WorkPayload = z.infer<typeof workInput>;
+
+function normalizeWorkImages(input: Pick<WorkPayload, "image" | "images">) {
+  const byUrl = new Map<string, z.infer<typeof workImageInput>>();
+  const source = input.images.length > 0
+    ? input.images
+    : [{ url: input.image, alt: "", isPrimary: true, sortOrder: 1 }];
+
+  source.forEach((image, index) => {
+    const url = image.url.trim();
+    if (!url) return;
+    byUrl.set(url, {
+      url,
+      alt: image.alt.trim(),
+      isPrimary: image.isPrimary,
+      sortOrder: image.sortOrder || index + 1,
+    });
+  });
+
+  if (!byUrl.has(input.image)) {
+    byUrl.set(input.image, { url: input.image, alt: "", isPrimary: true, sortOrder: 0 });
+  }
+
+  const images = Array.from(byUrl.values()).sort((a, b) => a.sortOrder - b.sortOrder);
+  const primary = images.find((image) => image.isPrimary)?.url ?? input.image ?? images[0]?.url;
+  return images.map((image, index) => ({
+    ...image,
+    isPrimary: image.url === primary,
+    sortOrder: index + 1,
+  }));
+}
+
+function workValues(input: WorkPayload) {
+  const { images, ...work } = input;
+  void images;
+  return {
+    ...work,
+    image: normalizeWorkImages(input).find((item) => item.isPrimary)?.url ?? input.image,
+    widthCm: input.widthCm === null ? null : String(input.widthCm),
+    heightCm: input.heightCm === null ? null : String(input.heightCm),
+    thicknessCm: input.thicknessCm === null ? null : String(input.thicknessCm),
+  };
+}
+
+async function replaceWorkImages(workId: number, input: Pick<WorkPayload, "image" | "images">) {
+  const images = normalizeWorkImages(input);
+  await getDb().delete(schema.workImages).where(eq(schema.workImages.workId, workId));
+  if (!images.length) return;
+  await getDb().insert(schema.workImages).values(images.map((image) => ({
+    workId,
+    url: image.url,
+    alt: image.alt,
+    isPrimary: image.isPrimary,
+    sortOrder: image.sortOrder,
+  })));
+}
+
+function coerceWorkDimensions<T extends { widthCm: unknown; heightCm: unknown; thicknessCm: unknown }>(work: T) {
+  return {
+    ...work,
+    widthCm: work.widthCm === null ? null : Number(work.widthCm),
+    heightCm: work.heightCm === null ? null : Number(work.heightCm),
+    thicknessCm: work.thicknessCm === null ? null : Number(work.thicknessCm),
+  };
+}
 
 async function upsertVariantTranslations(
   variantId: number,
@@ -427,52 +504,68 @@ export const adminRouter = createRouter({
 
   listWorks: adminQuery.query(async () => {
     const works = await getDb().select().from(schema.works).orderBy(asc(schema.works.sortOrder));
+    const images = await getDb().select().from(schema.workImages).orderBy(asc(schema.workImages.sortOrder), asc(schema.workImages.id));
     const translations = await getDb().select().from(schema.workTranslations);
     const variants = await getDb().select().from(schema.workVariants).orderBy(asc(schema.workVariants.sortOrder), asc(schema.workVariants.id));
     const variantTranslations = await getDb().select().from(schema.workVariantTranslations);
-    return works.map((work) => ({
-      ...work,
-      variants: variants
-        .filter((variant) => variant.workId === work.id)
-        .map((variant) => ({
-          ...variant,
-          price: Number(variant.price),
-          translations: Object.fromEntries(
-            variantTranslations
-              .filter((translation) => translation.variantId === variant.id)
-              .map((translation) => [translation.locale, {
-                name: translation.name,
-                description: translation.description,
-                dimensions: translation.dimensions,
-              }]),
-          ) as Record<"pt" | "en" | "es" | "ar", {
-            name: string;
-            description: string;
-            dimensions: string;
-          } | undefined>,
-        })),
-      translations: Object.fromEntries(
-        translations
-          .filter((translation) => translation.workId === work.id)
-          .map((translation) => [translation.locale, {
-            title: translation.title,
-            category: translation.category,
-            technique: translation.technique,
-            description: translation.description,
-          }]),
-      ) as Record<"pt" | "en" | "es" | "ar", {
-        title: string;
-        category: string;
-        technique: string;
-        description: string;
-      } | undefined>,
-    }));
+    return works.map((work) => {
+      const workImages = images.filter((image) => image.workId === work.id);
+      return {
+        ...coerceWorkDimensions(work),
+        images: workImages.length > 0
+          ? workImages
+          : [{
+            id: 0,
+            workId: work.id,
+            url: work.image,
+            alt: "",
+            isPrimary: true,
+            sortOrder: 1,
+            createdAt: work.createdAt,
+          }],
+        variants: variants
+          .filter((variant) => variant.workId === work.id)
+          .map((variant) => ({
+            ...variant,
+            price: Number(variant.price),
+            translations: Object.fromEntries(
+              variantTranslations
+                .filter((translation) => translation.variantId === variant.id)
+                .map((translation) => [translation.locale, {
+                  name: translation.name,
+                  description: translation.description,
+                  dimensions: translation.dimensions,
+                }]),
+            ) as Record<"pt" | "en" | "es" | "ar", {
+              name: string;
+              description: string;
+              dimensions: string;
+            } | undefined>,
+          })),
+        translations: Object.fromEntries(
+          translations
+            .filter((translation) => translation.workId === work.id)
+            .map((translation) => [translation.locale, {
+              title: translation.title,
+              category: translation.category,
+              technique: translation.technique,
+              description: translation.description,
+            }]),
+        ) as Record<"pt" | "en" | "es" | "ar", {
+          title: string;
+          category: string;
+          technique: string;
+          description: string;
+        } | undefined>,
+      };
+    });
   }),
 
   createWork: adminQuery.input(workInput).mutation(async ({ input }) => {
-    const rows = await getDb().insert(schema.works).values(input).returning({ id: schema.works.id });
+    const rows = await getDb().insert(schema.works).values(workValues(input)).returning({ id: schema.works.id });
     const workId = rows[0]?.id;
     if (workId) {
+      await replaceWorkImages(workId, input);
       await getDb()
         .insert(schema.workTranslations)
         .values({
@@ -493,8 +586,9 @@ export const adminRouter = createRouter({
     .mutation(async ({ input }) => {
       await getDb()
         .update(schema.works)
-        .set(input.data)
+        .set(workValues(input.data))
         .where(eq(schema.works.id, input.id));
+      await replaceWorkImages(input.id, input.data);
       await getDb()
         .insert(schema.workTranslations)
         .values({

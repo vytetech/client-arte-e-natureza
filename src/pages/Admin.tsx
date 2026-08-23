@@ -81,12 +81,21 @@ type WorkForm = {
   editionNumber: number | null;
   editionTotal: number | null;
   editionLabel: string;
+  widthCm: number | null;
+  heightCm: number | null;
+  thicknessCm: number | null;
   image: string;
   description: string;
   sortOrder: number;
 };
 
 type WorkTranslationForm = Pick<WorkForm, "title" | "category" | "technique" | "description">;
+type WorkImageForm = {
+  url: string;
+  alt: string;
+  isPrimary: boolean;
+  sortOrder: number;
+};
 type VariantTranslationForm = {
   name: string;
   description: string;
@@ -118,6 +127,9 @@ const emptyWork: WorkForm = {
   editionNumber: null,
   editionTotal: null,
   editionLabel: "",
+  widthCm: null,
+  heightCm: null,
+  thicknessCm: null,
   image: "",
   description: "",
   sortOrder: 99,
@@ -556,6 +568,7 @@ function WorksTab() {
     ar: emptyWork,
   });
   const [variants, setVariants] = useState<WorkVariantForm[]>([]);
+  const [workImages, setWorkImages] = useState<WorkImageForm[]>([]);
   const [priceInput, setPriceInput] = useState("");
   const [notice, setNotice] = useState("");
   const [order, setOrder] = useState<number[]>([]);
@@ -616,6 +629,9 @@ function WorksTab() {
       editionNumber: w.editionNumber,
       editionTotal: w.editionTotal,
       editionLabel: w.editionLabel,
+      widthCm: w.widthCm,
+      heightCm: w.heightCm,
+      thicknessCm: w.thicknessCm,
       image: w.image,
       description: w.description ?? "",
       sortOrder: w.sortOrder,
@@ -655,6 +671,18 @@ function WorksTab() {
         },
       };
     }));
+    const gallery = (w.images?.length ? w.images : [{ url: w.image, alt: "", isPrimary: true, sortOrder: 1 }])
+      .filter((image) => !!image.url)
+      .map((image, index) => ({
+        url: image.url,
+        alt: image.alt ?? "",
+        isPrimary: image.isPrimary || image.url === w.image,
+        sortOrder: image.sortOrder || index + 1,
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    setWorkImages(gallery.some((image) => image.isPrimary)
+      ? gallery
+      : gallery.map((image, index) => ({ ...image, isPrimary: index === 0 })));
     setEditLang("pt");
     setEditing(id);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -665,6 +693,66 @@ function WorksTab() {
     const price = n === null ? t("admin.works.price_placeholder") : `R$ ${formatBRL(n)}`;
     setPriceInput(n === null ? "" : formatBRL(n));
     setForm((f) => ({ ...f, price }));
+  };
+
+  const normalizeGallery = (images: WorkImageForm[], primaryUrl = form.image) => {
+    const unique = new Map<string, WorkImageForm>();
+    images.forEach((image, index) => {
+      const url = image.url.trim();
+      if (!url) return;
+      unique.set(url, {
+        url,
+        alt: image.alt.trim(),
+        isPrimary: image.isPrimary || url === primaryUrl,
+        sortOrder: image.sortOrder || index + 1,
+      });
+    });
+    const gallery = Array.from(unique.values());
+    const primary = gallery.find((image) => image.isPrimary)?.url ?? primaryUrl ?? gallery[0]?.url ?? "";
+    return gallery.map((image, index) => ({
+      ...image,
+      isPrimary: image.url === primary,
+      sortOrder: index + 1,
+    }));
+  };
+
+  const setPrimaryImage = (url: string) => {
+    setForm((current) => ({ ...current, image: url }));
+    setWorkImages((current) => normalizeGallery(current, url));
+  };
+
+  const addWorkImage = (url: string) => {
+    const cleanUrl = url.trim();
+    if (!cleanUrl) return;
+    setWorkImages((current) => {
+      const next = normalizeGallery([
+        ...current,
+        { url: cleanUrl, alt: "", isPrimary: current.length === 0, sortOrder: current.length + 1 },
+      ], form.image || cleanUrl);
+      if (!form.image) setForm((active) => ({ ...active, image: cleanUrl }));
+      return next;
+    });
+  };
+
+  const removeWorkImage = (url: string) => {
+    setWorkImages((current) => {
+      const next = normalizeGallery(current.filter((image) => image.url !== url));
+      if (form.image === url) {
+        setForm((active) => ({ ...active, image: next[0]?.url ?? "" }));
+        return normalizeGallery(next, next[0]?.url ?? "");
+      }
+      return next;
+    });
+  };
+
+  const moveWorkImage = (index: number, direction: -1 | 1) => {
+    setWorkImages((current) => {
+      const target = index + direction;
+      if (target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return normalizeGallery(next);
+    });
   };
 
   const save = () => {
@@ -684,6 +772,7 @@ function WorksTab() {
       status: canonicalStatus(form.status, "available"),
       editionNumber: form.isUniquePiece ? null : form.editionNumber,
       editionTotal: form.isUniquePiece ? null : form.editionTotal,
+      images: normalizeGallery(workImages, form.image),
     };
     if (editing === "new") createMut.mutate(data);
     else if (typeof editing === "number") {
@@ -796,7 +885,7 @@ function WorksTab() {
         <p className="text-sm text-[var(--c-ink)]/70">
           {text(t, "admin.works.count", { count: works?.length ?? 0 })}
         </p>
-        <Button onClick={() => { setForm(emptyWork); setVariants([]); setPriceInput(""); setEditing("new"); }}>{t("admin.works.new")}</Button>
+        <Button onClick={() => { setForm(emptyWork); setVariants([]); setWorkImages([]); setPriceInput(""); setEditing("new"); }}>{t("admin.works.new")}</Button>
       </div>
 
       {notice && (
@@ -918,6 +1007,34 @@ function WorksTab() {
               )}
               <p className="mt-2 text-[11px] text-[var(--c-ink)]/50">{t("admin.works.edition_help")}</p>
             </div>
+            <div className="md:col-span-2 rounded-lg border border-[var(--c-ink)]/10 bg-[var(--c-sand)]/45 p-4">
+              <h3 className="mb-3 text-sm font-bold">{t("admin.works.dimensions")}</h3>
+              <div className="grid gap-3 md:grid-cols-3">
+                {[
+                  ["widthCm", "admin.works.width"],
+                  ["heightCm", "admin.works.height"],
+                  ["thicknessCm", "admin.works.thickness"],
+                ].map(([field, labelKey]) => (
+                  <div key={field}>
+                    <label className="text-xs font-bold uppercase">{t(labelKey)}</label>
+                    <div className="flex items-center rounded-md border bg-white px-3 focus-within:border-[var(--c-primary)]">
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.1"
+                        value={form[field as keyof Pick<WorkForm, "widthCm" | "heightCm" | "thicknessCm">] ?? ""}
+                        onChange={(e) => setForm({
+                          ...form,
+                          [field]: e.target.value ? Number(e.target.value) : null,
+                        })}
+                        className="w-full bg-transparent py-2 text-sm outline-none"
+                      />
+                      <span className="text-xs font-bold text-[var(--c-ink)]/45">cm</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
             <div>
               <label className="text-xs font-bold uppercase">{t("admin.works.technique")}</label>
               <Input
@@ -965,13 +1082,20 @@ function WorksTab() {
               <label className="text-xs font-bold uppercase">{t("admin.works.image")}</label>
               <DeviceImagePicker
                 value={form.image}
-                onChange={(url) => setForm({ ...form, image: url })}
+                onChange={(url) => {
+                  addWorkImage(url);
+                  setPrimaryImage(url);
+                }}
               />
               <div className="mt-3 flex items-center gap-3">
                 <select
                   className="w-full rounded-md border px-3 py-2 text-sm"
                   value={form.image}
-                  onChange={(e) => setForm({ ...form, image: e.target.value })}
+                  onChange={(e) => {
+                    if (!e.target.value) return;
+                    addWorkImage(e.target.value);
+                    setPrimaryImage(e.target.value);
+                  }}
                 >
                   <option value="">{t("admin.works.library_option")}</option>
                   {form.image && !imageOptions.some((o) => o.url === form.image) && (
@@ -984,6 +1108,99 @@ function WorksTab() {
                 {form.image && !isVideo(form.image) && (
                   <img src={form.image} alt="" className="h-14 w-20 rounded object-cover" />
                 )}
+              </div>
+            </div>
+            <div className="md:col-span-2 rounded-lg border border-[var(--c-ink)]/10 bg-white p-4">
+              <div className="mb-4">
+                <h3 className="text-sm font-bold">{t("admin.works.gallery")}</h3>
+                <p className="mt-1 text-xs text-[var(--c-ink)]/55">{t("admin.works.gallery_help")}</p>
+              </div>
+              <div className="grid gap-3 lg:grid-cols-3">
+                <div className="rounded-lg border border-[var(--c-ink)]/10 p-3">
+                  <label className="text-xs font-bold uppercase">{t("admin.works.add_upload")}</label>
+                  <div className="mt-2">
+                    <DeviceImagePicker value="" onChange={addWorkImage} />
+                  </div>
+                </div>
+                <div className="rounded-lg border border-[var(--c-ink)]/10 p-3">
+                  <label className="text-xs font-bold uppercase">{t("admin.works.add_library")}</label>
+                  <select
+                    className="mt-2 w-full rounded-md border px-3 py-2 text-sm"
+                    value=""
+                    onChange={(e) => {
+                      if (!e.target.value) return;
+                      addWorkImage(e.target.value);
+                    }}
+                  >
+                    <option value="">{t("admin.works.library_option")}</option>
+                    {imageOptions.filter((option) => !isVideo(option.url)).map((option) => (
+                      <option key={option.url} value={option.url}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="rounded-lg border border-[var(--c-ink)]/10 p-3">
+                  <label className="text-xs font-bold uppercase">{t("admin.works.add_url")}</label>
+                  <Input
+                    className="mt-2"
+                    placeholder="/images/obra.jpg"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addWorkImage(e.currentTarget.value);
+                        e.currentTarget.value = "";
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (!e.currentTarget.value.trim()) return;
+                      addWorkImage(e.currentTarget.value);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="mt-4 grid gap-3">
+                {workImages.length === 0 && (
+                  <p className="rounded-lg border border-dashed border-[var(--c-ink)]/20 px-4 py-5 text-center text-sm text-[var(--c-ink)]/50">
+                    {t("admin.works.gallery_empty")}
+                  </p>
+                )}
+                {workImages.map((image, index) => (
+                  <div key={image.url} className="grid gap-3 rounded-lg border border-[var(--c-ink)]/10 p-3 md:grid-cols-[96px_1fr_auto]">
+                    <img src={image.url} alt="" className="h-20 w-24 rounded object-cover" />
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {image.isPrimary && (
+                          <span className="rounded bg-[var(--c-primary)] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white">
+                            {t("admin.works.primary")}
+                          </span>
+                        )}
+                        <span className="truncate font-mono text-[11px] text-[var(--c-ink)]/55">{image.url}</span>
+                      </div>
+                      <Input
+                        className="mt-2"
+                        value={image.alt}
+                        onChange={(e) => setWorkImages((current) => current.map((item) => (
+                          item.url === image.url ? { ...item, alt: e.target.value } : item
+                        )))}
+                        placeholder={t("admin.works.alt_placeholder")}
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-start gap-2 md:justify-end">
+                      <Button type="button" size="sm" variant="outline" disabled={index === 0} onClick={() => moveWorkImage(index, -1)}>
+                        ↑
+                      </Button>
+                      <Button type="button" size="sm" variant="outline" disabled={index === workImages.length - 1} onClick={() => moveWorkImage(index, 1)}>
+                        ↓
+                      </Button>
+                      <Button type="button" size="sm" variant={image.isPrimary ? "default" : "outline"} onClick={() => setPrimaryImage(image.url)}>
+                        {t("admin.works.set_primary")}
+                      </Button>
+                      <Button type="button" size="sm" variant="destructive" onClick={() => removeWorkImage(image.url)}>
+                        {t("admin.delete")}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="md:col-span-2">
