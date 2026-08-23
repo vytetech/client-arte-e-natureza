@@ -4,6 +4,7 @@ import { defaultSettings, defaultTexts, defaultWorks } from "./default-content";
 import { textTranslations, workTranslations, type WorkTranslationSeed } from "@db/content-translations";
 import { getDb, hasDatabaseConfig } from "./queries/connection";
 import { createRouter, publicQuery } from "./middleware";
+import { formatWhatsAppNumber, isValidWhatsAppNumber, normalizeWhatsAppNumber, normalizeWhatsAppPurpose } from "@contracts/whatsapp";
 
 type Locale = "pt" | "en" | "es" | "ar";
 
@@ -149,6 +150,34 @@ function useDefaultContent() {
   return !hasDatabaseConfig();
 }
 
+function publicWhatsAppContacts(settings: Record<string, string>, locale: Locale) {
+  const legacyNumber = normalizeWhatsAppNumber(settings["contact.whatsapp"] ?? "");
+  return ([1, 2] as const)
+    .map((id) => {
+      const number = normalizeWhatsAppNumber(settings[`contact.whatsapp.${id}.number`] ?? (id === 1 ? legacyNumber : ""));
+      const enabled = (settings[`contact.whatsapp.${id}.enabled`] ?? (id === 1 && number ? "1" : "0")) === "1";
+      if (!enabled || !number || !isValidWhatsAppNumber(number)) return null;
+      const fallbackDescription = settings[`contact.whatsapp.${id}.description.pt`] ?? "";
+      const description = settings[`contact.whatsapp.${id}.description.${locale}`] ?? fallbackDescription;
+      return {
+        id,
+        number,
+        displayNumber: formatWhatsAppNumber(number),
+        description,
+        purpose: normalizeWhatsAppPurpose(settings[`contact.whatsapp.${id}.purpose`] ?? "general"),
+        order: Number(settings[`contact.whatsapp.${id}.order`] ?? id) || id,
+      };
+    })
+    .filter((contact): contact is NonNullable<typeof contact> => !!contact)
+    .sort((a, b) => a.order - b.order || a.id - b.id);
+}
+
+function publicSettings(settings: Record<string, string>) {
+  return Object.fromEntries(
+    Object.entries(settings).filter(([key]) => !key.startsWith("contact.whatsapp")),
+  );
+}
+
 export const contentRouter = createRouter({
   texts: publicQuery
     .input((raw: unknown) => parseLocale(raw))
@@ -180,13 +209,30 @@ export const contentRouter = createRouter({
   settings: publicQuery.query(async () => {
     if (useDefaultContent()) {
       console.warn("[content] DATABASE_URL is not configured; using default public settings.");
-      return defaultSettings;
+      return publicSettings(defaultSettings);
     }
     const rows = await getDb().select().from(schema.settings);
     const map: Record<string, string> = { ...defaultSettings };
     for (const r of rows) map[r.key] = r.value;
-    return map;
+    return publicSettings(map);
   }),
+
+  whatsappContacts: publicQuery
+    .input((raw: unknown) => parseLocale(raw))
+    .query(async ({ input: locale }) => {
+      if (useDefaultContent()) {
+        console.warn("[content] DATABASE_URL is not configured; using default WhatsApp contacts.");
+        return publicWhatsAppContacts(defaultSettings, locale);
+      }
+      const rows = await getDb().select().from(schema.settings);
+      const map: Record<string, string> = { ...defaultSettings };
+      for (const r of rows) map[r.key] = r.value;
+      const explicitKeys = new Set(rows.map((row) => row.key));
+      if (explicitKeys.has("contact.whatsapp") && !explicitKeys.has("contact.whatsapp.1.number")) {
+        map["contact.whatsapp.1.number"] = map["contact.whatsapp"];
+      }
+      return publicWhatsAppContacts(map, locale);
+    }),
 
   workBySlug: publicQuery
     .input((raw: unknown) => {

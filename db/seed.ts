@@ -90,6 +90,22 @@ const texts: { key: string; label: string; value: string }[] = [
 
 const settings: { key: string; value: string }[] = [
   { key: "contact.whatsapp", value: "5532984527407" },
+  { key: "contact.whatsapp.1.enabled", value: "1" },
+  { key: "contact.whatsapp.1.number", value: "5532984527407" },
+  { key: "contact.whatsapp.1.purpose", value: "visits" },
+  { key: "contact.whatsapp.1.order", value: "1" },
+  { key: "contact.whatsapp.1.description.pt", value: "Visitas e agendamentos no ateliê" },
+  { key: "contact.whatsapp.1.description.en", value: "Studio visits and appointments" },
+  { key: "contact.whatsapp.1.description.es", value: "Visitas y reservas en el atelier" },
+  { key: "contact.whatsapp.1.description.ar", value: "زيارات المرسم وحجز المواعيد" },
+  { key: "contact.whatsapp.2.enabled", value: "0" },
+  { key: "contact.whatsapp.2.number", value: "" },
+  { key: "contact.whatsapp.2.purpose", value: "sales" },
+  { key: "contact.whatsapp.2.order", value: "2" },
+  { key: "contact.whatsapp.2.description.pt", value: "Compra e informações sobre obras" },
+  { key: "contact.whatsapp.2.description.en", value: "Purchases and information about works" },
+  { key: "contact.whatsapp.2.description.es", value: "Compra e información sobre obras" },
+  { key: "contact.whatsapp.2.description.ar", value: "شراء الأعمال والاستفسار عنها" },
 ];
 
 async function seed() {
@@ -117,9 +133,20 @@ async function seed() {
   }
   console.log(`Works inserted: ${insertedWorks}; skipped: ${skippedWorks}.`);
 
+  const legacyWhatsApp = await db
+    .select({ value: schema.settings.value })
+    .from(schema.settings)
+    .where(eq(schema.settings.key, "contact.whatsapp"))
+    .limit(1);
+  const seedSettings = settings.map((setting) =>
+    setting.key === "contact.whatsapp.1.number" && legacyWhatsApp[0]?.value
+      ? { ...setting, value: legacyWhatsApp[0].value }
+      : setting,
+  );
+
   let insertedSettings = 0;
   let skippedSettings = 0;
-  for (const setting of settings) {
+  for (const setting of seedSettings) {
     const result = await db.insert(schema.settings).values(setting).onConflictDoNothing().returning({ key: schema.settings.key });
     if (result.length) {
       insertedSettings++;

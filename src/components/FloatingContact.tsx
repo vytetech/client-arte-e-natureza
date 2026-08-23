@@ -1,6 +1,7 @@
 import { INSTAGRAM_URL } from "@/config"
 import { useWhatsApp } from "@/hooks/useWhatsApp"
 import { useLang } from "@/lib/i18n"
+import { useEffect, useRef, useState } from "react"
 
 function WhatsAppIcon() {
   return (
@@ -23,9 +24,50 @@ function InstagramIcon() {
 export default function FloatingContact() {
   const { t } = useLang()
   const whatsapp = useWhatsApp()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const close = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false)
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false)
+    }
+    document.addEventListener("mousedown", close)
+    document.addEventListener("keydown", closeOnEscape)
+    return () => {
+      document.removeEventListener("mousedown", close)
+      document.removeEventListener("keydown", closeOnEscape)
+    }
+  }, [])
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-center gap-3">
+    <div ref={ref} className="fixed bottom-5 right-5 z-50 flex flex-col items-center gap-3">
+      {open && whatsapp.hasMultipleContacts && (
+        <div className="w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-[var(--c-ink)]/10 bg-white p-3 text-[var(--c-ink)] shadow-[0_18px_50px_rgba(0,0,0,0.22)]">
+          <div className="px-2 pb-2 font-display text-lg font-semibold">WhatsApp</div>
+          <div className="space-y-1">
+            {whatsapp.contacts.map((contact) => (
+              <a
+                key={contact.id}
+                href={whatsapp.buildUrl(contact.number)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="block rounded-md px-2 py-3 outline-none transition hover:bg-[var(--c-sand)] focus:bg-[var(--c-sand)]"
+              >
+                <span className="block text-sm font-semibold leading-snug">
+                  {contact.description || t("social.whatsapp")}
+                </span>
+                <span className="mt-0.5 block font-mono text-xs text-[var(--c-ink)]/60">
+                  {contact.displayNumber}
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
       <a
         href={INSTAGRAM_URL}
         target="_blank"
@@ -40,19 +82,36 @@ export default function FloatingContact() {
       >
         <InstagramIcon />
       </a>
-      <a
-        href={whatsapp.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`${t("social.whatsapp")}${whatsapp.display ? ` ${whatsapp.display}` : ""}`}
-        title={`${t("social.whatsapp")}${whatsapp.display ? ` ${whatsapp.display}` : ""}`}
-        className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-[0_10px_28px_rgba(37,211,102,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:scale-110"
-      >
-        <span className="pointer-events-none absolute right-full mr-3 hidden whitespace-nowrap rounded-full bg-black/80 px-3 py-1.5 font-mono text-xs text-white group-hover:block">
-          {whatsapp.display || t("social.whatsapp")}
-        </span>
-        <WhatsAppIcon />
-      </a>
+      {whatsapp.isConfigured && (
+        whatsapp.hasMultipleContacts ? (
+          <button
+            type="button"
+            aria-label={t("social.whatsapp")}
+            aria-expanded={open}
+            onClick={() => setOpen((current) => !current)}
+            className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-[0_10px_28px_rgba(37,211,102,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:scale-110"
+          >
+            <span className="pointer-events-none absolute right-full mr-3 hidden whitespace-nowrap rounded-full bg-black/80 px-3 py-1.5 font-mono text-xs text-white group-hover:block">
+              {t("social.whatsapp")}
+            </span>
+            <WhatsAppIcon />
+          </button>
+        ) : (
+          <a
+            href={whatsapp.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${t("social.whatsapp")}${whatsapp.display ? ` ${whatsapp.display}` : ""}`}
+            title={`${t("social.whatsapp")}${whatsapp.display ? ` ${whatsapp.display}` : ""}`}
+            className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-[0_10px_28px_rgba(37,211,102,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:scale-110"
+          >
+            <span className="pointer-events-none absolute right-full mr-3 hidden whitespace-nowrap rounded-full bg-black/80 px-3 py-1.5 font-mono text-xs text-white group-hover:block">
+              {whatsapp.display || t("social.whatsapp")}
+            </span>
+            <WhatsAppIcon />
+          </a>
+        )
+      )}
     </div>
   )
 }

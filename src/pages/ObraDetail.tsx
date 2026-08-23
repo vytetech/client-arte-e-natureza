@@ -94,15 +94,18 @@ export default function ObraDetail() {
   const couponPct = s("coupon.percent", "");
   const showCoupon = couponOn && !!work?.couponEnabled && isCurrentDateInRange(s("coupon.start", ""), s("coupon.end", ""));
   const variantPrice = selectedVariant ? formatBRL(selectedVariant.price) : "";
-  const whatsapp = useWhatsApp(work
-    ? selectedVariant
-      ? interpolate(t("od.variant_whatsapp_message"), {
-        title: work.title,
-        variant: selectedVariant.name,
-        price: variantPrice,
-      })
-      : `${t("od.whatsapp_message")} "${work.title}" (${categoryLabel(work.category, t)}).`
-    : undefined);
+  const whatsapp = useWhatsApp({
+    purpose: "sales",
+    message: work
+      ? selectedVariant
+        ? interpolate(t("od.variant_whatsapp_message"), {
+          title: work.title,
+          variant: selectedVariant.name,
+          price: variantPrice,
+        })
+        : `${t("od.whatsapp_message")} "${work.title}" (${categoryLabel(work.category, t)}).`
+      : undefined,
+  });
   const editionLabel = work
     ? work.isUniquePiece
       ? t("od.unique_piece")

@@ -1,3 +1,15 @@
+export const WHATSAPP_PURPOSES = ["general", "visits", "sales"] as const;
+export type WhatsAppPurpose = (typeof WHATSAPP_PURPOSES)[number];
+
+export type WhatsAppContact = {
+  id: 1 | 2;
+  number: string;
+  displayNumber: string;
+  description: string;
+  purpose: WhatsAppPurpose;
+  order: number;
+};
+
 export function normalizeWhatsAppNumber(value: string) {
   return value.replace(/\D/g, "");
 }
@@ -22,6 +34,14 @@ export function formatWhatsAppNumber(value: string) {
   return `+${digits}`;
 }
 
+export function isWhatsAppPurpose(value: string): value is WhatsAppPurpose {
+  return WHATSAPP_PURPOSES.includes(value as WhatsAppPurpose);
+}
+
+export function normalizeWhatsAppPurpose(value: string): WhatsAppPurpose {
+  return isWhatsAppPurpose(value) ? value : "general";
+}
+
 export function getWhatsAppUrl(value: string, message?: string) {
   const digits = normalizeWhatsAppNumber(value);
   if (!digits) return "";
@@ -29,3 +49,5 @@ export function getWhatsAppUrl(value: string, message?: string) {
   const base = `https://wa.me/${digits}`;
   return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
+
+export const buildWhatsAppUrl = getWhatsAppUrl;

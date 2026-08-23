@@ -24,7 +24,7 @@ export default function Home() {
   const { t } = useTexts();
   const { visible } = useSettings();
   const { t: tr } = useLang();
-  const whatsapp = useWhatsApp();
+  const whatsapp = useWhatsApp({ purpose: "visits" });
 
   return (
     <Layout>

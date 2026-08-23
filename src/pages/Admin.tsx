@@ -115,6 +115,20 @@ type WorkVariantForm = {
 
 const LANGS: Lang[] = ["pt", "en", "es", "ar"];
 
+const WHATSAPP_CONTACT_IDS = [1, 2] as const;
+type WhatsAppContactId = (typeof WHATSAPP_CONTACT_IDS)[number];
+type WhatsAppPurpose = "general" | "visits" | "sales";
+
+const WHATSAPP_PURPOSE_OPTIONS: { value: WhatsAppPurpose; labelKey: string }[] = [
+  { value: "general", labelKey: "admin.contact.purpose.general" },
+  { value: "visits", labelKey: "admin.contact.purpose.visits" },
+  { value: "sales", labelKey: "admin.contact.purpose.sales" },
+];
+
+function whatsappSettingKey(id: WhatsAppContactId, field: string) {
+  return `contact.whatsapp.${id}.${field}`;
+}
+
 const emptyWork: WorkForm = {
   slug: "",
   title: "",
@@ -1957,6 +1971,7 @@ function useSettingsState() {
       await save.mutateAsync({ values });
       utils.admin.listSettings.invalidate();
       utils.content.settings.invalidate();
+      utils.content.whatsappContacts.invalidate();
       setNotice(message);
       window.setTimeout(() => setNotice(""), 2500);
     } catch (error) {
@@ -2281,19 +2296,42 @@ function EntregaTab() {
 function ContactTab() {
   const { vals, set, saveKeys, notice, saving } = useSettingsState();
   const { t } = useLang();
-  const [whatsappInput, setWhatsAppInput] = useState("");
+  const [numbers, setNumbers] = useState<Record<WhatsAppContactId, string>>({ 1: "", 2: "" });
+  const [descriptionLang, setDescriptionLang] = useState<Record<WhatsAppContactId, Lang>>({ 1: "pt", 2: "pt" });
   const noticeIsError = notice.startsWith(`${t("admin.error")}:`);
 
   useEffect(() => {
-    setWhatsAppInput(formatWhatsAppNumber(vals["contact.whatsapp"] ?? ""));
-  }, [vals["contact.whatsapp"]]);
+    setNumbers({
+      1: formatWhatsAppNumber(vals[whatsappSettingKey(1, "number")] ?? vals["contact.whatsapp"] ?? ""),
+      2: formatWhatsAppNumber(vals[whatsappSettingKey(2, "number")] ?? ""),
+    });
+  }, [vals]);
 
   const handleSaveContact = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const normalized = normalizeWhatsAppNumber(whatsappInput);
-    set("contact.whatsapp", normalized);
-    await saveKeys(["contact.whatsapp"], t("admin.contact.saved"), { "contact.whatsapp": normalized })
-      .then(() => setWhatsAppInput(formatWhatsAppNumber(normalized)))
+    const normalized = {
+      1: normalizeWhatsAppNumber(numbers[1]),
+      2: normalizeWhatsAppNumber(numbers[2]),
+    };
+    const keys = [
+      "contact.whatsapp",
+      ...WHATSAPP_CONTACT_IDS.flatMap((id) => [
+        whatsappSettingKey(id, "enabled"),
+        whatsappSettingKey(id, "number"),
+        whatsappSettingKey(id, "purpose"),
+        whatsappSettingKey(id, "order"),
+        ...LANGS.map((lang) => whatsappSettingKey(id, `description.${lang}`)),
+      ]),
+    ];
+    await saveKeys(keys, t("admin.contact.saved"), {
+      "contact.whatsapp": normalized[1],
+      [whatsappSettingKey(1, "number")]: normalized[1],
+      [whatsappSettingKey(2, "number")]: normalized[2],
+    })
+      .then(() => setNumbers({
+        1: formatWhatsAppNumber(normalized[1]),
+        2: formatWhatsAppNumber(normalized[2]),
+      }))
       .catch(() => undefined);
   };
 
@@ -2305,24 +2343,102 @@ function ContactTab() {
           {t("admin.contact.help")}
         </p>
 
-        <div className="mt-5 max-w-sm">
-          <label className="text-xs font-bold uppercase">{t("admin.contact.whatsapp")}</label>
-          <Input
-            inputMode="tel"
-            autoComplete="tel"
-            value={whatsappInput}
-            onChange={(event) => setWhatsAppInput(event.target.value)}
-            onBlur={() => setWhatsAppInput(formatWhatsAppNumber(whatsappInput))}
-            placeholder={t("admin.contact.whatsapp_placeholder")}
-          />
-          <p className="mt-2 text-xs text-[var(--c-ink)]/50">
-            {t("admin.contact.format_help")}
-          </p>
+        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+          {WHATSAPP_CONTACT_IDS.map((id) => {
+            const enabledKey = whatsappSettingKey(id, "enabled");
+            const purposeKey = whatsappSettingKey(id, "purpose");
+            const orderKey = whatsappSettingKey(id, "order");
+            const activeLang = descriptionLang[id];
+            const descriptionKey = whatsappSettingKey(id, `description.${activeLang}`);
+            return (
+              <section key={id} className="rounded-xl border border-[var(--c-ink)]/10 p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--c-ink)]/10 pb-4">
+                  <div>
+                    <h3 className="font-bold">{text(t, "admin.contact.card_title", { number: id })}</h3>
+                    <p className="mt-1 text-xs text-[var(--c-ink)]/50">
+                      {vals[enabledKey] === "1" ? t("admin.active") : t("admin.inactive")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold uppercase">{t("admin.contact.enabled")}</span>
+                    <Toggle on={(vals[enabledKey] ?? (id === 1 ? "1" : "0")) === "1"} onChange={(value) => set(enabledKey, value ? "1" : "0")} />
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase">{t("admin.contact.purpose")}</label>
+                    <select
+                      className="w-full rounded-md border px-3 py-2 text-sm"
+                      value={vals[purposeKey] ?? (id === 1 ? "visits" : "sales")}
+                      onChange={(event) => set(purposeKey, event.target.value)}
+                    >
+                      {WHATSAPP_PURPOSE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{t(option.labelKey)}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold uppercase">{t("admin.contact.order")}</label>
+                    <select
+                      className="w-full rounded-md border px-3 py-2 text-sm"
+                      value={vals[orderKey] ?? String(id)}
+                      onChange={(event) => set(orderKey, event.target.value)}
+                    >
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold uppercase">{t("admin.contact.whatsapp")}</label>
+                    <Input
+                      inputMode="tel"
+                      autoComplete="tel"
+                      value={numbers[id]}
+                      onChange={(event) => setNumbers((current) => ({ ...current, [id]: event.target.value }))}
+                      onBlur={() => setNumbers((current) => ({ ...current, [id]: formatWhatsAppNumber(current[id]) }))}
+                      placeholder={t("admin.contact.whatsapp_placeholder")}
+                    />
+                    <p className="mt-2 text-xs text-[var(--c-ink)]/50">
+                      {t("admin.contact.format_help")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold uppercase">{t("admin.contact.description")}</label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {LANGS.map((lang) => (
+                        <Button
+                          key={lang}
+                          type="button"
+                          size="sm"
+                          variant={activeLang === lang ? "default" : "outline"}
+                          onClick={() => setDescriptionLang((current) => ({ ...current, [id]: lang }))}
+                        >
+                          {formatLanguageLabel(lang)}
+                        </Button>
+                      ))}
+                    </div>
+                    <Textarea
+                      rows={3}
+                      className="mt-3"
+                      dir={activeLang === "ar" ? "rtl" : "ltr"}
+                      value={vals[descriptionKey] ?? ""}
+                      onChange={(event) => set(descriptionKey, event.target.value)}
+                      placeholder={t("admin.contact.description_placeholder")}
+                    />
+                  </div>
+                </div>
+              </section>
+            );
+          })}
         </div>
 
         <div className="mt-4 flex items-center gap-3">
           <Button size="sm" type="submit" disabled={saving}>
-            {saving ? t("admin.saving") : t("admin.contact.save")}
+            {saving ? t("admin.saving") : t("admin.contact.save_all")}
           </Button>
           {notice && <span className={`text-xs ${noticeIsError ? "text-red-700" : "text-green-700"}`}>{notice}</span>}
         </div>

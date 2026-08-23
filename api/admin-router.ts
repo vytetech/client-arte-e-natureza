@@ -7,7 +7,7 @@ import { TRPCError } from "@trpc/server";
 import { hashPassword, validatePasswordStrength } from "./lib/password";
 import { findUserByUsername, isValidUsername, normalizeUsername } from "./queries/users";
 import { normalizeStatus } from "@contracts/status";
-import { isValidWhatsAppNumber, normalizeWhatsAppNumber } from "@contracts/whatsapp";
+import { isValidWhatsAppNumber, isWhatsAppPurpose, normalizeWhatsAppNumber } from "@contracts/whatsapp";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { defaultSettings } from "./default-content";
@@ -69,6 +69,8 @@ const booleanSettingKeys = new Set([
   "lang.en",
   "lang.es",
   "lang.ar",
+  "contact.whatsapp.1.enabled",
+  "contact.whatsapp.2.enabled",
 ]);
 
 const dateSettingKeys = new Set(["coupon.start", "coupon.end"]);
@@ -109,11 +111,22 @@ function normalizeSettingValue(key: string, value: string) {
     return String(amount);
   }
 
-  if (key === "contact.whatsapp") {
+  if (key === "contact.whatsapp" || /^contact\.whatsapp\.[12]\.number$/.test(key)) {
     const digits = normalizeWhatsAppNumber(trimmed);
-    assertBadRequest(!!digits, "Informe o número do WhatsApp.");
+    if (!digits) return "";
     assertBadRequest(isValidWhatsAppNumber(digits), "Número do WhatsApp inválido.");
     return digits;
+  }
+
+  if (/^contact\.whatsapp\.[12]\.purpose$/.test(key)) {
+    assertBadRequest(isWhatsAppPurpose(trimmed), "Tipo de WhatsApp inválido.");
+    return trimmed;
+  }
+
+  if (/^contact\.whatsapp\.[12]\.order$/.test(key)) {
+    const order = Number(trimmed);
+    assertBadRequest(Number.isInteger(order) && order >= 1 && order <= 2, "Ordem do WhatsApp inválida.");
+    return String(order);
   }
 
   return value;
@@ -133,6 +146,13 @@ function validateCombinedSettings(settings: Record<string, string>, changedKeys:
     assertBadRequest(!start || isDateInput(start), "Data inicial do cupom inválida.");
     assertBadRequest(!end || isDateInput(end), "Data final do cupom inválida.");
     assertBadRequest(!start || !end || end >= start, "Data final do cupom não pode ser anterior à data inicial.");
+  }
+
+  for (const id of [1, 2] as const) {
+    if (settings[`contact.whatsapp.${id}.enabled`] !== "1") continue;
+    const digits = normalizeWhatsAppNumber(settings[`contact.whatsapp.${id}.number`] ?? "");
+    assertBadRequest(!!digits, `Informe o número do WhatsApp ${id}.`);
+    assertBadRequest(isValidWhatsAppNumber(digits), `Número do WhatsApp ${id} inválido.`);
   }
 }
 
@@ -862,6 +882,11 @@ export const adminRouter = createRouter({
     const rows = await getDb().select().from(schema.settings);
     const map = new Map(Object.entries(defaultSettings).map(([key, value]) => [key, { key, value }]));
     for (const row of rows) map.set(row.key, row);
+    const explicitKeys = new Set(rows.map((row) => row.key));
+    const legacyWhatsApp = rows.find((row) => row.key === "contact.whatsapp")?.value;
+    if (legacyWhatsApp && !explicitKeys.has("contact.whatsapp.1.number")) {
+      map.set("contact.whatsapp.1.number", { key: "contact.whatsapp.1.number", value: legacyWhatsApp });
+    }
     return Array.from(map.values());
   }),
 

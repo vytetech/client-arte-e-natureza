@@ -31,7 +31,7 @@ export default function PromotionSection({ variant = "home" }: { variant?: "home
     readingOn ? t("promotion.reading") : "",
     workOn ? t("promotion.work") : "",
   ].filter(Boolean);
-  const whatsapp = useWhatsApp(t("promotion.whatsapp_message"));
+  const whatsapp = useWhatsApp({ message: t("promotion.whatsapp_message"), purpose: "sales" });
 
   if (benefits.length === 0) return null;
 

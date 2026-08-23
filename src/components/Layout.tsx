@@ -230,9 +230,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div>
             <div className="eyebrow mb-4 text-white/35">{t("footer.contact")}</div>
             <div className="flex flex-col gap-2.5 text-sm">
-              <a href={whatsapp.href} target="_blank" rel="noopener noreferrer" className="text-[#4ee38a] hover:underline">
-                WhatsApp{whatsapp.display ? ` ${whatsapp.display}` : ""}
-              </a>
+              {whatsapp.isConfigured && (
+                <a href={whatsapp.href} target="_blank" rel="noopener noreferrer" className="text-[#4ee38a] hover:underline">
+                  WhatsApp{whatsapp.display ? ` ${whatsapp.display}` : ""}
+                </a>
+              )}
               <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="text-[#e08bb5] hover:underline">
                 Instagram @danieldetomiartenatureza
               </a>

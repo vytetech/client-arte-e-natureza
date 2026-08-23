@@ -10,7 +10,7 @@ const EMBED_URL =
 
 export default function MapaSection() {
   const { t } = useLang();
-  const whatsapp = useWhatsApp();
+  const whatsapp = useWhatsApp({ purpose: "visits" });
   return (
     <section id="como-chegar" className="border-t border-[var(--c-ink)]/10 py-24">
       <div className="mx-auto max-w-6xl px-5">

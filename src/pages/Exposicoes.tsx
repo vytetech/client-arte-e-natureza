@@ -6,7 +6,7 @@ import { useLang } from "@/lib/i18n";
 export default function Exposicoes() {
   const { t } = useTexts();
   const { t: tr } = useLang();
-  const whatsapp = useWhatsApp();
+  const whatsapp = useWhatsApp({ purpose: "sales" });
 
   return (
     <Layout>

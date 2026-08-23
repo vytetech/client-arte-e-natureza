@@ -13,7 +13,7 @@ const FOTOS = [
 
 export default function GaleriaCeuAberto() {
   const { t } = useLang();
-  const whatsapp = useWhatsApp();
+  const whatsapp = useWhatsApp({ purpose: "visits" });
   return (
     <section className="bg-[var(--c-dark)] py-24 text-[var(--c-bg)]">
       <div className="mx-auto max-w-6xl px-5">

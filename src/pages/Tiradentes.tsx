@@ -7,7 +7,7 @@ import { useLang } from "@/lib/i18n";
 export default function Tiradentes() {
   const { t } = useTexts();
   const { t: tr } = useLang();
-  const whatsapp = useWhatsApp();
+  const whatsapp = useWhatsApp({ purpose: "visits" });
   const tiradentesText = t("tiradentes_text").replaceAll("{whatsapp}", whatsapp.display || "WhatsApp");
 
   return (
