@@ -68,13 +68,10 @@ function LanguageSwitcher() {
                 setLang(l);
                 setOpen(false);
               }}
-              className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition hover:bg-[#f8ecef] ${
+              className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-3 text-left text-sm transition hover:bg-[#f8ecef] ${
                 l === lang ? "bg-[#f8ecef] font-semibold text-[var(--c-primary)]" : "text-[var(--c-ink)]/75"
               }`}
             >
-              <span className="w-7 shrink-0 font-mono text-xs font-bold tracking-wide">
-                {LANGUAGE_META[l].countryCode}
-              </span>
               <span dir="auto" className="min-w-0 flex-1 truncate">
                 {LANGUAGE_META[l].label}
               </span>
