@@ -1,6 +1,7 @@
 import Layout from "@/components/Layout";
 import { useTexts } from "@/hooks/useTexts";
 import { useLang } from "@/lib/i18n";
+import { SITE_URL, usePageSeo } from "@/lib/seo";
 
 const PHOTOS = [
   { src: "/images/artist-real-1.jpg", key: "artista.photo0" },
@@ -12,6 +13,42 @@ const PHOTOS = [
 export default function Artista() {
   const { t } = useTexts();
   const { t: tr } = useLang();
+  usePageSeo({
+    title: "Daniel Detomi - Artista plastico em Tiradentes MG",
+    description:
+      "Conheca Daniel Detomi, artista mineiro em Tiradentes. Seu trabalho une arte brasileira, pintura, escultura, papel mache, reuso de materiais e natureza.",
+    path: "/artista",
+    image: "/images/artist-real-1.jpg",
+    type: "profile",
+    keywords: [
+      "Daniel Detomi",
+      "Artista brasileiro",
+      "Artista plastico em Tiradentes",
+      "Artistas de Minas Gerais",
+      "Arte e povos originarios",
+      "Arte em papel mache",
+    ],
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "@id": `${SITE_URL}/artista#daniel-detomi`,
+      name: "Daniel Detomi",
+      jobTitle: "Artista plastico",
+      url: `${SITE_URL}/artista`,
+      image: `${SITE_URL}/images/artist-real-1.jpg`,
+      worksFor: {
+        "@type": "ArtGallery",
+        name: "Atelier Daniel Detomi",
+        url: SITE_URL,
+      },
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Tiradentes",
+        addressRegion: "MG",
+        addressCountry: "BR",
+      },
+    },
+  });
 
   return (
     <Layout>

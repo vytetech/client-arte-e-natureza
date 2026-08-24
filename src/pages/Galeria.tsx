@@ -5,6 +5,7 @@ import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
 import { statusTranslationKey } from "@contracts/status";
 import { categoryLabel } from "@/lib/categoryLabels";
+import { SITE_URL, usePageSeo } from "@/lib/seo";
 
 const ARTIST_PHOTOS = [
   { src: "/images/bastidores-1.jpg", key: "gal.bast0" },
@@ -25,6 +26,32 @@ export default function Galeria() {
   const { t, lang } = useLang();
   const whatsapp = useWhatsApp({ purpose: "sales" });
   const { data: works, isLoading } = trpc.content.works.useQuery(lang);
+  usePageSeo({
+    title: cat ? `${categoryLabel(cat, t)} em Tiradentes` : "Galeria de arte em Tiradentes MG",
+    description: cat
+      ? `Galeria de ${categoryLabel(cat, t).toLowerCase()} do Atelier Daniel Detomi em Tiradentes, Minas Gerais. Obras de arte brasileira inspiradas na natureza.`
+      : "Galeria de arte em Tiradentes, Minas Gerais, com pinturas, esculturas, recortes, arte ambiental e bastidores do Atelier Daniel Detomi.",
+    path: cat ? `/galeria?cat=${encodeURIComponent(cat)}` : "/galeria",
+    image: "/images/real-ancionais.jpg",
+    keywords: [
+      "Galeria de arte em Tiradentes",
+      "Galeria de arte em Minas Gerais",
+      "Galerias e atelies em Tiradentes",
+      "Arte em Minas Gerais",
+      "Exposicao de arte em Tiradentes",
+    ],
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: "Galeria de arte do Atelier Daniel Detomi",
+      url: `${SITE_URL}/galeria`,
+      isPartOf: {
+        "@type": "ArtGallery",
+        name: "Atelier Daniel Detomi",
+        url: SITE_URL,
+      },
+    },
+  });
 
   const categories = Array.from(new Set((works ?? []).map((w) => w.category)));
   const filtered = cat ? (works ?? []).filter((w) => w.category === cat) : (works ?? []);

@@ -2,11 +2,35 @@ import Layout from "@/components/Layout";
 import { useTexts } from "@/hooks/useTexts";
 import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
+import { SITE_URL, usePageSeo } from "@/lib/seo";
 
 export default function Exposicoes() {
   const { t } = useTexts();
   const { t: tr } = useLang();
   const whatsapp = useWhatsApp({ purpose: "sales" });
+  usePageSeo({
+    title: "Exposicoes de arte em Tiradentes - Atelier Daniel Detomi",
+    description:
+      "Exposicoes do Atelier Daniel Detomi, como Recortes do Cerrado e Terra Brasilis, com arte brasileira, papel mache, fauna do cerrado e consciencia ambiental.",
+    path: "/exposicoes",
+    image: "/images/expo-recortes-real.jpg",
+    keywords: [
+      "Exposicao de arte em Tiradentes",
+      "Arte inspirada no cerrado",
+      "Arte inspirada na fauna e flora brasileira",
+      "Arte brasileira",
+      "Cultura de Minas Gerais",
+      "Recortes do Cerrado",
+      "Terra Brasilis",
+    ],
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: "Exposicoes do Atelier Daniel Detomi",
+      url: `${SITE_URL}/exposicoes`,
+      about: ["Recortes do Cerrado", "Terra Brasilis", "Arte brasileira", "Arte e natureza"],
+    },
+  });
 
   return (
     <Layout>

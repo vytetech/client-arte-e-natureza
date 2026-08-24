@@ -3,6 +3,7 @@ import Layout from "@/components/Layout";
 import { trpc } from "@/providers/trpc";
 import { useLang } from "@/lib/i18n";
 import { useTexts } from "@/hooks/useTexts";
+import { usePageSeo } from "@/lib/seo";
 
 type CafeItem = {
   id: number;
@@ -105,6 +106,20 @@ export default function Cafe() {
   const heroEyebrow = siteText("cafe.hero.eyebrow", t("cafe.hero.eyebrow"));
   const heroTitle = siteText("cafe.hero.title", t("cafe.hero.title"));
   const heroDescription = siteText("cafe.hero.description", t("cafe.hero.description"));
+  usePageSeo({
+    title: "Espaco de Cafe - Atelier Daniel Detomi em Tiradentes",
+    description:
+      "Registros do Espaco de Cafe do Atelier Daniel Detomi em Tiradentes: encontros, conversas, arte, cotidiano e bastidores do atelie.",
+    path: "/cafe",
+    image: "/images/atelier-interior-real.jpg",
+    noindex: !isLoading && !showPublicPage,
+    keywords: [
+      "Atelier em Tiradentes",
+      "Turismo cultural em Tiradentes",
+      "Galerias e atelies em Tiradentes",
+      "Cultura de Minas Gerais",
+    ],
+  });
 
   return (
     <Layout>

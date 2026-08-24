@@ -7,6 +7,7 @@ import { useTexts } from "@/hooks/useTexts";
 import { useSettings } from "@/hooks/useTheme";
 import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
+import { organizationJsonLd, usePageSeo } from "@/lib/seo";
 
 function Paras({ text, className }: { text: string; className?: string }) {
   return (
@@ -25,6 +26,22 @@ export default function Home() {
   const { visible } = useSettings();
   const { t: tr } = useLang();
   const whatsapp = useWhatsApp({ purpose: "visits" });
+  usePageSeo({
+    title: "Atelier Daniel Detomi - Arte e Natureza em Tiradentes MG",
+    description:
+      "Atelie de arte em Tiradentes, Minas Gerais, do artista Daniel Detomi. Pinturas, esculturas, papel mache, recortes em metal e galeria a ceu aberto inspirada na fauna e flora brasileira.",
+    path: "/",
+    keywords: [
+      "Arte em Tiradentes",
+      "Obras de arte em Tiradentes",
+      "Arte inspirada na natureza",
+      "Fauna brasileira na arte",
+      "Flora brasileira na arte",
+      "Jardim de esculturas",
+      "Museu a ceu aberto",
+    ],
+    jsonLd: organizationJsonLd,
+  });
 
   return (
     <Layout>

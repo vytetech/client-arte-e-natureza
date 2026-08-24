@@ -8,6 +8,7 @@ import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
 import { statusTranslationKey } from "@contracts/status";
 import { categoryLabel } from "@/lib/categoryLabels";
+import { SITE_URL, usePageSeo } from "@/lib/seo";
 
 function parseDateOnly(value: string, endOfDay = false) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
@@ -86,6 +87,53 @@ export default function ObraDetail() {
       formatDimension(work.thicknessCm),
     ].filter(Boolean)
     : [];
+  const workCategory = work ? categoryLabel(work.category, t) : "";
+  const workTitle = work
+    ? `${work.title} - ${workCategory} de Daniel Detomi`
+    : "Obra de Daniel Detomi em Tiradentes";
+  const workDescription = work
+    ? `${work.title}, ${work.technique}, obra de Daniel Detomi em Tiradentes, Minas Gerais. ${work.description}`
+    : "Obra de arte do Atelier Daniel Detomi em Tiradentes, Minas Gerais, com pinturas, esculturas e arte inspirada na natureza.";
+  usePageSeo({
+    title: workTitle,
+    description: workDescription.slice(0, 155),
+    path: slug ? `/obra/${slug}` : "/galeria",
+    image: work?.image ?? "/images/real-ancionais.jpg",
+    type: "article",
+    keywords: work
+      ? [
+        work.title,
+        workCategory,
+        work.technique,
+        "Obras de arte em Tiradentes",
+        "Arte brasileira",
+        "Daniel Detomi",
+      ]
+      : ["Obras de arte em Tiradentes", "Daniel Detomi"],
+    jsonLd: work
+      ? {
+        "@context": "https://schema.org",
+        "@type": "VisualArtwork",
+        name: work.title,
+        url: `${SITE_URL}/obra/${work.slug}`,
+        image: `${SITE_URL}${work.image}`,
+        description: work.description,
+        artform: workCategory,
+        artMedium: work.technique,
+        dateCreated: work.year,
+        creator: {
+          "@type": "Person",
+          name: "Daniel Detomi",
+          url: `${SITE_URL}/artista`,
+        },
+        isPartOf: {
+          "@type": "ArtGallery",
+          name: "Atelier Daniel Detomi",
+          url: SITE_URL,
+        },
+      }
+      : undefined,
+  });
   const showShipping = visible("shipping.enabled");
   const showShippingNote = s("shipping.note", "1") === "1";
   const showIntl = s("shipping.international", "0") === "1";

@@ -3,6 +3,7 @@ import Layout from "@/components/Layout";
 import { trpc } from "@/providers/trpc";
 import { useLang } from "@/lib/i18n";
 import { categoryLabel } from "@/lib/categoryLabels";
+import { SITE_URL, usePageSeo } from "@/lib/seo";
 
 const CATEGORIES = [
   { name: "Pinturas", image: "/images/pintura-tropical.jpg", di: 0 },
@@ -16,6 +17,28 @@ const CATEGORIES = [
 export default function Obras() {
   const { t, lang } = useLang();
   const { data: works } = trpc.content.works.useQuery(lang);
+  usePageSeo({
+    title: "Obras de arte em Tiradentes - Pinturas e esculturas brasileiras",
+    description:
+      "Acervo do Atelier Daniel Detomi em Tiradentes: pinturas brasileiras, esculturas em papel mache, recortes em metal, arte ambiental e obras inspiradas na biodiversidade.",
+    path: "/obras",
+    image: "/images/pintura-tropical.jpg",
+    keywords: [
+      "Obras de arte em Tiradentes",
+      "Pinturas em Tiradentes",
+      "Pinturas brasileiras",
+      "Esculturas brasileiras",
+      "Esculturas em papel mache",
+      "Arte e biodiversidade",
+    ],
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: "Obras de arte do Atelier Daniel Detomi",
+      url: `${SITE_URL}/obras`,
+      about: ["Pinturas brasileiras", "Esculturas", "Arte em papel mache", "Arte ambiental"],
+    },
+  });
 
   return (
     <Layout>

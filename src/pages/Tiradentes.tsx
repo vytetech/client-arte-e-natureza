@@ -3,12 +3,44 @@ import MapaSection from "@/components/MapaSection";
 import { useTexts } from "@/hooks/useTexts";
 import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useLang } from "@/lib/i18n";
+import { SITE_URL, usePageSeo } from "@/lib/seo";
 
 export default function Tiradentes() {
   const { t } = useTexts();
   const { t: tr } = useLang();
   const whatsapp = useWhatsApp({ purpose: "visits" });
   const tiradentesText = t("tiradentes_text").replaceAll("{whatsapp}", whatsapp.display || "WhatsApp");
+  usePageSeo({
+    title: "Arte em Tiradentes MG - Atelier Daniel Detomi",
+    description:
+      "Roteiro de turismo cultural em Tiradentes: visite o Atelier Daniel Detomi, uma galeria a ceu aberto com pinturas, esculturas e arte inspirada na natureza.",
+    path: "/tiradentes",
+    image: "/images/placa-1.jpg",
+    keywords: [
+      "O que visitar em Tiradentes",
+      "Turismo cultural em Tiradentes",
+      "Arte em Tiradentes",
+      "Atelie de arte em Tiradentes",
+      "Galerias e atelies em Tiradentes",
+      "Arte ao ar livre",
+    ],
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "TouristAttraction",
+      name: "Atelier Daniel Detomi - Arte e Natureza",
+      url: `${SITE_URL}/tiradentes`,
+      image: `${SITE_URL}/images/placa-1.jpg`,
+      description:
+        "Atelie e galeria a ceu aberto em Tiradentes, Minas Gerais, com obras de Daniel Detomi inspiradas na fauna, flora e cultura brasileira.",
+      touristType: ["Turismo cultural", "Arte", "Galerias e atelies"],
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Tiradentes",
+        addressRegion: "MG",
+        addressCountry: "BR",
+      },
+    },
+  });
 
   return (
     <Layout>
