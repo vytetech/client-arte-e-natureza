@@ -1,3 +1,34 @@
+<!-- Apresentação pública padronizada pela VyteTech; documentação técnica original mantida abaixo. -->
+
+<div align="center">
+
+# Atelier Daniel Detomi — Arte e Natureza
+
+**Projeto desenvolvido pela [VyteTech](https://vytetech.com)** · Engenharia de software e soluções digitais
+
+[Acessar site](https://www.danieldetomiartenatureza.com) · [Portfólio VyteTech](https://github.com/vytetech/VyteTech/blob/main/docs/PORTFOLIO.md) · [Contato](mailto:contato@vytetech.com)
+
+</div>
+
+> **Visão geral:** Plataforma institucional e administrativa para portfólio artístico, catálogo de obras e conteúdo multilíngue.
+
+### Entregas e funcionalidades
+
+- Catálogo e detalhe de obras, galeria e exposições
+- Painel administrativo para conteúdo, mídias e apresentação
+- Conteúdo em português, inglês, espanhol e árabe
+
+**Tecnologias principais:** React, TypeScript, Vite, Hono, tRPC, PostgreSQL e Render.
+
+**Direitos e uso:** código publicado com autorização do cliente. A disponibilidade pública não representa concessão automática de licença para reutilização ou redistribuição; aplicam-se os direitos e acordos pertinentes.
+
+Para divulgação responsável de questões de segurança, consulte [SECURITY.md](SECURITY.md).
+
+---
+
+<details>
+<summary><strong>Documentação técnica original do projeto (abrir)</strong></summary>
+
 # Atelier Daniel Detomi — Arte e Natureza
 
 Site institucional e plataforma administrativa do Atelier Daniel Detomi — Arte e Natureza.
@@ -320,7 +351,7 @@ Arquivos estáticos versionados continuam em `public/`.
 
 ## Produção
 
-- Código-fonte versionado em repositório privado.
+- Código-fonte versionado em repositório público com autorização do cliente. Credenciais, dados privados e informações operacionais restritas não devem ser publicados.
 - Deploy conectado ao repositório no provedor de hospedagem.
 - Banco PostgreSQL separado da instância da aplicação.
 - Secrets configurados via environment variables.
@@ -433,3 +464,6 @@ Não aplicar migration diretamente em produção sem revisão da migration gerad
 - Não versionar `.env`, `.env.local`, `.env.production`, `node_modules`, `dist` ou caches locais.
 - Não editar migrations já aplicadas em produção.
 - Não inserir senhas administrativas em código, migration, seed ou documentação.
+
+
+</details>
