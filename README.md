@@ -26,10 +26,7 @@ Para divulgação responsável de questões de segurança, consulte [SECURITY.md
 
 ---
 
-<details>
-<summary><strong>Documentação técnica original do projeto (abrir)</strong></summary>
-
-# Atelier Daniel Detomi — Arte e Natureza
+## Documentação técnica e operação
 
 Site institucional e plataforma administrativa do Atelier Daniel Detomi — Arte e Natureza.
 
@@ -465,5 +462,3 @@ Não aplicar migration diretamente em produção sem revisão da migration gerad
 - Não editar migrations já aplicadas em produção.
 - Não inserir senhas administrativas em código, migration, seed ou documentação.
 
-
-</details>
