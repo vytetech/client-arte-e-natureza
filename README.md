@@ -462,3 +462,12 @@ Não aplicar migration diretamente em produção sem revisão da migration gerad
 - Não editar migrations já aplicadas em produção.
 - Não inserir senhas administrativas em código, migration, seed ou documentação.
 
+
+## Governança e documentação
+
+- [Governança documental](docs/GOVERNANCE.md)
+- [Visão de sistema e fluxos](docs/SYSTEM_OVERVIEW_AND_FLOWS.md)
+- [Arquitetura técnica](docs/ARQUITETURA.md)
+- [Operação e manutenção](docs/OPERACAO.md)
+
+Os documentos públicos são referências técnicas e não autorizam divulgação de credenciais, registros de usuários, contratos ou informações confidenciais. A manutenção de informações sensíveis pertence aos sistemas restritos da empresa.
